@@ -3,9 +3,9 @@ import RegistrationView from '../views/RegistrationView.vue'
 
 const routes = [
   {
-    path: '/about',
-    name: 'about',
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
+    path: '/map',
+    name: 'map',
+    component: () => import(/* webpackChunkName: "about" */ '../views/MapView.vue')
   },
   {
     path: '/register',
