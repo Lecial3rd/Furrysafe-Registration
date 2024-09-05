@@ -1,7 +1,8 @@
 <template>
   <nav>
-    <router-link to="/about">About</router-link>
-    <router-link to="/register">Register</router-link>
+    <router-link to="/map"> Map </router-link>
+    <router-link to="/register"> Register </router-link>
+    <router-link to="/upload-image"> Image Upload </router-link> <!-- New Link -->
   </nav>
   <router-view/>
 </template>
@@ -23,6 +24,7 @@ nav {
 nav a {
   font-weight: bold;
   color: #2c3e50;
+  margin-right: 15px; /* Adds space between links */
 }
 
 nav a.router-link-exact-active {

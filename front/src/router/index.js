@@ -1,16 +1,27 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import MapView from '../views/MapView.vue'
 import RegistrationView from '../views/RegistrationView.vue'
+import ImageUploadView from '../views/ImageUploadView.vue'
 
 const routes = [
   {
-    path: '/about',
-    name: 'about',
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
+    path: '/map',
+    name: 'Map',
+    component: MapView
   },
   {
     path: '/register',
-    name: 'register',
+    name: 'Register',
     component: RegistrationView
+  },
+  {
+    path: '/upload-image',
+    name: 'ImageUpload',
+    component: ImageUploadView
+  },
+  {
+    path: '/',
+    redirect: '/map'
   }
 ]
 

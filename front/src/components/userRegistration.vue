@@ -16,7 +16,7 @@
       <div class="field">
         <label class="label">Middle Initial</label>
         <div class="control">
-          <input class="input" type="text" v-model="form.middle_initial">
+          <input class="input" type="text" v-model="form.middle_initial" maxlength="1">
         </div>
       </div>
       <div class="field">
@@ -69,6 +69,8 @@
 </template>
 
 <script>
+import { supabase } from '../supabaseClient.js'
+
 export default {
   data() {
     return {
@@ -89,50 +91,49 @@ export default {
   methods: {
     async registerUser() {
       try {
-        const response = await fetch('http://localhost:5000/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(this.form)
-        })
-        const data = await response.json()
-        if (response.ok) {
-          this.message = 'User created successfully!'
-          this.messageType = 'is-success'
-          this.form = {
-            user_username: '',
-            first_name: '',
-            middle_initial: '',
-            last_name: '',
-            user_email: '',
-            user_password: '',
-            date_of_birth: '',
-            gender: ''
-          }
-        } else {
-          this.message = 'User creation failed: ' + (data.error || 'Unknown error')
-          this.messageType = 'is-danger'
+        // Insert into tbl_user
+        const { data: userData, error: userError } = await supabase
+          .from('tbl_user')
+          .insert([{ user_email: this.form.user_email, user_password: this.form.user_password }])
+          .select()
+
+        if (userError) throw userError
+
+        const user_id = userData[0].user_id
+
+        // Insert into tbl_user_details
+        const { error: detailsError } = await supabase
+          .from('tbl_user_details')
+          .insert([{
+            user_id,
+            user_username: this.form.user_username,
+            firstname: this.form.first_name,
+            mi: this.form.middle_initial,
+            lastname: this.form.last_name,
+            date_of_birth: this.form.date_of_birth,
+            gender: this.form.gender
+          }])
+
+        if (detailsError) throw detailsError
+
+        this.message = 'User created successfully!'
+        this.messageType = 'is-success'
+        this.form = {
+          user_username: '',
+          first_name: '',
+          middle_initial: '',
+          last_name: '',
+          user_email: '',
+          user_password: '',
+          date_of_birth: '',
+          gender: ''
         }
+
       } catch (error) {
-        this.message = 'An error occurred: ' + error.message
+        this.message = 'User creation failed: ' + error.message
         this.messageType = 'is-danger'
       }
     }
   }
 }
 </script>
-
-<style scoped>
-.notification {
-  margin-top: 1em;
-}
-.is-success {
-  background-color: #48c774;
-  color: white;
-}
-.is-danger {
-  background-color: #f14668;
-  color: white;
-}
-</style>
