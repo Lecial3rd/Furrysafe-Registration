@@ -1,7 +1,8 @@
 <template>
   <nav>
-    <router-link to="/about">About</router-link>
-    <router-link to="/register">Register</router-link>
+    <router-link to="/map"> Map </router-link>
+    <router-link to="/register"> Register </router-link>
+    <router-link to="/image"> Image Upload </router-link>
   </nav>
   <router-view/>
 </template>

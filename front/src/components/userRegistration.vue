@@ -16,7 +16,7 @@
       <div class="field">
         <label class="label">Middle Initial</label>
         <div class="control">
-          <input class="input" type="text" v-model="form.middle_initial">
+          <input class="input" type="text" v-model="form.middle_initial" maxlength="1">
         </div>
       </div>
       <div class="field">
@@ -69,6 +69,8 @@
 </template>
 
 <script>
+import { supabase } from '../supabaseClient.js'
+
 export default {
   data() {
     return {
@@ -87,52 +89,55 @@ export default {
     }
   },
   methods: {
-    async registerUser() {
-      try {
-        const response = await fetch('http://localhost:5000/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(this.form)
-        })
-        const data = await response.json()
-        if (response.ok) {
-          this.message = 'User created successfully!'
-          this.messageType = 'is-success'
-          this.form = {
-            user_username: '',
-            first_name: '',
-            middle_initial: '',
-            last_name: '',
-            user_email: '',
-            user_password: '',
-            date_of_birth: '',
-            gender: ''
-          }
-        } else {
-          this.message = 'User creation failed: ' + (data.error || 'Unknown error')
-          this.messageType = 'is-danger'
-        }
-      } catch (error) {
-        this.message = 'An error occurred: ' + error.message
-        this.messageType = 'is-danger'
-      }
+  async registerUser() {
+    try {
+      // Use Supabase Auth for sign-up
+      const { user, error: authError } = await supabase.auth.signUp({
+        email: this.form.user_email,
+        password: this.form.user_password
+      });
+
+      if (authError) throw new Error(`Auth Error: ${authError.message}`);
+
+      // Notify the user to check their email for verification
+      this.message = 'Registration successful! Please check your email to verify your account.';
+      this.messageType = 'is-success';
+
+      // Insert into tbl_user
+      const { data: userData, error: userError } = await supabase
+        .from('tbl_user')
+        .insert([{ user_email: this.form.user_email, user_password: this.form.user_password, date_created: new Date() }])
+        .select();
+
+      if (userError) throw new Error(`User Insertion Error: ${userError.message}`);
+
+      const user_id = userData[0].user_id;
+
+      // Prepare user details with checks for empty values
+      const userDetails = {
+        user_id,
+        user_username: this.form.user_username || null,
+        firstname: this.form.first_name || null,
+        mi: this.form.middle_initial || null,
+        lastname: this.form.last_name || null,
+        date_of_birth: this.form.date_of_birth ? new Date(this.form.date_of_birth).toISOString().split('T')[0] : null,
+        gender: this.form.gender || null
+      };
+
+      console.log("User Details to Insert:", userDetails);  // Log user details
+
+      // Insert into tbl_user_details
+      const { error: detailsError } = await supabase
+        .from('tbl_user_details')
+        .insert([userDetails]);
+
+      if (detailsError) throw new Error(`Details Insertion Error: ${detailsError.message}`);
+
+    } catch (error) {
+      this.message = `Registration failed: ${error.message}`;
+      this.messageType = 'is-danger';
     }
   }
 }
+}
 </script>
-
-<style scoped>
-.notification {
-  margin-top: 1em;
-}
-.is-success {
-  background-color: #48c774;
-  color: white;
-}
-.is-danger {
-  background-color: #f14668;
-  color: white;
-}
-</style>
