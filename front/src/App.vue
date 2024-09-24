@@ -3,6 +3,7 @@
     <router-link to="/map"> Map </router-link>
     <router-link to="/register"> Register </router-link>
     <router-link to="/image"> Image Upload </router-link>
+    <router-link to="/login"> Login for Chat Testing </router-link>
   </nav>
   <router-view/>
 </template>
