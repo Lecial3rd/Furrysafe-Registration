@@ -89,55 +89,46 @@ export default {
     }
   },
   methods: {
-  async registerUser() {
-    try {
-      // Use Supabase Auth for sign-up
-      const { user, error: authError } = await supabase.auth.signUp({
-        email: this.form.user_email,
-        password: this.form.user_password
-      });
+    async registerUser() {
+      try {
+        // Insert into tbl_user
+        const { data: userData, error: userError } = await supabase
+          .from('tbl_user')
+          .insert([{ user_email: this.form.user_email, user_password: this.form.user_password, date_created: new Date() }])
+          .select();
 
-      if (authError) throw new Error(`Auth Error: ${authError.message}`);
+        if (userError) throw new Error(`User Insertion Error: ${userError.message}`);
 
-      // Notify the user to check their email for verification
-      this.message = 'Registration successful! Please check your email to verify your account.';
-      this.messageType = 'is-success';
+        const user_id = userData[0].user_id;
 
-      // Insert into tbl_user
-      const { data: userData, error: userError } = await supabase
-        .from('tbl_user')
-        .insert([{ user_email: this.form.user_email, user_password: this.form.user_password, date_created: new Date() }])
-        .select();
+        // Prepare user details with checks for empty values
+        const userDetails = {
+          user_id,
+          user_username: this.form.user_username || null,
+          firstname: this.form.first_name || null,
+          mi: this.form.middle_initial || null,
+          lastname: this.form.last_name || null,
+          date_of_birth: this.form.date_of_birth ? new Date(this.form.date_of_birth).toISOString().split('T')[0] : null,
+          gender: this.form.gender || null
+        };
 
-      if (userError) throw new Error(`User Insertion Error: ${userError.message}`);
+        console.log("User Details to Insert:", userDetails);  // Log user details
 
-      const user_id = userData[0].user_id;
+        // Insert into tbl_user_details
+        const { error: detailsError } = await supabase
+          .from('tbl_user_details')
+          .insert([userDetails]);
 
-      // Prepare user details with checks for empty values
-      const userDetails = {
-        user_id,
-        user_username: this.form.user_username || null,
-        firstname: this.form.first_name || null,
-        mi: this.form.middle_initial || null,
-        lastname: this.form.last_name || null,
-        date_of_birth: this.form.date_of_birth ? new Date(this.form.date_of_birth).toISOString().split('T')[0] : null,
-        gender: this.form.gender || null
-      };
+        if (detailsError) throw new Error(`Details Insertion Error: ${detailsError.message}`);
 
-      console.log("User Details to Insert:", userDetails);  // Log user details
+        this.message = 'Registration successful!';
+        this.messageType = 'is-success';
 
-      // Insert into tbl_user_details
-      const { error: detailsError } = await supabase
-        .from('tbl_user_details')
-        .insert([userDetails]);
-
-      if (detailsError) throw new Error(`Details Insertion Error: ${detailsError.message}`);
-
-    } catch (error) {
-      this.message = `Registration failed: ${error.message}`;
-      this.messageType = 'is-danger';
+      } catch (error) {
+        this.message = `Registration failed: ${error.message}`;
+        this.messageType = 'is-danger';
+      }
     }
   }
-}
 }
 </script>

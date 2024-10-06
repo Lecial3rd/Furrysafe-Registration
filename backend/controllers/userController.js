@@ -1,79 +1,35 @@
-//import functions from models 
-import {
-    getUserbyUserID, //individual user
-    getUsers, 
-    insertUser, 
-    updateUserbyUserID,
-    deactivateUserbyUser_ID,
-} from "../models/userModel.js" 
+// controllers/userController.js
+const supabase = require('../config/supabase');
 
-//retrieves all users
-export const showUsers = (req, res)=> {
-    getUsers((err, results) => {
-        if(err){
-            res.send(err);
-        }
-        else{
-            res.json(results);
-        }
-    })
+// Function to get all users except the current user
+const getAllUsersExceptCurrent = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('tbl_user')
+      .select(`
+        user_id, 
+        user_email,
+        tbl_user_details(firstname, lastname, mi)
+      `)
+      .neq('user_id', userId);
+
+    if (error) {
+      return res.status(500).json({ error: 'Error fetching users' });
+    }
+
+    const users = data.map(user => ({
+      id: user.user_id,
+      email: user.user_email,
+      fullName: `${user.tbl_user_details.firstname} ${user.tbl_user_details.mi ? user.tbl_user_details.mi + ' ' : ''}${user.tbl_user_details.lastname}`,
+    }));
+
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 };
 
-//retrieves a single user 
-export const showUserbyUserID = (req, res) => {
-     getUserbyUserID (req.params.id, (err, results) => {
-        if(err){
-            res.send(err); 
-        }
-        else{
-            res.json(results);
-        }
-     })
-}
-
-//create new user 
-export const createUser = (req, res) => {
-    const data = req.body; 
-    insertUser (data, (err, results)=>{
-        if(err){
-            if(err == 'ER_DUP_ENTRY'){
-                res.status(409).send({error: 'ER_DUP_ENTRY'});
-            }
-            else{
-                res.send(err);
-            }
-        }
-        else{
-            res.json(results);
-        }
-    })
-}
-
-//update user 
-export const updateUser = (req, res) => {
-    const data = req.body;
-    const id = req.params.id;
-    updateUserbyUserID(data, id, (err, results) => {
-        if(err){
-            res.send("Error: " + err);
-        }
-        else{
-            res.json(results);
-        }
-    })
-}
-
-//deactivate user 
-export const deactivateUser = (req, res) => {
-    const data = req.body; 
-    const id = req.params.id; 
-
-    deactivateUserbyUser_ID(data, id, (err, results) => {
-        if(err){
-            res.send("Error:" + err); 
-        }
-        else{
-            res.json(results);
-        }
-    })
-}
+module.exports = { getAllUsersExceptCurrent };

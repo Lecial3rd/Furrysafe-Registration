@@ -3,10 +3,26 @@
     <router-link to="/map"> Map </router-link>
     <router-link to="/register"> Register </router-link>
     <router-link to="/image"> Image Upload </router-link>
-    <router-link to="/login"> Login to Chat</router-link>
+    <router-link to="/login"> Login to Chat </router-link>
   </nav>
-  <router-view/>
+  <router-view v-slot="{ Component }">
+    <component :is="Component" v-bind="{ socket }" /> <!-- Use v-bind to pass socket -->
+  </router-view>
 </template>
+
+<script>
+import { inject } from 'vue';
+
+export default {
+  setup() {
+    // Ensure the socket instance is provided globally
+    const socket = inject('socket'); // Inject the global socket instance
+    return {
+      socket,
+    };
+  },
+};
+</script>
 
 <style>
 @import "~bulma/css/bulma.css";
