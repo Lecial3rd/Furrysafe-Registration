@@ -69,7 +69,15 @@ const getMessages = async (conversationId) => {
   try {
     const { data, error } = await supabase
       .from('tbl_messages')
-      .select('*')
+      .select(`
+        id,
+        conversation_id,
+        sender_id,
+        message,
+        img_path,
+        sent_at,
+        tbl_user(user_id, user_email, tbl_user_details(firstname, lastname, mi))
+      `)
       .eq('conversation_id', conversationId)
       .order('sent_at', { ascending: true });
 
@@ -77,6 +85,12 @@ const getMessages = async (conversationId) => {
       console.error('Error fetching messages:', error);
       return [];
     }
+
+    // Map the sender's name
+    data.forEach(message => {
+      const { firstname, lastname, mi } = message.tbl_user.tbl_user_details;
+      message.senderName = `${firstname} ${mi ? mi + ' ' : ''}${lastname}`;
+    });
 
     return data;
   } catch (error) {

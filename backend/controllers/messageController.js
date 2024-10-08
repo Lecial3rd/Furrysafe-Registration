@@ -2,7 +2,7 @@ const supabase = require('../config/supabase');
 const { findOrCreateConversation } = require('./conversationController');
 
 // Send a message to a conversation
-const sendMessage = async (senderId, conversationId, message, imagePath = '') => {
+const sendMessage = async (io, senderId, conversationId, message, imgPath = '') => {
   try {
     const { data, error } = await supabase
       .from('tbl_messages')
@@ -11,7 +11,7 @@ const sendMessage = async (senderId, conversationId, message, imagePath = '') =>
           conversation_id: conversationId,
           sender_id: senderId,
           message,
-          img_path: imagePath, // Update this line to match the column name in your table
+          img_path: imgPath || '',
           sent_at: new Date().toISOString(),
         },
       ])
@@ -19,7 +19,7 @@ const sendMessage = async (senderId, conversationId, message, imagePath = '') =>
 
     if (error) {
       console.error('Error sending message:', error);
-      return null;
+      throw error;
     }
 
     // Update last message time in conversation
@@ -28,10 +28,16 @@ const sendMessage = async (senderId, conversationId, message, imagePath = '') =>
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', conversationId);
 
+    // Broadcast the message to all connected clients
+    io.emit('new_message', {
+      conversationId,
+      message: data,
+    });
+
     return data;
   } catch (error) {
     console.error('Error sending message:', error);
-    return null;
+    throw error;
   }
 };
 

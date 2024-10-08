@@ -1,10 +1,11 @@
 <template>
+
   <div class="chat-container">
     <!-- Sidebar for online users -->
     <div class="sidebar">
       <div class="app-title">Chat App</div>
       <div class="user-info">
-        <h2>Welcome {{ userFullName }}</h2>
+        <h2>Welcome, {{ userFullName }}</h2>
       </div>
       <div class="users">
         <h3 class="users-label">Online Users</h3>
@@ -12,246 +13,363 @@
           <li v-for="user in onlineUsers" :key="user.id" class="user" @click="joinConversation(user)">
             {{ user.fullName }}
           </li>
-        </ul>``
+        </ul>
       </div>
     </div>
-
+    
     <!-- Chat Area -->
     <div class="chat-area">
       <!-- Chat header with the current user -->
       <div class="header" v-if="currentChatUser">
         <h3>Chat with {{ currentChatUser.fullName }}</h3>
       </div>
-
+      
       <!-- Messages area -->
       <div class="messages">
-        <div v-for="message in messages" :key="message.id" :class="['message', message.sender_id === loggedInUserId ? 'message-sent' : 'message-received']">
-          <p>
-            <span class="sender">{{ message.sender_id === loggedInUserId ? 'You' : currentChatUser.fullName }}</span>:
-            {{ message.message }}
+        <div v-for="message in messages" :key="message?.id" :class="['message', message?.sender_id === loggedInUserId ? 'message-sent' : 'message-received']">
+          <p v-if="message?.message">
+            <span :class="['sender', message?.sender_id === loggedInUserId ? 'right' : 'left']">
+              {{ message.senderName }}:
+            </span>
+            {{ message?.message }}
           </p>
+          <img v-if="message?.img_path" :src="message?.img_path" alt="Image" class="message-image">
         </div>
       </div>
-
+      
       <!-- Input area for sending messages -->
       <div class="input-area" v-if="currentChatUser">
-        <input v-model="messageText" class="message-input" placeholder="Type a message"> 
+        <input v-model="messageText" class="message-input" placeholder="Type a message" @keydown="handleKeyDown"> 
+        <input type="file" @change="handleFileUpload" class="image-input" accept="image/*">
         <button class="send-btn" @click="sendMessage">Send</button>
       </div>
     </div>
   </div>
-</template>
-
-<script>
-import { ref, onMounted } from 'vue';
-import { io } from 'socket.io-client';
-
-export default {
-  setup() {
-    const socket = io('http://localhost:3000');
-    const userFullName = ref('');
-    const onlineUsers = ref([]);
-    const currentChatUser = ref(null);
-    const conversationId = ref(null);
-    const messages = ref([]);
-    const messageText = ref('');
-    const loggedInUserId = ref(sessionStorage.getItem('user_id')); // Initialize with user_id from session storage
-
-    // Fetch all users except the logged-in user
-    onMounted(async () => {
-      const response = await fetch(`http://localhost:3000/users/${loggedInUserId.value}`);
-      const users = await response.json();
-      onlineUsers.value = users;
-
-      socket.emit('get_online_users');
-      socket.on('online_users', (users) => {
+  
+  </template>
+  
+  <script>
+  import { ref, onMounted } from 'vue';
+  import { io } from 'socket.io-client';
+  import { supabase } from '../supabaseClient';
+  
+  export default {
+    setup() {
+      const socket = io('http://localhost:3000');
+      const userFullName = ref('');
+      const onlineUsers = ref([]);
+      const currentChatUser = ref(null);
+      const conversationId = ref(null);
+      const messages = ref([]);
+      const messageText = ref('');
+      const loggedInUserId = ref(sessionStorage.getItem('user_id'));
+      const selectedFile = ref(null);
+  
+      onMounted(async () => {
+        const response = await fetch(`http://localhost:3000/users/${loggedInUserId.value}`);
+        const users = await response.json();
         onlineUsers.value = users;
+  
+        socket.emit('get_online_users');
+        socket.on('online_users', (users) => {
+          onlineUsers.value = users;
+        });
+  
+        socket.on('new_message', (data) => {
+          if (data.conversationId === conversationId.value) {
+            messages.value.push(data.message);
+          } else {
+            conversationId.value = data.conversationId;
+            fetchMessages(conversationId.value);
+          }
+          fetchMessages(conversationId.value);
+        });
+        
+        userFullName.value = sessionStorage.getItem('user_fullname');
+        loggedInUserId.value = sessionStorage.getItem('user_id');
       });
-
-      userFullName.value = sessionStorage.getItem('user_fullname');
-    });
-
-    const fetchMessages = async (convId) => {
-      const response = await fetch(`http://localhost:3000/conversations/${convId}/messages`);
-      messages.value = await response.json();
-    };
-
-    const joinConversation = async (user) => {
-      const response = await fetch(`http://localhost:3000/conversations/find-or-create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user1Id: loggedInUserId.value,
-          user2Id: user.id,
-        }),
-      });
-
-      const { conversationId: convId } = await response.json();
-      conversationId.value = convId;
-      currentChatUser.value = user;
-
-      fetchMessages(convId);
-    };
-
-    const sendMessage = async () => {
-      if (!messageText.value) return;
-
-      const response = await fetch('http://localhost:3000/messages/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          senderId: loggedInUserId.value,
+      
+      const fetchMessages = async (convId) => {
+        try {
+          const response = await fetch(`http://localhost:3000/conversations/${convId}/messages`);
+          const data = await response.json();
+  
+          if (data.length > 0) {
+            messages.value = data.filter(message => message !== null);
+          } else {
+            messages.value = [];
+          }
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+          messages.value = [];
+        }
+      };
+  
+      const joinConversation = async (user) => {
+        const response = await fetch(`http://localhost:3000/conversations/find-or-create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user1Id: loggedInUserId.value,
+            user2Id: user.id,
+          }),
+        });
+  
+        const { conversationId: convId } = await response.json();
+        conversationId.value = convId;
+        currentChatUser.value = user;
+  
+        const { data: userData, error: userError } = await supabase
+          .from('tbl_user')
+          .select('user_id, user_email, tbl_user_details(firstname, lastname, mi)')
+          .eq('user_id', user.id);
+  
+        if (userError) {
+          console.error('Error fetching user data:', userError);
+          return;
+        }
+  
+        const { firstname, lastname, mi } = userData[0].tbl_user_details;
+        const userName = `${firstname} ${mi ? mi + ' ' : ''}${lastname}`;
+        currentChatUser.value = {
+          ...currentChatUser.value,
+          fullName: userName,
+        };
+  
+        fetchMessages(convId);
+      };
+  
+      const sendMessage = async () => {
+        if (!messageText.value && !selectedFile.value) return;
+  
+        let imgPath = '';
+  
+        if (selectedFile.value) {
+          try {
+            const fileName = `public/${Date.now()}_${selectedFile.value.name}`;
+            const { data, error } = await supabase.storage
+              .from('images')
+              .upload(fileName, selectedFile.value);
+  
+            if (error) {
+              console.error('Image upload failed:', error.message);
+              return;
+            }
+  
+            imgPath = `https://iduczfllgzezvjhnjzad.supabase.co/storage/v1/object/public/images/${fileName}`;
+            console.log('Image uploaded successfully:', imgPath);
+          } catch (error) {
+            console.error('File upload error:', error);
+            return;
+          }
+        }
+  
+        const response = await fetch('http://localhost:3000/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senderId: loggedInUserId.value,
+            conversationId: conversationId.value,
+            message: messageText.value,
+            imgPath: imgPath || '',
+          }),
+        });
+  
+        const newMessage = await response.json();
+        console.log('New message:', newMessage);
+  
+        socket.emit('new_message', {
           conversationId: conversationId.value,
-          message: messageText.value,
-        }),
-      });
-
-      const newMessage = await response.json();
-      messages.value.push(newMessage); // Update messages state
-      messageText.value = ''; // Clear input field
-      fetchMessages(conversationId.value); // Fetch messages again to update state
-    };
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        sendMessage();
-      }
-    };
-
-    return {
-      userFullName,
-      onlineUsers,
-      currentChatUser,
-      conversationId,
-      messages,
-      messageText,
-      joinConversation,
-      sendMessage,
-      handleKeyDown,
-    };
-  },
-};
-</script>
-
-<style scoped>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-}
-
-.chat-container {
-  display: flex;
-  height: 100vh;
-}
-
-.sidebar {
-  width: 25%;
-  background-color: #007BFF;
-  color: white;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start; /* Changed to align items at the start */
-}
-
-.app-title {
-  font-size: 1.5em;
-  margin-bottom: 20px;
-}
-
-.user-info {
-  margin-bottom: 20px; /* Space between title and welcome message */
-}
-
-.user:hover {
-  background-color: rgba(255, 255, 255, 0.4);
-}
-
-.users {
-  margin-top: 20px; /* Space between welcome message and users list */
-}
-
-.users-label {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.user {
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.2);
-  margin: 5px 0;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.chat-area {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-}
-
-.header {
-  background-color: #007BFF;
-  color: white;
-  padding: 10px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.messages {
-  flex: 1;
-  padding: 20px;
-  background-color: #f1f1f1;
-  overflow-y: auto;
-}
-
-.message {
-  background-color: white;
-  padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.message-sent {
-  background-color: #007BFF;
-  color: white;
-  align-self: flex-end;
-}
-
-.message-received {
-  background-color: #f1f1f1;
-  align-self: flex-start;
-}
-
-.sender {
-  font-weight: bold;
-  color: #007BFF;
-}
-
-.input-area {
-  background-color: #007BFF;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-}
-
-.message-input {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  margin-right: 10px;
-}
-
-.send-btn {
-  background-color: #0056b3;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-</style>
+          message: newMessage,
+        });
+  
+        messages.value.push(newMessage);
+        messageText.value = '';
+        selectedFile.value = null;
+        fetchMessages(conversationId.value);
+      };
+  
+      const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          sendMessage();
+        }
+      };
+  
+      const handleFileUpload = (event) => {
+        selectedFile.value = event.target.files[0];
+      };
+  
+      return {
+        userFullName,
+        onlineUsers,
+        currentChatUser,
+        conversationId,
+        messages,
+        messageText,
+        joinConversation,
+        sendMessage,
+        handleKeyDown,
+        handleFileUpload,
+      };
+    },
+  };
+  </script>
+  
+  <style scoped>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+  }
+  
+  .chat-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 25%;
+    background-color: #007BFF;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  
+  .app-title {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+  }
+  
+  .user-info {
+    margin-bottom: 20px;
+  }
+  
+  .user:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+  
+  .users {
+    margin-top: 20px;
+  }
+  
+  .users-label {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .user {
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 5px 0;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .chat-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  
+  .header {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .messages {
+    flex: 1;
+    padding: 20px;
+    background-color: #f1f1f1;
+    overflow-y: auto;
+  }
+  
+  .message {
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .message-sent {
+    background-color: #007BFF;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+    text-align: right;
+  }
+  
+  .message-received {
+    background-color: #f1f1f1;
+    align-self: flex-start;
+    margin-right: auto;
+    text-align: left;
+  }
+  
+  .message-sent .sender {
+    float: right;
+    text-align: right;
+  }
+  
+  .message-received .sender {
+    float: left;
+    text-align: left;
+  }
+  
+  .right {
+    float: right;
+    text-align: right;
+  }
+  
+  .left {
+    float: left;
+    text-align: left;
+  }
+  
+  .sender {
+    font-weight: bold;
+    color: #007BFF;
+  }
+  
+  .input-area {
+    background-color: #007BFF;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .message-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  
+  .send-btn {
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .image-input {
+    margin-right: 10px;
+  }
+  
+  .message-image {
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
+    height: auto;
+  }
+  </style>
+  

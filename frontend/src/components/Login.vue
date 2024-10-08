@@ -88,44 +88,44 @@ export default {
       }
     },
     async loginUser() {
-      if (!this.message) { // Only proceed if no validation errors
-        this.isLoading = true;
-        try {
-          const response = await fetch('http://localhost:3000/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: this.email,
-              password: this.password,
-            }),
-          });
+  if (!this.message) { // Only proceed if no validation errors
+    this.isLoading = true;
+    try {
+      const response = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: this.email,
+          password: this.password,
+        }),
+      });
 
-          const result = await response.json();
-          console.log(result); // Debug backend response
+      const result = await response.json();
+      console.log(result); // Debug backend response
 
-          if (!response.ok) {
-            this.message = result.error || 'Invalid email or password';
-            this.messageType = 'is-danger';
-            return;
-          }
-
-          // Save user details in sessionStorage
-          sessionStorage.setItem('user_id', result.user_id);
-          sessionStorage.setItem('email', result.email);
-          sessionStorage.setItem('fullname', result.fullname); // Store full name
-
-          // Redirect to chat after successful login
-          console.log('Login successful. Redirecting to Chat...');
-          this.$router.push({ name: 'Chat' });
-        } catch (error) {
-          this.message = 'An error occurred during login';
-          this.messageType = 'is-danger';
-          console.error(error);
-        } finally {
-          this.isLoading = false;  // Reset loading state
-        }
+      if (!response.ok) {
+        this.message = result.error || 'Invalid email or password';
+        this.messageType = 'is-danger';
+        return;
       }
-    },
+
+      // Save user details in sessionStorage
+      sessionStorage.setItem('user_id', result.user_id);
+      sessionStorage.setItem('email', result.email);
+      sessionStorage.setItem('user_fullname', result.fullname); // Store full name as user_fullname
+
+      // Redirect to chat after successful login
+      console.log('Login successful. Redirecting to Chat...');
+      this.$router.push({ name: 'Chat' });
+    } catch (error) {
+      this.message = 'An error occurred during login';
+      this.messageType = 'is-danger';
+      console.error(error);
+    } finally {
+      this.isLoading = false;  // Reset loading state
+    }
+  }
+},
   },
 };
 </script>

@@ -15,7 +15,10 @@ const setupSocket = (io, supabase) => {
     socket.on('disconnect', () => {
       console.log('Client disconnected');
     });
+    
   });
+
+  return setupMessageRoutes(io, supabase);
 };
 
 module.exports = setupSocket;

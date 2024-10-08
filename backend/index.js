@@ -1,14 +1,11 @@
-// index.js
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
 const authRoutes = require('./routes/authRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
-const messageRoutes = require('./routes/messageRoutes');
-const userRoutes = require('./routes/userRoutes'); // <-- Add this
-const supabase = require('./config/supabase');
 const setupSocket = require('./config/socket'); // Import the socket setup function
+const supabase = require('./config/supabase');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,13 +21,13 @@ app.use(cors());
 app.use(express.json());
 
 // Setup socket.io
-setupSocket(io, supabase); // Pass both io and supabase to the socket setup function
+const messageRoutes = setupSocket(io, supabase); // Pass both io and supabase to the socket setup function
 
 // Use routes
 app.use('/auth', authRoutes);
 app.use('/conversations', conversationRoutes);
 app.use('/messages', messageRoutes);
-app.use('/users', userRoutes); // <-- Add this line
+app.use('/users', require('./routes/userRoutes')); // <-- Add this line
 
 // Optional: Error handling middleware
 app.use((err, req, res, next) => {
