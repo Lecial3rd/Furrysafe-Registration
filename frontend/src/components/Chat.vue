@@ -1,15 +1,17 @@
 <template>
 
+  <!-- Main chat container -->
   <div class="chat-container">
-    <!-- Sidebar for online users -->
+    <!-- Sidebar displaying online users -->
     <div class="sidebar">
       <div class="app-title">Chat App</div>
       <div class="user-info">
-        <h2>Welcome, {{ userFullName }}</h2>
+        <h2>Welcome, {{ userFullName }}</h2> <!-- Displays logged-in user's name -->
       </div>
       <div class="users">
         <h3 class="users-label">Online Users</h3>
         <ul>
+          <!-- List of online users; clicking a user opens a conversation -->
           <li v-for="user in onlineUsers" :key="user.id" class="user" @click="joinConversation(user)">
             {{ user.fullName }}
           </li>
@@ -17,30 +19,36 @@
       </div>
     </div>
     
-    <!-- Chat Area -->
+    <!-- Chat area for conversation -->
     <div class="chat-area">
-      <!-- Chat header with the current user -->
+      <!-- Chat header, only visible if a user is selected -->
       <div class="header" v-if="currentChatUser">
         <h3>Chat with {{ currentChatUser.fullName }}</h3>
       </div>
       
-      <!-- Messages area -->
+      <!-- Messages section, displaying chat history -->
       <div class="messages">
+        <!-- Loop through messages and display them with appropriate styling based on sender -->
         <div v-for="message in messages" :key="message?.id" :class="['message', message?.sender_id === loggedInUserId ? 'message-sent' : 'message-received']">
+          <!-- Display text message with sender's name -->
           <p v-if="message?.message">
             <span :class="['sender', message?.sender_id === loggedInUserId ? 'right' : 'left']">
               {{ message.senderName }}:
             </span>
             {{ message?.message }}
           </p>
+          <!-- Display image if message contains an image path -->
           <img v-if="message?.img_path" :src="message?.img_path" alt="Image" class="message-image">
         </div>
       </div>
       
-      <!-- Input area for sending messages -->
+      <!-- Input area for typing and sending messages -->
       <div class="input-area" v-if="currentChatUser">
+        <!-- Message input field -->
         <input v-model="messageText" class="message-input" placeholder="Type a message" @keydown="handleKeyDown"> 
+        <!-- Image upload button -->
         <input type="file" @change="handleFileUpload" class="image-input" accept="image/*">
+        <!-- Send button -->
         <button class="send-btn" @click="sendMessage">Send</button>
       </div>
     </div>
@@ -55,26 +63,31 @@
   
   export default {
     setup() {
+      // Initialize socket connection
       const socket = io('http://localhost:3000');
+      // Vue reactive references for various states
       const userFullName = ref('');
       const onlineUsers = ref([]);
       const currentChatUser = ref(null);
       const conversationId = ref(null);
       const messages = ref([]);
       const messageText = ref('');
-      const loggedInUserId = ref(sessionStorage.getItem('user_id'));
+      const loggedInUserId = ref(sessionStorage.getItem('user_id')); // Fetch logged-in user's ID
       const selectedFile = ref(null);
   
+      // Fetch online users and listen for new messages on component mount
       onMounted(async () => {
         const response = await fetch(`http://localhost:3000/users/${loggedInUserId.value}`);
         const users = await response.json();
         onlineUsers.value = users;
   
+        // Listen for online users from socket
         socket.emit('get_online_users');
         socket.on('online_users', (users) => {
           onlineUsers.value = users;
         });
   
+        // Listen for new messages and update accordingly
         socket.on('new_message', (data) => {
           if (data.conversationId === conversationId.value) {
             messages.value.push(data.message);
@@ -82,19 +95,21 @@
             conversationId.value = data.conversationId;
             fetchMessages(conversationId.value);
           }
-          fetchMessages(conversationId.value);
         });
         
+        // Fetch logged-in user's name from session storage
         userFullName.value = sessionStorage.getItem('user_fullname');
         loggedInUserId.value = sessionStorage.getItem('user_id');
       });
       
+      // Fetch messages for a specific conversation
       const fetchMessages = async (convId) => {
         try {
           const response = await fetch(`http://localhost:3000/conversations/${convId}/messages`);
           const data = await response.json();
   
           if (data.length > 0) {
+            // Filter out any null messages
             messages.value = data.filter(message => message !== null);
           } else {
             messages.value = [];
@@ -105,6 +120,7 @@
         }
       };
   
+      // Join or create a conversation with the selected user
       const joinConversation = async (user) => {
         const response = await fetch(`http://localhost:3000/conversations/find-or-create`, {
           method: 'POST',
@@ -119,6 +135,7 @@
         conversationId.value = convId;
         currentChatUser.value = user;
   
+        // Retrieve full name from database using Supabase client
         const { data: userData, error: userError } = await supabase
           .from('tbl_user')
           .select('user_id, user_email, tbl_user_details(firstname, lastname, mi)')
@@ -131,6 +148,8 @@
   
         const { firstname, lastname, mi } = userData[0].tbl_user_details;
         const userName = `${firstname} ${mi ? mi + ' ' : ''}${lastname}`;
+  
+        // Update current chat user with the name
         currentChatUser.value = {
           ...currentChatUser.value,
           fullName: userName,
@@ -139,11 +158,13 @@
         fetchMessages(convId);
       };
   
+      // Send a message with optional image attachment
       const sendMessage = async () => {
         if (!messageText.value && !selectedFile.value) return;
   
         let imgPath = '';
   
+        // Upload image if file selected
         if (selectedFile.value) {
           try {
             const fileName = `public/${Date.now()}_${selectedFile.value.name}`;
@@ -157,13 +178,13 @@
             }
   
             imgPath = `https://iduczfllgzezvjhnjzad.supabase.co/storage/v1/object/public/images/${fileName}`;
-            console.log('Image uploaded successfully:', imgPath);
           } catch (error) {
             console.error('File upload error:', error);
             return;
           }
         }
   
+        // Send message through server
         const response = await fetch('http://localhost:3000/messages/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -176,19 +197,19 @@
         });
   
         const newMessage = await response.json();
-        console.log('New message:', newMessage);
-  
         socket.emit('new_message', {
           conversationId: conversationId.value,
           message: newMessage,
         });
   
+        // Add new message to the list and clear inputs
         messages.value.push(newMessage);
         messageText.value = '';
         selectedFile.value = null;
         fetchMessages(conversationId.value);
       };
   
+      // Handle "Enter" key press for sending messages
       const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
           event.preventDefault();
@@ -196,6 +217,7 @@
         }
       };
   
+      // Capture file upload event
       const handleFileUpload = (event) => {
         selectedFile.value = event.target.files[0];
       };
@@ -217,6 +239,7 @@
   </script>
   
   <style scoped>
+  /* Basic styles for the chat container and layout */
   body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -227,6 +250,7 @@
     height: 100vh;
   }
   
+  /* Sidebar styles */
   .sidebar {
     width: 25%;
     background-color: #007BFF;
@@ -267,6 +291,7 @@
     border-radius: 5px;
   }
   
+  /* Chat area styles */
   .chat-area {
     flex-grow: 1;
     display: flex;
@@ -282,6 +307,7 @@
     justify-content: center;
   }
   
+  /* Message display styles */
   .messages {
     flex: 1;
     padding: 20px;
@@ -312,31 +338,13 @@
     text-align: left;
   }
   
-  .message-sent .sender {
-    float: right;
-    text-align: right;
-  }
-  
-  .message-received .sender {
-    float: left;
-    text-align: left;
-  }
-  
-  .right {
-    float: right;
-    text-align: right;
-  }
-  
-  .left {
-    float: left;
-    text-align: left;
-  }
-  
+  /* Sender's name styling */
   .sender {
     font-weight: bold;
     color: #007BFF;
   }
   
+  /* Input area for message entry */
   .input-area {
     background-color: #007BFF;
     padding: 15px;
