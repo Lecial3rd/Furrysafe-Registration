@@ -3,14 +3,14 @@ const express = require('express');
 const { getMessages, findOrCreateConversation } = require('../controllers/conversationController');
 const router = express.Router();
 
-// Get messages for a conversation
+// Get messages for a conversation (POST)
 router.get('/:conversationId/messages', async (req, res) => {
   const { conversationId } = req.params;
   const messages = await getMessages(conversationId);
   res.json(messages);
 });
 
-// Find or create a conversation
+// Find or create a conversation between two users (POST)
 router.post('/find-or-create', async (req, res) => {
   const { user1Id, user2Id } = req.body;
   const conversationId = await findOrCreateConversation(user1Id, user2Id);

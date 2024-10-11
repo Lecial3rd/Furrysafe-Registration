@@ -1,7 +1,7 @@
 const supabase = require('../config/supabase');
 const { findOrCreateConversation } = require('./conversationController');
 
-// Send a message to a conversation
+// Send a message to a conversation 
 const sendMessage = async (io, senderId, conversationId, message, imgPath = '') => {
   try {
     const { data, error } = await supabase
@@ -22,13 +22,13 @@ const sendMessage = async (io, senderId, conversationId, message, imgPath = '') 
       throw error;
     }
 
-    // Update last message time in conversation
+    // Update last message time in conversation table
     await supabase
       .from('tbl_conversation')
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', conversationId);
 
-    // Broadcast the message to all connected clients
+    // Broadcast the message to all connected clients in the conversation room using Socket.io emitters
     io.emit('new_message', {
       conversationId,
       message: data,

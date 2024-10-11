@@ -2,6 +2,7 @@ const express = require('express');
 const { sendMessage } = require('../controllers/messageController');
 const router = express.Router();
 
+// Send a message to a conversation (POST)
 const setupMessageRoutes = (io, supabase) => {
   router.post('/send', async (req, res) => {
     try {

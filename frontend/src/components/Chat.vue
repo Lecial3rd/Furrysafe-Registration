@@ -163,7 +163,7 @@
   
         let imgPath = '';
         
-        // Upload image if file selected
+        // Upload image if file selected for attachment
         if (selectedFile.value) {
           try {
             const fileName = `public/${Date.now()}_${selectedFile.value.name}`;
@@ -175,7 +175,8 @@
               console.error('Image upload failed:', error.message);
               return;
             }
-  
+            
+            //iduczfllgzezvjhnjzad.supabase.co is the bucket name in Supabase Cloud Storage
             imgPath = `https://iduczfllgzezvjhnjzad.supabase.co/storage/v1/object/public/images/${fileName}`;
             console.log('Image uploaded successfully:', imgPath);
           } catch (error) {
@@ -195,7 +196,8 @@
             imgPath: imgPath || '',
           }),
         });
-          
+        
+        // Add new message to the list and clear inputs after sending message through server
         const newMessage = await response.json();
         console.log('New message:', newMessage);
   
@@ -204,7 +206,6 @@
           message: newMessage,
         });
         
-        // Add new message to the list and clear inputs
         messages.value.push(newMessage);
         messageText.value = '';
         selectedFile.value = null;
@@ -219,7 +220,7 @@
         }
       };
 
-      // Capture file upload event
+      // Capture file upload event and update selectedFile value
       const handleFileUpload = (event) => {
         selectedFile.value = event.target.files[0];
       };

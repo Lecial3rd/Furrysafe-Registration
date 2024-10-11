@@ -1,22 +1,25 @@
 const supabase = require('../config/supabase');
 
-// Function to find or create a conversation between two users
+// Function to find or create a conversation between two users 
 const findOrCreateConversation = async (user1Id, user2Id) => {
+  // Check if a conversation already exists between the two users
   const { data: data1, error: error1 } = await supabase
     .from('tbl_conversation')
     .select('*')
     .eq('user1_id', user1Id)
     .eq('user2_id', user2Id);
-
+    
   if (error1) {
     console.error('Error fetching conversation:', error1);
     return null;
   }
 
+  // If a conversation exists, return its id
   if (data1.length > 0) {
     return data1[0].id;
   }
 
+  // This part is similar to the above code but for the second user instead of the first one
   const { data: data2, error: error2 } = await supabase
     .from('tbl_conversation')
     .select('*')
@@ -32,7 +35,7 @@ const findOrCreateConversation = async (user1Id, user2Id) => {
     return data2[0].id;
   }
 
-  // If no conversation, create one
+  // If no conversation exists, create a new one between the two users
   const { error: createError } = await supabase
     .from('tbl_conversation')
     .insert([

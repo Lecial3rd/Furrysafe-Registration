@@ -1,7 +1,7 @@
 // controllers/userController.js
 const supabase = require('../config/supabase');
 
-// Function to get all users except the current user
+// Function to get all users except the current user 
 const getAllUsersExceptCurrent = async (req, res) => {
   const { userId } = req.params;
 
