@@ -1,15 +1,16 @@
 <template>
-
+  <!-- Main chat container -->
   <div class="chat-container">
     <!-- Sidebar for online users -->
     <div class="sidebar">
       <div class="app-title">Chat App</div>
       <div class="user-info">
-        <h2>Welcome, {{ userFullName }}</h2>
+        <h2>Welcome, {{ userFullName }}</h2> <!-- Displays logged-in user's name -->
       </div>
       <div class="users">
         <h3 class="users-label">Online Users</h3>
         <ul>
+          <!-- List of online users; clicking a user opens a conversation -->
           <li v-for="user in onlineUsers" :key="user.id" class="user" @click="joinConversation(user)">
             {{ user.fullName }}
           </li>
@@ -17,30 +18,36 @@
       </div>
     </div>
     
-    <!-- Chat Area -->
+    <!-- Chat area for conversation -->
     <div class="chat-area">
-      <!-- Chat header with the current user -->
+      <!-- Chat header, only visible if a user is selected -->
       <div class="header" v-if="currentChatUser">
         <h3>Chat with {{ currentChatUser.fullName }}</h3>
       </div>
       
-      <!-- Messages area -->
+      <!-- Messages section, displaying chat history -->
       <div class="messages">
+        <!-- Loop through messages and display them with appropriate styling based on sender -->
         <div v-for="message in messages" :key="message?.id" :class="['message', message?.sender_id === loggedInUserId ? 'message-sent' : 'message-received']">
+          <!-- Display text message with sender's name -->
           <p v-if="message?.message">
             <span :class="['sender', message?.sender_id === loggedInUserId ? 'right' : 'left']">
               {{ message.senderName }}:
             </span>
             {{ message?.message }}
           </p>
+          <!-- Display image if message contains an image path -->
           <img v-if="message?.img_path" :src="message?.img_path" alt="Image" class="message-image">
         </div>
       </div>
       
-      <!-- Input area for sending messages -->
+      <!-- Input area for typing and sending messages -->
       <div class="input-area" v-if="currentChatUser">
+        <!-- Message input field -->
         <input v-model="messageText" class="message-input" placeholder="Type a message" @keydown="handleKeyDown"> 
+        <!-- Image upload button -->
         <input type="file" @change="handleFileUpload" class="image-input" accept="image/*">
+        <!-- Send button -->
         <button class="send-btn" @click="sendMessage">Send</button>
       </div>
     </div>
