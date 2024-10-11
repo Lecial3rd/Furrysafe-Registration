@@ -1,4 +1,3 @@
-// controllers/userController.js
 const supabase = require('../config/supabase');
 
 // Function to get all users except the current user

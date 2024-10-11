@@ -3,6 +3,7 @@ const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const setupSocket = require('./config/socket'); // Import the socket setup function
 const supabase = require('./config/supabase');
@@ -27,7 +28,7 @@ const messageRoutes = setupSocket(io, supabase); // Pass both io and supabase to
 app.use('/auth', authRoutes);
 app.use('/conversations', conversationRoutes);
 app.use('/messages', messageRoutes);
-app.use('/users', require('./routes/userRoutes')); // <-- Add this line
+app.use('/users', userRoutes);
 
 // Optional: Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,5 +1,4 @@
 const supabase = require('../config/supabase');
-const { findOrCreateConversation } = require('./conversationController');
 
 // Send a message to a conversation
 const sendMessage = async (io, senderId, conversationId, message, imgPath = '') => {
