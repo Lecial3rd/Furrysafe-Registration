@@ -156,7 +156,7 @@
   
         fetchMessages(convId);
       };
-      
+            
       // Send a message with optional image attachment
       const sendMessage = async () => {
         if (!messageText.value && !selectedFile.value) return;
