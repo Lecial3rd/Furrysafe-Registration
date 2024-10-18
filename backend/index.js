@@ -1,43 +1,71 @@
-const express = require('express');
-const http = require('http');
-const cors = require('cors');
-const { Server } = require('socket.io');
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const conversationRoutes = require('./routes/conversationRoutes');
-const setupSocket = require('./config/socket'); // Import the socket setup function
-const supabase = require('./config/supabase');
+import express from "express";
+import cors from "cors";
+import Router from "./routes/routes.js";
+import compression from "compression";
+import { https } from 'firebase-functions';
+import { Server } from "socket.io";
+import { createServer } from 'http';
 
 const app = express();
-const server = http.createServer(app);
+const port = process.env.PORT || 5000;
+
+// Create an HTTP server
+const server = createServer(app);
+
+// Use compression middleware for compressing outgoing responses
+app.use(compression());
+
+// Use CORS middleware for cross-origin requests
+app.use(cors({
+  origin: function (origin, callback) {
+    callback(null, true); // Allows all origins
+  },
+  credentials: true
+}));
+
+// Set the limit for incoming JSON payloads
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Use your routes
+app.use(Router);
+
+// Create a Socket.IO server with CORS options
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:8080', // Replace with specific origins in production
+    origin: function (origin, callback) {
+      callback(null, true); // Allows all origins
+    },
     methods: ['GET', 'POST'],
-  },
+    credentials: true
+  }
 });
 
-// Enable CORS
-app.use(cors());
-app.use(express.json());
+io.on("connection", socket => {
+  socket.on('send-message', (messageData) => {
+    let roomid = messageData.chat_id;
+    // Emit 'receive-message' to all sockets in the room except the sender
+    socket.to(roomid).emit('receive-message', messageData);
+  });
 
-// Setup socket.io
-const messageRoutes = setupSocket(io, supabase); // Pass both io and supabase to the socket setup function
-
-// Use routes
-app.use('/auth', authRoutes);
-app.use('/conversations', conversationRoutes);
-app.use('/messages', messageRoutes);
-app.use('/users', userRoutes);
-
-// Optional: Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
+  socket.on('join-chat', room => {
+    socket.join(room);
+  });
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+try {
+  server.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+  });
+
+  // Socket.IO events
+  io.on('connection', (socket) => {
+
+  });
+} catch (err) {
+  console.log("Error: " + err);
+}
+
+// Export the API for Firebase Functions
+export const api = https.onRequest(app);

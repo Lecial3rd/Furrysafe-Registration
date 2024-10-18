@@ -1,15 +1,17 @@
-// main.js
 import { createApp } from 'vue';
 import App from './App.vue';
-import router from './router';
-import { io } from 'socket.io-client';
+import router from './router'; // Import your router
+import globalMixin from '@/router/globalMixin'; // Import your global mixin
+import './assets/css/style.css'; // Import your CSS styles
 
-// Initialize socket connection
-const socket = io('http://localhost:3000'); // Update the URL to your backend server if different
-
+// Create the Vue application instance
 const app = createApp(App);
 
-// Provide the socket globally
-app.provide('socket', socket);
+// Apply the global mixin
+app.mixin(globalMixin);
 
-app.use(router).mount('#app');
+// Use the router in your app
+app.use(router);
+
+// Mount the app to the DOM element with id 'app'
+app.mount('#app');
