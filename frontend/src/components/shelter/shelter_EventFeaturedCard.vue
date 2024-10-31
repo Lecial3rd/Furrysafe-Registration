@@ -47,7 +47,8 @@ export default {
 </script>
 <template>
     <div>
-        <div v-if="showEventInfo" class="mt-[1rem] py-2 w-full overflow-x-auto">
+        <!-- <div v-if="showEventInfo" class="mt-[1rem] py-2 w-full overflow-x-auto"> -->
+            <div class="mt-[1rem] py-2 w-full overflow-x-auto">
             <div class="flex">
                 <div v-for="(event, index) in events" :key="index"
                     class="border bg-white rounded-lg sm:w-[20rem] lg:w-[30rem] mx-2 flex-shrink-0">
@@ -67,7 +68,7 @@ export default {
                             event.caption }}</p>
                         <div class="flex justify-center items-center border-t-2 mt-2">
                             <img :src="event.imageUrl" alt="event image" id="imgsize"
-                                class="lg:w-[23rem] lg:h-[20rem] mt-2">
+                                class="lg:w-[23rem] lg:h-[20rem] object-cover mt-2">
                         </div>
                     </div>
                 </div>

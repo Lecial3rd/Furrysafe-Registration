@@ -8,7 +8,7 @@
   </template>
   
   <script>
-  import MapWithPin from '@/components/Map.vue';
+  import MapWithPin from '@/components/Map2.vue';
   
   export default {
     components: {

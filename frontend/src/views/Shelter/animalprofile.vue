@@ -4,12 +4,12 @@
             <div class="graycolor">
                 <textvalue msg="Animal Profile" />
             </div>
-            <div class="flex gap-x-3 sm:gap-1 items-center">
-                <div class="bgorange py-[.40rem] px-[2rem] sm:px-[12px] rounded-md hover:bg-bgdarkorange">
+            <div class="flex sm:gap-x-1 md:gap-x-4 items-center">
+                <div class="bgorange py-[.40rem] px-[2rem] sm:px-[12px] rounded-md hover:bg-lightorange">
                     <RouterLink to="/create_animalprofileform" class="flex gap-x-1 items-center">
                         <FolderPlusIcon class="-ml-0.5 mr-1.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-white"
                             aria-hidden="true" />
-                        <span class="text-white font-medium text-[13.5px] sm:text-[11.6px]">Create New Profile</span>
+                        <span class="text-white font-medium text-[13.5px] sm:text-[11px]">Create New Profile</span>
                     </RouterLink>
                 </div>
                 <div class="flex gap-5">
@@ -19,12 +19,12 @@
         </header>
         <main class="mt-[1rem]">
             <ul id="profile-columns" role="list"
-                class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                class="grid gap-6 place-items-center">
                 <li v-for="pets in profiles" :key="pets.name"
-                    class="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center border drop-shadow-md">
+                    class="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg w-full bg-white text-center border drop-shadow-md">
                     <div class="flex flex-1 flex-col p-7">
                         <!-- Image with fallback and error handling -->
-                        <img class="mx-auto w-52 h-52 flex-shrink-0 object-cover"
+                        <img class="mx-auto w-60 h-60 flex-shrink-0 object-cover"
                             :src="pets.imageUrl || default_profile" @error="onImageError($event)"
                             alt="Pet profile picture" />
                         <h3 class="mt-6 text-sm font-medium text-gray-900">{{ pets.name }} </h3>
@@ -36,7 +36,7 @@
                     <div>
                         <div class="text-[14px] bg-slate-50 p-[1rem] hover:bg-bgteal hover:text-white rounded-b-lg">
                             <RouterLink :to="{ name: 'viewanimalprofile', params: { petid: pets.petid } }">
-                                <span class="px-[5rem] py-[1rem]">View Profile</span>
+                                <span class="px-[2rem] py-[1rem]">View Profile</span>
                             </RouterLink>
                         </div>
                     </div>
@@ -55,7 +55,7 @@ import axios from "axios";
 import { ref, onMounted } from 'vue';
 import { FolderPlusIcon } from '@heroicons/vue/20/solid';
 import textvalue from '@/components/textString.vue';
-import datetoday from '@/components/dateCard.vue';
+import datetoday from '@/components/Shelter/dateCard.vue';
 import linkfooter from '@/components/footerLink.vue';
 import { useRouter, useRoute } from 'vue-router';
 import default_profile from '@/assets/images/default_profile_photo.png';

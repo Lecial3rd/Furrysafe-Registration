@@ -1,6 +1,6 @@
 <script>
-import updatecard from '@/components/admin_updateCard.vue';
-import tablelist from '@/components/admin_updatesTable.vue';
+import updatecard from '@/components/Admin/admin_Dasboard_updateCard.vue';
+import tablelist from '@/components/Admin/admin_Dasboard_updatesTable.vue';
 
 export default {
     components: {

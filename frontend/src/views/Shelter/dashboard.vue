@@ -1,10 +1,12 @@
 <script>
 import textvalue from '@/components/textString.vue'
-import datetoday from '@/components/dateCard.vue'
+import datetoday from '@/components/Shelter/dateCard.vue'
 import linkfooter from '@/components/footerLink.vue'
-import updatescard from '@/components/dashboard_Activities.vue';
-import displaymap from '@/components/Map.vue';
+import updatescard from '@/components/Shelter/shelter_Dashboard_Activities.vue';
+import displaymap from '@/components/Map2.vue';
 import mapoverlay from '@/components/pin_MapModal.vue'
+
+import statsCard from '@/components/Shelter/shelter_Dashboard_statsCard.vue';
 
 export default {
     beforeMount() {
@@ -18,7 +20,7 @@ export default {
         this.open = true; // Set the open ref value to true
     },
     components: {
-        textvalue, datetoday, linkfooter, updatescard, displaymap, mapoverlay
+        textvalue, datetoday, linkfooter, updatescard, displaymap, mapoverlay, statsCard
     },
     data() {
         return {
@@ -48,22 +50,23 @@ export default {
                 <datetoday />
             </div>
         </header>
-        <main class="mt-[1rem] flex gap-x-6">
-            <div class="w-[70%]">
-                <div class="">
-                    <div class="grid border">
-                        <div class="font-medium graycolor py-[1rem] px-[2rem] border-b-2">Shelters Location</div>
-                        <div class="flex bg-white">
-                            <displaymap class="h-[40vh]" />
-                        </div>
+        <main class="mt-[1rem] flex gap-x-6 sm:flex-col sm:gap-y-6 xl:flex-row">
+            <div class="sm:w-full xl:w-[60%]">
+                <div class="mb-6">
+                    <statsCard />
+                </div>
+                <div class="grid border">
+                    <div class="text-sm font-medium graycolor py-[1rem] px-[2rem] border-b-2">Shelters Location</div>
+                    <div class="flex bg-white">
+                        <displaymap />
                     </div>
                 </div>
             </div>
-            <div class="w-[30%] border rounded-xl">
-                <div class="py-[1rem] px-[2rem] border-b-2">
-                    <span class="font-medium graycolor">Activity</span>
+            <div class="sm:w-full xl:w-[40%] h-fit border rounded-xl">
+                <div class="py-[.5rem] px-[2rem] border-b-2">
+                    <span class="text-sm font-medium graycolor">Activity</span>
                 </div>
-                <div class="py-[2rem] px-[4rem] flex bg-slate-50">
+                <div class="py-[2rem] px-[4rem] flex justify-center">
                     <updatescard />
                 </div>
             </div>

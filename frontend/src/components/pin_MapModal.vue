@@ -69,7 +69,7 @@ const latlang = defineProps({
     }
 })
 
-import displayMap from '@/components/Map.vue'
+import displayMap from '@/components/Map2.vue'
 
 
 const address = ref([])

@@ -1,11 +1,10 @@
-
-<script>
+<!-- <script>
 import textvalue from '@/components/textString.vue'
-import datetoday from '@/components/dateCard.vue'
+import datetoday from '@/components/Shelter/dateCard.vue'
 import linkfooter from '@/components/footerLink.vue'
-import reports from '@/components/shelter/shelter_RescueOp_ReportsCard.vue'
-import reportview from '@/components/shelter/shelter_RescueOp_ViewReport.vue'
-import chats from '@/components/shelter/shelter_RescueOp_ChatBox.vue'
+import reports from '@/components/Shelter/shelter_RescueOp_ReportsCard.vue'
+import reportview from '@/components/Shelter/shelter_RescueOp_ViewReport.vue'
+import chats from '@/components/Shelter/shelter_RescueOp_ChatBox.vue'
 
 export default {
     components: {
@@ -28,6 +27,25 @@ export default {
         }
     }
 }
+</script> -->
+<script setup>
+import reports from '@/components/Shelter/shelter_RescueOp_ReportsCard.vue'
+import chats from '@/components/Shelter/shelter_RescueOp_ChatBox.vue'
+import { ref } from 'vue'
+
+const tabs = ref([
+    { name: 'Rescue Operation', current: true },
+    // { name: 'Chats', current: false },
+])
+
+const currentTab = ref(tabs.value[0].name)
+
+const updateCurrentTab = (tabName) => {
+    currentTab.value = tabName
+    tabs.value.forEach((tab) => {
+        tab.current = tab.name === tabName
+    })
+}
 </script>
 <template>
     <div class="h-screen flex flex-col">
@@ -45,13 +63,12 @@ export default {
         <div v-show="currentTab === 'Rescue Operation'">
             <div class="pt-4 mx-auto flex justify-center">
                 <div class="w-fit">
-                    <reports/>
-                    <!-- <reportview/> -->
+                    <reports />
                 </div>
             </div>
         </div>
         <div v-show="currentTab === 'Chats'">
-            <chats/>
+            <chats />
         </div>
     </div>
 </template>

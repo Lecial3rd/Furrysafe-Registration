@@ -1,5 +1,5 @@
 <script>
-import statusbuttons from '@/components/shelter/shelter_ReportStatusButtons.vue'
+import statusbuttons from '@/components/Shelter/shelter_RescueOp_ReportCard_ReportStatusButtons.vue'
 
 export default {
     components: {

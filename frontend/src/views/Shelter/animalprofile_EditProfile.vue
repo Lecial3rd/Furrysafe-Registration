@@ -943,9 +943,9 @@ onMounted(() => { //pag load sa page mag load ni =)
                                             <div
                                                 class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
                                                 <img :src="file.source" alt=""
-                                                    class="pointer-events-none object-cover" />
+                                                    class="pointer-events-none w-80 h-80 object-cover" />
                                                 <button @click.prevent="removeImage(index)"
-                                                    class="absolute top-0 right-0 p-1 text-gray-600 hover:text-red-600">
+                                                    class="absolute top-0 right-0 p-1 text-red-700 hover:text-red-500">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                                         fill="none" stroke="currentColor" stroke-width="2"
                                                         class="w-4 h-4">

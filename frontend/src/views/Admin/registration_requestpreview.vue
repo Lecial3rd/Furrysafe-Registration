@@ -1,7 +1,7 @@
 <script setup>
     import { ref, onMounted } from 'vue';
     import { useRoute } from 'vue-router';
-    import requestdocu from '@/components/admin_requestDocuments.vue';
+    import requestdocu from '@/components/Admin/admin_Registration_requestDocuments.vue';
     import axios from 'axios'; // Import axios
     
     // Define the route and state

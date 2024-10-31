@@ -140,7 +140,7 @@ onMounted(() => {
                 </RouterLink>
             </div>
         </div>
-        <div id="margin" class="sm:mx-[1rem] md:mx-[10rem]">
+        <div class="sm:mx-[1rem] md:mx-[10rem]">
             <div class="border-b mb-6">
                 <div class=" flex justify-between px-4 sm:px-0">
                     <h3 class="text-base font-semibold leading-7 text-gray-900">Pet Information</h3>
@@ -238,7 +238,7 @@ onMounted(() => {
                             <li v-for="image in extraphotos" :key="image.source" class="relative">
                                 <div
                                     class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
-                                    <img :src="image.source" alt="" class="pointer-events-none object-cover" />
+                                    <img :src="image.source" alt="" class="pointer-events-none w-80 h-80 object-cover " />
                                 </div>
                             </li>
                         </ul>
