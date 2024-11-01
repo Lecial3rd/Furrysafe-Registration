@@ -18,7 +18,11 @@ import mockup from "../views/mockup.vue";
 
 // Shelter Views
 import shelterdashboardContent from "../views/Shelter/dashboard.vue";
-import shelterprofile from "../views/Shelter/myshelter.vue";
+// import shelterprofile from "../views/Shelter/myshelter.vue";
+import shelterprofile from "../views/Shelter/tryshelterprofile.vue";
+
+
+
 import shelteranimalprofile from "../views/Shelter/animalprofile.vue";
 import rescueoperation from "../views/Shelter/rescueoperation.vue";
 
@@ -52,6 +56,11 @@ import sheltermessages from "@/components/Shelter/shelter_RescueOp_ChatBox.vue"
 import buddyDashboard from "../layouts/Client/Buddy/dashboard.vue"
 import home from "../views/Buddy/home.vue"
 import buddymessages from "../views/Buddy/Message.vue"
+import buddyprofile from "../views/Buddy/Profile.vue"
+import buddyeditprofile from "@/components/Buddy/buddy_Profile_EditProfile.vue"
+import buddyshelterprofile from "@/components/Buddy/buddy_ViewShelterProfile.vue"
+
+
 
 const routes = [
   //jene loginhelp huehfjkgjgsad
@@ -253,10 +262,28 @@ const routes = [
         component: home,
       },
       {
-        // dashboard
+        // message
         path: "/buddy_messages",
         name: "buddy_messages",
         component: buddymessages,
+      },
+      {
+        // profile
+        path: "/buddy_profile",
+        name: "buddy_profile",
+        component: buddyprofile,
+      },
+      {
+        // edit profile
+        path: "/buddy_editprofile",
+        name: "buddy_editprofile",
+        component: buddyeditprofile,
+      },
+      {
+        // view shelter profile
+        path: "/shelter_profile",
+        name: "shelter_profile",
+        component: buddyshelterprofile,
       },
     ],
   },

@@ -1,7 +1,7 @@
 <script setup>
 import axios from "axios";
 import { ref, onMounted } from 'vue';
-import { PhotoIcon, MapPinIcon, PhoneIcon, EnvelopeIcon, LinkIcon } from '@heroicons/vue/24/solid';
+import { PhotoIcon, MapIcon, MapPinIcon, PhoneIcon, EnvelopeIcon, LinkIcon } from '@heroicons/vue/24/solid';
 import prompt from '@/components/prompt_savechange.vue';
 import { useRouter, useRoute } from 'vue-router';
 
@@ -81,7 +81,7 @@ async function get_Shelter_Details() {
             shelterid: id
         });
 
-        console.log(response.data[0])
+        console.log("response", response.data[0])
         if (response.data) {
             populateForm(response.data[0]);
         }
@@ -100,10 +100,8 @@ async function populateForm(data) {
     email.value = data.email || '';
     lat.value = data.latitude || '';
     lng.value = data.longitude || '';
-    url.value = data.profile || '';
+    selectedImage.value = data.profile || '';
     // Handle links based on their format
-
-    console.log("lat lang to pass", lat.value, lng.value)
 
     if (data.link) {
         let parsedLinks = [];
@@ -121,20 +119,6 @@ async function populateForm(data) {
         links.value = parsedLinks.map(link => ({ value: link }));
     } else {
         links.value = [{ value: '' }];
-    }
-
-    // Handle profile image if available
-    if (data.profile) {
-        try {
-            const response = await axios.post("http://localhost:5000/image",
-                {
-                    profileUrl: data.profile
-                })
-            selectedImage.value = response.data.data
-        }
-        catch (err) {
-            console.log(err)
-        }
     }
 }
 
@@ -266,17 +250,16 @@ onMounted(() => {
                         </div>
                     </div>
                     <div class="col-span-full">
-                        <label for="shelterAddress" class="block text-sm font-medium leading-6 text-gray-900">Shelter's
-                            Location</label>
+                        <label for="shelterAddress" class="block text-sm font-medium leading-6 text-gray-900">
+                            Shelter's Location</label>
                         <div class="mt-2 flex gap-x-3 items-center">
-                            <MapPinIcon alt="Logout Icon" class="w-6 h-6 text-gray-500" aria-hidden="true" />
+                            <MapIcon  alt="Logout Icon" class="w-6 h-6 text-gray-500" aria-hidden="true" />
                             <input type="text" v-model="shelterAddress" name="shelterAddress" id="shelterAddress"
                                 autocomplete="street-address"
                                 class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                             <div @click.prevent="showMapModal = true">
-                                <img width="30" height="30"
-                                    src="https://img.icons8.com/fluency-systems-regular/50/map-editing.png"
-                                    alt="map-editing" />
+                                <MapPinIcon alt="Edit location" class="w-6 h-6 text-red-600 hover:text-red-500 cursor-pointer" aria-hidden="true" />
+
                             </div>
                         </div>
                     </div>

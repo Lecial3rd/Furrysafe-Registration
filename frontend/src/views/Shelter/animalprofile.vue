@@ -34,7 +34,7 @@
                         </dl>
                     </div>
                     <div>
-                        <div class="text-[14px] bg-slate-50 p-[1rem] hover:bg-bgteal hover:text-white rounded-b-lg">
+                        <div class="text-[14px] bg-slate-50 p-[1rem] hover:bg-lightteal hover:text-white rounded-b-lg">
                             <RouterLink :to="{ name: 'viewanimalprofile', params: { petid: pets.petid } }">
                                 <span class="px-[2rem] py-[1rem]">View Profile</span>
                             </RouterLink>

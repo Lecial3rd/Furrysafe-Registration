@@ -55,8 +55,8 @@
                         </div>
                     </div>
                     <div class="col-span-full">
-                        <label for="shelterAddress" class="block text-sm font-medium leading-6 text-gray-900">Shelter's
-                            Location</label>
+                        <label for="shelterAddress" class="block text-sm font-medium leading-6 text-gray-900">
+                            Shelter's Location</label>
                         <div class="mt-2 flex gap-x-3 items-center">
                             <MapPinIcon alt="Logout Icon" class="w-6 h-6 text-gray-500" aria-hidden="true" />
                             <input type="text" v-model="shelterAddress" name="shelterAddress" id="shelterAddress"
@@ -65,8 +65,8 @@
                         </div>
                     </div>
                     <div class="sm:col-span-full md:col-span-3">
-                        <label for="Phone" class="block text-sm font-medium leading-6 text-gray-900">Contact
-                            Number</label>
+                        <label for="Phone" class="block text-sm font-medium leading-6 text-gray-900">
+                            Contact Number</label>
                         <div class="mt-2 flex gap-x-3 items-center">
                             <PhoneIcon alt="Logout Icon" class="w-6 h-6 text-gray-500" aria-hidden="true" />
                             <input type="text" v-model="Phone" name="Phone" id="Phone" autocomplete="Phone"
@@ -83,8 +83,8 @@
                         </div>
                     </div>
                     <div class="sm:col-span-full">
-                        <label for="link" class="block text-sm font-medium leading-6 text-gray-900">Website and Social
-                            Link</label>
+                        <label for="link" class="block text-sm font-medium leading-6 text-gray-900">
+                            Website and Social Link</label>
                         <!-- links loop -->
                         <div>
                             <div v-for="(link, index) in links" :key="index" class="mt-2 flex gap-x-3 items-center">

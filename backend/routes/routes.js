@@ -36,11 +36,15 @@ import {
   getUserFullName,
   insertNewChat,
   fetchAllShelters, //added fetchAllShelters
-  insertShelterPost
+  insertShelterPost,
+  insertShelterRescue
 } from "../controllers/shelter_functions.js";
 
 import {
-  insertBuddyReport
+  insertBuddyReport,
+  getBuddyDetails, 
+  setBuddyDetails,
+  getBuddyPost
 }
 from "../controllers/buddy_functions.js"
 
@@ -99,6 +103,9 @@ router.post("/sterilization", getSterilization);
 router.get("/pet_status", getPetStatus);
 router.post("/save_pet_profile", upload2.any(), insertPetProfile);
 router.post("/update_pet_profile", upload2.any(), updatePetProfile);
+router.post("/insertshelterpost", upload2.any(), insertShelterPost);  //New route for shelter post
+router.post("/accept-rescue", insertShelterRescue); // New route for rescue operations
+
 //chat
 router.post("/search", searchUserName);
 router.post("/loadinbox", loadInboxMessages);
@@ -114,8 +121,8 @@ router.get("/getreportcategory", getReportCategory);
 
 //buddy functions 
 router.post("/insertbuddyreport", upload2.any(), insertBuddyReport)
-
-//shelter post and event
-router.post("/insertshelterpost", upload2.any(), insertShelterPost)
+router.post("/getbuddydetails", upload2.any(), getBuddyDetails)
+router.post("/setbuddydetails", upload2.any(), setBuddyDetails) 
+router.post("/getbuddypost", upload2.any(), getBuddyPost) 
 
 export default router;

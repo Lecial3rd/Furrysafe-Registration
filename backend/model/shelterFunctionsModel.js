@@ -69,27 +69,15 @@ export const retrieveProfile = async (req, res) => {
         message: "Shelter details saved successfully",
       });
     }
-  } catch (err) {}
+  } catch (err) { }
 };
 //save modified shelter details and links
 export const saveShelter_and_Link = async (req, res) => {
   try {
-    const {
-      shelterid,
-      sheltername,
-      shelteraddress,
-      image,
-      contact,
-      email,
-      latitude,
-      longitude,
-      bio,
-      links,
-    } = req.body;
+    const { shelterid, sheltername, shelteraddress, image, contact, email, latitude, longitude, bio, links } = req.body;
     const file = req.file;
     let filePath = null;
 
-    // Check if the file is uploaded
     if (file) {
       filePath = `user_images/${Date.now()}_${file.originalname}`;
 
@@ -100,11 +88,20 @@ export const saveShelter_and_Link = async (req, res) => {
           contentType: file.mimetype,
         });
 
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        return res.status(500).send({ message: "File upload failed" });
+      if (!uploadError) {
+        const { data: profileUrlData } = supabase.storage
+          .from("images")
+          .getPublicUrl(filePath);
+          filePath = profileUrlData.publicUrl; // Profile photo URL
+
+        console.error("Profile uploaded:", filePath);
+      } else {
+        return res
+          .status(500)
+          .send({ message: "Failed to upload profile image." });
       }
-    } else {
+    }
+    else {
       filePath = image;
     }
 
@@ -143,6 +140,7 @@ export const saveShelter_and_Link = async (req, res) => {
       contactValue = contact; // Leave as is if it's already a number
     }
 
+    console.log("file path to save", filePath)
     // Call the RPC function to update shelter details
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       "update_shelter_details",
@@ -323,9 +321,8 @@ export const savepetprofie = async (req, res) => {
     const extraPhotoUrls = [];
 
     if (profileFile) {
-      const profileFilePath = `pets_profiles/${Date.now()}_${
-        profileFile.originalname
-      }`;
+      const profileFilePath = `pets_profiles/${Date.now()}_${profileFile.originalname
+        }`;
       const { data: profileUploadData, error: profileUploadError } =
         await supabase.storage
           .from("pets_images") // Ensure this is your correct bucket name
@@ -376,8 +373,7 @@ export const savepetprofie = async (req, res) => {
       status_id &&
       (pet_type || other_pet_category) &&
       (other_sterilization || sterilization_id_int)
-    ) 
-    {
+    ) {
       const { data, error } = await supabase.rpc("insert_pet_data", {
         _about_pet: about,
         _age: age,
@@ -474,9 +470,8 @@ export const updatepetprofile = async (req, res) => {
 
     if (profileFile) {
       //if true then save new profile to cloud and delete prev photo
-      const profileFilePath = `pets_profiles/${Date.now()}_${
-        profileFile.originalname
-      }`;
+      const profileFilePath = `pets_profiles/${Date.now()}_${profileFile.originalname
+        }`;
       const { data: profileUploadData, error: profileUploadError } =
         await supabase.storage
           .from("pets_images") // Ensure this is your correct bucket name
@@ -695,8 +690,8 @@ export const sendMessage = async (req, res) => {
     if (message == '') {
       message = null;
     }
-    
-    if(extraPhotoUrls.length == 0){
+
+    if (extraPhotoUrls.length == 0) {
       extraPhotoUrls = null
     }
     console.log(extraPhotoUrls, message)
@@ -805,7 +800,7 @@ export const getAllShelters = async (req, res) => {
 };
 // end of added from salpocial's code
 
-// Insert shelter post
+
 export const addShelterPost = async (req, res) => {
   try {
     // Extract and parse parameters
@@ -868,6 +863,11 @@ export const addShelterPost = async (req, res) => {
     console.error('Error in addShelterPost:', err);
     res.status(500).json({ success: false, message: err.message || 'Failed to create post' });
   }
+};
+
+// In progresss Shelter Rescue Operations
+export const acceptRescueReport = async (req, res) => {
+
 };
 
 export default { addShelterAddress };

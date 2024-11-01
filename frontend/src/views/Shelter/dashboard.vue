@@ -8,19 +8,21 @@ import mapoverlay from '@/components/pin_MapModal.vue'
 
 import statsCard from '@/components/Shelter/shelter_Dashboard_statsCard.vue';
 
+import shelterfeed from '@/components/Shelter/shelter_Myshelter_NewsfeedCard.vue'; // joey added
+
 export default {
     beforeMount() {
         // this.address_exists = localStorage.getItem("address_exists")
         const address_exist = localStorage.getItem('address_exists')
 
-        if(address_exist.startsWith(false)){
+        if (address_exist.startsWith(false)) {
             this.toggleModal()
         }
 
         this.open = true; // Set the open ref value to true
     },
     components: {
-        textvalue, datetoday, linkfooter, updatescard, displaymap, mapoverlay, statsCard
+        textvalue, datetoday, linkfooter, updatescard, displaymap, mapoverlay, statsCard, shelterfeed
     },
     data() {
         return {
@@ -28,16 +30,16 @@ export default {
         }
     },
     methods: {
-    toggleModal() {
-        console.log("Toggling modal");
-        this.modalVisible = true; // Show the modal
+        toggleModal() {
+            console.log("Toggling modal");
+            this.modalVisible = true; // Show the modal
         },
-  },
+    },
 };
 
-    // function toggleModal() {
-    //     console.log("D:")
-    // }
+// function toggleModal() {
+//     console.log("D:")
+// }
 </script>
 <template>
     <div class="h-screen flex flex-col">
@@ -51,18 +53,17 @@ export default {
             </div>
         </header>
         <main class="mt-[1rem] flex gap-x-6 sm:flex-col sm:gap-y-6 xl:flex-row">
-            <div class="sm:w-full xl:w-[60%]">
-                <div class="mb-6">
+            <div class="sm:w-full xl:w-[65%] bg-gray-50 shadow-sm rounded-xl">
+                <!-- <div class="mb-6">
                     <statsCard />
+                </div> -->
+
+                <div class="flex flex-col py-2">
+                    <shelterfeed />
                 </div>
-                <div class="grid border">
-                    <div class="text-sm font-medium graycolor py-[1rem] px-[2rem] border-b-2">Shelters Location</div>
-                    <div class="flex bg-white">
-                        <displaymap />
-                    </div>
-                </div>
+
             </div>
-            <div class="sm:w-full xl:w-[40%] h-fit border rounded-xl">
+            <div class="sm:w-full xl:w-[35%] h-fit border rounded-xl bg-white">
                 <div class="py-[.5rem] px-[2rem] border-b-2">
                     <span class="text-sm font-medium graycolor">Activity</span>
                 </div>

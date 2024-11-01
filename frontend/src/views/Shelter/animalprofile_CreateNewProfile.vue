@@ -4,9 +4,9 @@ import { ref, watch, computed, onMounted, toRaw } from 'vue';
 import { PhotoIcon } from '@heroicons/vue/24/solid'
 import linkfooter from '@/components/footerLink.vue'
 import prompt from '@/components/prompt_savecreatedacc.vue'
+import Toast from '@/components/toast.vue';  // Ensure correct case for the file name
 import { useRouter } from 'vue-router';
 
-import Toast from '@/components/toast.vue';  // Ensure correct case for the file name
 const toastRef = ref(null);  // Create a ref for the Toast component
 const isModalpromptOpen = ref(false)
 
@@ -375,6 +375,7 @@ async function savePetProfile(formData) { //Save pet profile, pet profile photo,
             }
         );
 
+        console.log("tite", response.data.success)
         if (response.data.success) {
             // navigateTo("/myshelter", { query: { showToast: true, message: 'Saved Successfully', from: 'edit' } });
             navigateTo({

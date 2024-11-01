@@ -9,9 +9,10 @@ import linkfooter from '@/components/footerLink.vue';
 import Toast from '@/components/toast.vue';  // Ensure correct case for the file name
 import popupNewpost from '@/components/Shelter/shelter_NewPostModal.vue';
 import popupNewEvent from '@/components/Shelter/shelter_EventPostModal.vue';
-import eventsCard from '@/components/Shelter/shelter_EventFeaturedCard.vue';
+// import eventsCard from '@/components/Shelter/shelter_EventFeaturedCard.vue';
 
 import shelterfeed from '@/components/Shelter/shelter_Myshelter_NewsfeedCard.vue'; // joey added
+import eventsCard from '@/components/Shelter/test.vue';
 
 const route = useRoute();
 
@@ -19,16 +20,16 @@ const route = useRoute();
 const showModalNewEvent = ref(false);
 const showModalCreatePost = ref(false);
 const isOpen = ref(false);
-const showEventInfo = ref(true);
+// const showEventInfo = ref(false);
 const toastRef = ref(null);  // Ref for the Toast component
 
 // Methods
 const toggleModalPost = () => {
-  showModalCreatePost.value = !showModalCreatePost.value;
+    showModalCreatePost.value = !showModalCreatePost.value;
 };
 
 const toggleModalEvent = () => {
-  showModalNewEvent.value = !showModalNewEvent.value;
+    showModalNewEvent.value = !showModalNewEvent.value;
 };
 
 onMounted(() => {
@@ -60,35 +61,18 @@ onMounted(() => {
                     <detailCard class="border rounded-md" />
                 </div>
                 <div id="newsfeed" class="xl:w-[70%]">
-                    <div class="mb-[1rem]">
-                        <!-- <div
-                            class="flex justify-between items-center bg-amber-50 rounded-lg py-2 sm:px-[2rem] lg:px-[3rem]">
-                            <div><span class="sm:text-[14px]">Event Posts</span></div>
-                            <div>
-                                <button @click="$nextTick(() => {
-                                    this.showEventInfo = !this.showEventInfo;
-                                    this.$refs.eventCard.toggleEventInfo()
-                                })">
-                                    <img width="13" height="13"
-                                        :src="showEventInfo ? 'https://img.icons8.com/external-tanah-basah-glyph-tanah-basah/48/4D4D4D/external-Up-arrows-tanah-basah-glyph-tanah-basah-6.png' : 'https://img.icons8.com/external-tanah-basah-basic-outline-tanah-basah/24/4D4D4D/external-chevron-arrows-tanah-basah-basic-outline-tanah-basah-4.png'"
-                                        alt="external-chevron-arrows-tanah-basah-basic-outline-tanah-basah-4" />
-                                </button>
-                            </div>
-                        </div> -->
-                        <div>
-                            <!-- <eventsCard ref="eventCard" /> -->
-                            <eventsCard />
-                        </div>
+                     <div class="mb-[1rem]">
+                       <eventsCard />
                     </div>
-                    <div>
+                    <div class="border rounded-xl">
                         <div
-                            class="flex justify-between border-b-2 border-t items-center p-[1rem] sm:px-[1rem] md:px-[2rem] bg-white">
-                            <span class="sm:text-[14px]">Shelter's Feed</span>
+                            class="flex justify-between rounded-t-xl border-b-2 items-center p-[1rem] sm:px-[1rem] md:px-[2rem] bg-white">
+                            <span class="sm:text-[14px] font-semibold">Shelter's Feed</span>
                             <div class="flex gap-x-2">
                                 <button type="button" @click="toggleModalEvent"
                                     class="flex justify-center rounded-md bgorange px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-lightorange group">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                        fill="currentColor" class="size-5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                        class="size-5">
                                         <path fill-rule="evenodd"
                                             d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z"
                                             clip-rule="evenodd" />
@@ -98,8 +82,8 @@ onMounted(() => {
                                 </button>
                                 <button type="button" @click="toggleModalPost"
                                     class="flex justify-center rounded-md bgteal px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-lightteal group">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                        fill="currentColor" class="size-5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                        class="size-5">
                                         <path fill-rule="evenodd"
                                             d="M4.125 3C3.089 3 2.25 3.84 2.25 4.875V18a3 3 0 0 0 3 3h15a3 3 0 0 1-3-3V4.875C17.25 3.839 16.41 3 15.375 3H4.125ZM12 9.75a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5H12Zm-.75-2.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5H12a.75.75 0 0 1-.75-.75ZM6 12.75a.75.75 0 0 0 0 1.5h7.5a.75.75 0 0 0 0-1.5H6Zm-.75 3.75a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5H6a.75.75 0 0 1-.75-.75ZM6 6.75a.75.75 0 0 0-.75.75v3c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-3A.75.75 0 0 0 9 6.75H6Z"
                                             clip-rule="evenodd" />
@@ -114,7 +98,7 @@ onMounted(() => {
                             <popupNewEvent v-if="showModalNewEvent" @close="toggleModalEvent" />
                         </div>
 
-                        <div class="my-[1rem]">
+                        <div class="py-[1rem] bg-gray-50">
                             <shelterfeed />
                         </div>
                     </div>
@@ -126,6 +110,6 @@ onMounted(() => {
                 <linkfooter />
             </div>
         </footer>
-        <Toast ref="toastRef"  @closed="refreshRoute($router)" />
+        <Toast ref="toastRef" @closed="refreshRoute($router)" />
     </div>
 </template>

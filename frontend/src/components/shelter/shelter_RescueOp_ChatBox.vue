@@ -559,8 +559,13 @@ onMounted(async () => {
                         @click="createConversation = false; selectConversation(conversation)"
                         class="border-t p-2 px-4 cursor-pointer hover:bg-gray-50"
                         :class="{ 'bg-gray-100': conversation.chat_id === selectedChat_id }">
+                        <!-- here jeneh - joey added -->
                         <div class="flex justify-between">
-                            <span class="font-medium truncate">{{ conversation.other_participant_name }}</span>
+                            <div class="flex items-center gap-x-2">
+                                <img alt="profile" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                                <!-- here jeneh put :scr="" sa <img> -->
+                                <span class="font-medium truncate">{{ conversation.other_participant_name }}</span>
+                            </div>
                             <span class="text-[12px] sm:hidden xl:flex">{{ formatTime(conversation.date) }}</span>
                         </div>
                         <div v-if="conversation.message?.includes('https')">
@@ -588,9 +593,16 @@ onMounted(async () => {
         <!-- Chat Area -->
         <div v-if="!createConversation" class="w-[70%] flex flex-col border-r-2">
             <!-- Chat Header -->
-            <div class="text-gray-600 bg-white p-4 flex gap-x-2 items-center">
+            <!-- <div class="text-gray-600 bg-white p-4 flex gap-x-2 items-center">
                 <span class="text-md font-semibold">{{ selectedConversation?.NameFrom }}</span>
-                <!-- <span class="text-sm font-medium border rounded-xl px-2">badge</span> -->
+                dsa <span class="text-sm font-medium border rounded-xl px-2">badge</span> dsads
+            </div> -->
+
+            <div class="flex items-center gap-x-2 p-4 border-b">
+                <img alt="profile image" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                <!-- here jeneh put :scr="" sa <img> -->
+                <span class="text-lg font-semibold">{{ selectedConversation?.NameFrom }}</span>
+
             </div>
 
             <!-- Messages Display -->
@@ -598,7 +610,6 @@ onMounted(async () => {
                 <div v-for="(message, messageIndex) in sortedMessages" :key="messageIndex" class="message">
                     <!-- Outgoing Messages (Sent by Current User) -->
                     <div v-if="message.user_id == user_id" class="flex text-sm text-gray-600 p-3 justify-end">
-
                         <div class="text-sm text-gray-600 p-3">
                             <div class="text-right">
                                 <span class="font-medium">{{ selectedConversation?.NameFrom }}</span>
@@ -607,10 +618,10 @@ onMounted(async () => {
                             <div v-if="message.message?.includes('https')">
                                 <div class="pt-2">
                                     <img :src="message.message" alt=""
-                                        class="pointer-events-none h-20 w-20 object-cover rounded">
+                                        class="pointer-events-none h-60 w-60 object-cover rounded">
                                 </div>
                             </div>
-                            <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-lg">
+                            <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-l-2xl">
                                 <p>{{ message.message }} </p>
                             </div>
                         </div>
@@ -622,17 +633,17 @@ onMounted(async () => {
 
                     <div v-else class="flex justify-start mb-2">
                         <div class="text-sm text-gray-600 p-3">
-                            <div class="text-right">
+                            <div class="text-left">
                                 <span class="font-medium">{{ selectedConversation?.NameFrom }}</span>
                                 <span class="text-[10px] ml-2">{{ formatTime(message.date) }}</span>
                             </div>
                             <div v-if="message.message?.includes('https')">
                                 <div class="pt-2">
                                     <img :src="message.message" alt=""
-                                        class="pointer-events-none h-20 w-20 object-cover rounded">
+                                        class="pointer-events-none h-60 w-60 object-cover rounded-lg">
                                 </div>
                             </div>
-                            <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-lg">
+                            <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-r-2xl">
                                 <p>{{ message.message }} </p>
                             </div>
                         </div>

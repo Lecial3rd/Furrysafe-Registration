@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import axios from "axios"
 import { onMounted } from 'vue';
@@ -23,7 +23,7 @@ const selectedCategory = ref('')
 const lat = ref('');
 const lng = ref('');
 const selectedLocationAddress = ref('')
-const reportCategory = ref('')
+const selectedreportCategory = ref('') 
 const petcondition = ref('')
 const reportDetails = ref('')
 const reportPhoto = ref(['this is url'])
@@ -33,7 +33,23 @@ const fileInput = ref(null);
 const imageUrls = ref([]);
 const images = 'https://img.icons8.com/fluency/48/stack-of-photos.png';
 const category = ref([]);
-const reportcategory = ref([]);
+
+const selectedPostDetailsValue = ref([])
+const stringselectedreportCategory = ref(''); 
+const stringselectedPetCategory = ref(''); 
+
+import { defineProps } from 'vue'; // for reusing the form defining mode receive either edit or create yeahhh - joey
+const props = defineProps({ // for reuse form defines mode if either edit or create - joey
+  mode: {
+    type: String,
+    required: true
+  },
+  selectedPostDetails: {
+    type: Object,
+    required: false
+  }
+});
+
 
 const clearAnimalTypeInput = () => {
   other_selectedCategory.value = '';
@@ -46,26 +62,19 @@ function clearflags() {
 const defaultOptionText = computed(() => {
   return options.value.length > 0 ? 'Select Missing Pet' : 'No Pet is Registered';
 });
-
-function getReportInput() {
+function getReportInput() { //used in both modes
   const formData = new FormData();
   data.value = []
 
-  console.log("address", selectedLocationAddress.value)
+  console.log(selectedreportCategory.value)
 
   photoflag.value = (imageUrls.value.length < 1) ? photoflag.value = false : photoflag.value = true
   locationflag.value = (selectedLocationAddress.value == '') ? locationflag.value = false : locationflag.value = true
 
-  selectedCategory.value = (selectedCategory.value == 'other') ? null : selectedCategory.value
-  petcondition.value = (petcondition.value == '') ? null : petcondition.value
-  reportDetails.value = (reportDetails.value == '') ? null : petcondition.value
-  other_selectedCategory.value = (other_selectedCategory.value == '') ? null : other_selectedCategory.value
-  selectedPetId.value = (selectedPetId.value == null) ? '' : selectedPetId.value
-
   if (photoflag.value == true && locationflag.value == true) {
     data.value = [
       ['_user_id', id],
-      ['_post_type', reportCategory.value],
+      ['_post_type', selectedreportCategory.value],
       ['_content', reportDetails.value],
       ['_lat', lat.value],
       ['_long', lng.value],
@@ -81,9 +90,13 @@ function getReportInput() {
       formData.append(`photo_url`, file.file);
     })
 
-    saveReport(formData)
+    if (props.mode === 'edit') {
+      console.log('Editing post...');
+    } else {
+      console.log('Creating post...');
+      saveReport(formData)
+    }
   }
-  console.log("report inputs", selectedCategory.value, selectedLocationAddress.value, reportCategory.value, other_selectedCategory.value, photoflag.value)
 }
 
 // Handle file change and load images
@@ -99,9 +112,6 @@ const handleFileChange = (event) => {
     }
     reader.readAsDataURL(file)
   }
-
-
-  console.log(imageUrls.value)
 }
 function handleData(data) {
   console.log(data)
@@ -109,22 +119,10 @@ function handleData(data) {
   lat.value = data.lat
   lng.value = data.lng
 }
-
 async function getCategory() {
   try {
     const response = await axios.get("http://localhost:5000/load-category")
     category.value = response.data
-  }
-  catch (err) {
-    console.log("error", err)
-  }
-  console.log(category.value)
-}
-async function getReportCategory() {
-  try {
-    const response = await axios.get("http://localhost:5000/getreportcategory")
-    const filteredCategories = response.data.filter(item => item.post_name !== 'Adoption');
-    reportcategory.value = filteredCategories;
   }
   catch (err) {
     console.log("error", err)
@@ -155,19 +153,12 @@ async function retrieveProfile() {
 
       })
     }
-    console.log("try end")
   }
   catch (err) {
     console.log("an error occured while retrieving profile", err)
   }
 }
-async function saveReport(formData) {
-  console.log("report save function")
-
-  for (const [key, value] of formData.entries()) {
-    console.log(`Key: ${key}, Value:`, value);
-  }
-
+async function saveReport(formData) { //create function
   try {
     const response = await axios.post("http://localhost:5000/insertbuddyreport",
       formData,
@@ -194,18 +185,101 @@ async function saveReport(formData) {
   }
 }
 
+const reportcategory = ref([]);
+async function getReportCategory() {
+  try {
+    const response = await axios.get("http://localhost:5000/getreportcategory")
+    const filteredCategories = response.data.filter(item => item.post_name !== 'Adoption');
+    reportcategory.value = filteredCategories;
+  }
+  catch (err) {
+    console.log("error", err)
+  }
+}
+
+const reportidvalue = computed(() => {
+  const selectedItem = reportcategory.value.find(item => {
+    return item.post_name == stringselectedreportCategory.value;
+  });
+  return selectedItem ? selectedItem.type_id : null;
+});
+const petidvalue = computed(() => {
+  const selectedItem = category.value.find(item => {
+    return item.pet_category == stringselectedPetCategory.value;
+  });
+  return selectedItem ? selectedItem.id : null;
+});
+const fullname = computed(() => user_avatar.value.firstname + ' ' + user_avatar.value.lastname);
+const profileUrl = computed(() => user_avatar.value.user_profile_url);
+
+watch(reportidvalue, (newValue) => {
+  if (selectedreportCategory.value !== newValue) {
+    selectedreportCategory.value = newValue;
+  }
+});
+watch(petidvalue, (newValue) => {
+  if (selectedCategory.value !== newValue) {
+    selectedCategory.value = newValue;
+  }
+});
+
+async function loadPostDetails() { //used in edit for retrieval of post details
+  stringselectedreportCategory.value = selectedPostDetailsValue.value.post_type
+
+  // date: "10-31-2024 06:52:06"
+  // pet_id: null
+
+  selectedLocationAddress.value = selectedPostDetailsValue.value.report_address_location
+  lat.value = selectedPostDetailsValue.value.latitude
+  lng.value = selectedPostDetailsValue.value.longitude
+  petcondition.value = selectedPostDetailsValue.value.pet_condition
+  reportDetails.value = selectedPostDetailsValue.value.content
+  other_selectedCategory.value = selectedPostDetailsValue.value.pet_category
+  stringselectedPetCategory.value = selectedPostDetailsValue.value.pet_category
+  imageUrls.value.push(...selectedPostDetailsValue.value.photos);
+}
+
+import default_avatar from '@/assets/images/buddy_default.jpg'
+const user_avatar = ref({})
+async function getUserDetails() {
+    try {
+        const _id = localStorage.getItem('u_id')
+        const response = await axios.post("http://localhost:5000/getbuddydetails",
+            {
+                _id: _id
+            }
+        )
+        if (response.data.success) {
+            console.log("response", response.data.data)
+            user_avatar.value = response.data.data[0]
+            console.log("user avatar", user_avatar.value.user_name) // Check to confirm values are set
+        }
+    }
+    catch (err) {
+        console.log("error", err)
+    }
+}
+
 // Remove image from list
 const removeImage = (index) => {
   imageUrls.value.splice(index, 1);
 }
-
 const emit = defineEmits(['close']) // for closing the modal
 const open = ref(true)
 
-onMounted(() => {
-  getCategory()
-  retrieveProfile()
-  getReportCategory()
+onMounted(async () => {
+  selectedPostDetailsValue.value = props.selectedPostDetails;
+
+  await getUserDetails()
+  await getCategory();
+  await retrieveProfile();
+  await getReportCategory();
+
+  if (props.mode === 'edit') {
+    loadPostDetails();
+  }
+
+  console.log("props", selectedPostDetailsValue.value);
 });
 </Script>
 
@@ -241,8 +315,8 @@ onMounted(() => {
                   <img class="h-16 w-16 border border-gray-500 rounded-full object-cover" :src="profileUrl"
                     alt="profile image" />
                   <div class="flex flex-col gap-y-1">
-                    <span class="text-base font-medium">Reporter Name</span>
-                    <select v-model="reportCategory"
+                    <span  class="text-base font-medium"> {{ fullname }}</span>
+                    <select v-model="selectedreportCategory"
                       class="border text-gray-700 bg-slate-50 font-medium rounded-lg text-sm px-5 py-2.5  inline-flex text-left  ">
                       <option value="" selected disabled hidden>Report Type</option>
                       <option v-for="(item, index) in reportcategory" :key="index" :value="item.type_id">
@@ -253,7 +327,7 @@ onMounted(() => {
                 </div>
                 <div class="text-sm">
                   <!-- HERE JO  -->
-                  <div v-if="reportCategory == 2" class="py-2 flex flex-col gap-y-2">
+                  <div v-if="selectedreportCategory == 2" class="py-2 flex flex-col gap-y-2">
                     <label for="petcategory" class="font-medium">Pet</label>
                     <select v-model="selectedPetId" id="petcategory"
                       class="text-gray-700 bg-slate-50 block w-full p-2.5 border rounded-lg">
@@ -316,7 +390,7 @@ onMounted(() => {
                   </div>
                   <div v-if="imageUrls.length > 0" class="grid grid-cols-1 place-items-center gap-1 border-t">
                     <div v-for="(imageUrl, index) in imageUrls" :key="index.source" class="relative mx-1">
-                      <img :src="imageUrl.url" alt="Uploaded Image"
+                      <img :src="imageUrl.url || imageUrl" alt="Uploaded Image"
                         class="max-w-full max-h-[300px] object-contain border" />
                       <button @click="removeImage(index)"
                         class="absolute top-0 right-0 p-1 text-red-500 hover:text-red-800">
@@ -349,9 +423,9 @@ onMounted(() => {
                 </div>
               </div>
               <div class="flex justify-end w-full mt-4">
-                <button type="button" @click="getReportInput"
+                <button @click="getReportInput"
                   class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                  Report
+                  {{ mode === 'edit' ? 'Save Changes' : 'Report' }}
                 </button>
               </div>
             </DialogPanel>

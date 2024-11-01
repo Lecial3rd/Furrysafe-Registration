@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'; // Import useRoute
 import { Dialog, DialogPanel, Menu, MenuButton, MenuItem, MenuItems, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { Bars3Icon, BellIcon, PlusIcon, AdjustmentsHorizontalIcon, ArrowRightStartOnRectangleIcon, UserIcon, CursorArrowRaysIcon, HomeIcon, ChatBubbleOvalLeftEllipsisIcon, XMarkIcon } from '@heroicons/vue/24/outline'
@@ -13,11 +13,12 @@ const navigation = [
     { name: 'Message', to: { name: 'buddy_messages' }, icon: ChatBubbleOvalLeftEllipsisIcon, current: false },
     { name: 'Explore', to: { name: '' }, icon: CursorArrowRaysIcon, current: false },
     { name: 'Create', to: null, icon: PlusIcon, current: false, },
-    { name: 'Profile', to: { name: '' }, icon: UserIcon, current: false },
+    { name: 'Profile', to: { name: 'buddy_profile' }, icon: UserIcon, current: false },
 ]
 
 const route = useRoute()
 const router = useRouter();
+
 //logout 
 function navigateTo(path) {
     router.push(path);
@@ -62,6 +63,30 @@ async function logout() {
     }
 }
 
+import default_avatar from '@/assets/images/buddy_default.jpg'
+const user_avatar = ref({})
+async function getUserDetails() {
+    try {
+        const _id = localStorage.getItem('u_id')
+        const response = await axios.post("http://localhost:5000/getbuddydetails",
+            {
+                _id: _id
+            }
+        )
+        if (response.data.success) {
+            console.log(response.data.data)
+            user_avatar.value = response.data.data[0]
+            console.log("user avatar", user_avatar.value.user_name) // Check to confirm values are set
+        }
+    }
+    catch (err) {
+        console.log("error", err)
+    }
+}
+
+onMounted(() => { //pag load sa page mag load ni =)
+    getUserDetails()
+})
 const sidebarOpen = ref(false)
 </script>
 
@@ -110,8 +135,9 @@ const sidebarOpen = ref(false)
                                                             aria-hidden="true" />
                                                         {{ item.name }}
                                                     </RouterLink>
-                                                    <button v-else @click="openCreateModal = true"
-                                                        :class="[item === currentNavigatedItem ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-base leading-6 font-semibold px-6 cursor-pointer']">
+                                                    <button v-else
+                                                        @click="openCreateModal = true; currentModalMode = 'create'"
+                                                        :class="[item === currentNavigatedItem ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-base leading-6 font-semibold px-6 cursor-pointer w-full']">
                                                         <component :is="item.icon" class="h-6 w-6 shrink-0"
                                                             aria-hidden="true" />
                                                         {{ item.name }}
@@ -156,26 +182,14 @@ const sidebarOpen = ref(false)
                         <li>
                             <ul role="list" class="-mx-2 space-y-4">
                                 <span class="text-[11px] font-semibold text-gray-600 px-4">NAVIGATION</span>
-                                <!-- <li v-for="item in navigation" :key="item.name">
-                                    <RouterLink v-if="item.name !== 'Create'" :to="item.to"
-                                        :class="[item.current ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-base leading-6 font-semibold px-6 cursor-pointer']">
-                                        <component :is="item.icon" class="h-6 w-6 shrink-0" aria-hidden="true" />
-                                        {{ item.name }}
-                                    </RouterLink>
-                                    <button v-else @click="openCreateModal = true"
-                                        :class="[item.current ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-base leading-6 font-semibold px-6 cursor-pointer']">
-                                        <component :is="item.icon" class="h-6 w-6 shrink-0" aria-hidden="true" />
-                                        {{ item.name }}
-                                    </button>
-                                </li> -->
                                 <li v-for="item in navigation" :key="item.name">
                                     <RouterLink v-if="item.name !== 'Create'" :to="item.to"
                                         :class="[item === currentNavigatedItem ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-base leading-6 font-semibold px-6 cursor-pointer']">
                                         <component :is="item.icon" class="h-6 w-6 shrink-0" aria-hidden="true" />
                                         {{ item.name }}
                                     </RouterLink>
-                                    <button v-else @click="openCreateModal = true"
-                                        :class="[item === currentNavigatedItem ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-base leading-6 font-semibold px-6 cursor-pointer']">
+                                    <button v-else @click="openCreateModal = true; currentModalMode = 'create'"
+                                        :class="[item === currentNavigatedItem ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100', 'group flex gap-x-3 rounded-md p-2 text-base leading-6 font-semibold px-6 cursor-pointer w-full']">
                                         <component :is="item.icon" class="h-6 w-6 shrink-0" aria-hidden="true" />
                                         {{ item.name }}
                                     </button>
@@ -214,20 +228,20 @@ const sidebarOpen = ref(false)
                 <!-- Search Engine -->
                 <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                     <form class="relative flex flex-1" action="#" method="GET">
-                        <label for="search-field" class="sr-only">Search</label>
+                        <!-- <label for="search-field" class="sr-only">Search</label>
                         <MagnifyingGlassIcon
                             class="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-gray-400"
                             aria-hidden="true" />
                         <input id="search-field"
                             class="block h-full w-full border-0 py-0 pl-8 pr-0 text-gray-900 placeholder:text-gray-400 outline-none sm:text-sm"
-                            placeholder="Search..." type="search" name="search" />
+                            placeholder="Search..." type="search" name="search" /> -->
                     </form>
                     <div class="flex items-center gap-x-4 lg:gap-x-6">
                         <!-- notif idk if unsa pay ipang butang -->
-                        <button type="button" class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
+                        <!-- <button type="button" class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
                             <span class="sr-only">View notifications</span>
                             <BellIcon class="h-6 w-6" aria-hidden="true" />
-                        </button>
+                        </button> -->
 
                         <!-- Separator -->
                         <div class="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10" aria-hidden="true" />
@@ -236,14 +250,14 @@ const sidebarOpen = ref(false)
                         <Menu as="div" class="relative">
                             <MenuButton class="-m-1.5 flex items-center p-1.5">
                                 <span class="sr-only">Open user menu</span>
-                                <img class="h-8 w-8 rounded-full bg-gray-50" :src="avatar.profileImage"
-                                    alt="profile-avatar" />
+                                <img class="h-8 w-8 rounded-full bg-gray-50" :src="user_avatar.user_profile_url || default_avatar"
+                                    alt="buddy_default.png" />
                                 <span class="hidden lg:flex lg:items-center">
                                     <span class="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">
-                                        {{ avatar.username }}
+                                        {{ user_avatar.user_name }}
                                     </span>
-                                    <component :is="avatar.icon" class="ml-2 h-5 w-5 text-gray-400"
-                                        aria-hidden="true" />
+                                    <!-- <component :is="avatar.icon" class="ml-2 h-5 w-5 text-gray-400"
+                                        aria-hidden="true" /> -->
                                 </span>
                             </MenuButton>
                             <transition enter-active-class="transition ease-out duration-100"
@@ -269,10 +283,10 @@ const sidebarOpen = ref(false)
                 </div>
             </div>
 
-            <main class="py-10">
+            <main class="py-10 bg-gray-50">
                 <div class="px-4 sm:px-6 lg:px-8">
                     <RouterView /> <!-- diri mang display ang mga child sa dashboard -->
-                    <CreateReportModal v-if="openCreateModal" @close="openCreateModal = false" />
+                    <CreateReportModal v-if="openCreateModal" mode="create" @close="openCreateModal = false" />
                 </div>
             </main>
         </div>

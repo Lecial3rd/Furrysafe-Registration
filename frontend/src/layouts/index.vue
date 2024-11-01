@@ -81,7 +81,7 @@ import logo from '@/assets/images/frrysfLOGO.png' // FurrySafe Logo
 import Linkfooter from '../components/footerLink.vue'
 const navigation = [
     { name: 'Home', to: { name: 'landingpage' }, current: true },
-    { name: 'Featured', to: { name: 'buddyDashboard' }, current: false },
+    { name: 'Featured', to: { name: '' }, current: false },
     { name: 'Contacts', to: { name: '' }, current: false },
     { name: 'About', to: { name: '' }, current: false },
     { name: 'FAQ', to: { name: '' }, current: false },
