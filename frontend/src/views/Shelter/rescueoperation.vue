@@ -1,33 +1,3 @@
-<!-- <script>
-import textvalue from '@/components/textString.vue'
-import datetoday from '@/components/Shelter/dateCard.vue'
-import linkfooter from '@/components/footerLink.vue'
-import reports from '@/components/Shelter/shelter_RescueOp_ReportsCard.vue'
-import reportview from '@/components/Shelter/shelter_RescueOp_ViewReport.vue'
-import chats from '@/components/Shelter/shelter_RescueOp_ChatBox.vue'
-
-export default {
-    components: {
-        textvalue, datetoday, linkfooter, reports, chats, reportview
-    },
-    data() {
-        const tabs = [
-            { name: 'Rescue Operation', current: true },
-            { name: 'Chats', current: false },
-        ]
-        return {
-            tabs,
-            currentTab: tabs[0].name
-        }
-    },
-    methods: {
-        updateCurrentTab(tabName) {
-            this.currentTab = tabName
-            this.tabs.forEach((tab) => tab.current = tab.name === tabName) 
-        }
-    }
-}
-</script> -->
 <script setup>
 import reports from '@/components/Shelter/shelter_RescueOp_ReportsCard.vue'
 import chats from '@/components/Shelter/shelter_RescueOp_ChatBox.vue'

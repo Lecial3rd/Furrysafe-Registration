@@ -37,7 +37,8 @@ import {
   insertNewChat,
   fetchAllShelters, //added fetchAllShelters
   insertShelterPost,
-  insertShelterRescue
+  insertShelterRescue,
+  getReports
 } from "../controllers/shelter_functions.js";
 
 import {
@@ -105,6 +106,7 @@ router.post("/save_pet_profile", upload2.any(), insertPetProfile);
 router.post("/update_pet_profile", upload2.any(), updatePetProfile);
 router.post("/insertshelterpost", upload2.any(), insertShelterPost);  //New route for shelter post
 router.post("/accept-rescue", insertShelterRescue); // New route for rescue operations
+router.get("/getereports", getReports);  // New route for getting rescue reports
 
 //chat
 router.post("/search", searchUserName);

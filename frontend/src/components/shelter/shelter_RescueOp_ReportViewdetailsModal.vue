@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 
 import { ChevronLeftIcon, ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/vue/20/solid";
@@ -17,10 +17,12 @@ const toggleDropdown = () => {
 
 // Reactive state
 const currentIndex = ref(0);
+const postImageUrl = computed(() => selectedReportDetails.value.photos[currentIndex.value]);
 
+const selectedReportDetails = ref([])
 const viewpostdetials = {
     id: 1,
-    username: 'Username',
+    username: 'Username who reported',
     profile: require("@/assets/images/homepage.png"),
     reportstatus: "Pending Action",
     reporttype: "Missing Dog",
@@ -36,11 +38,28 @@ const viewpostdetials = {
         require("@/assets/images/bals.png"),
     ],
 };
+const props = defineProps({ // for reuse form defines mode if either edit or create - joey
+    selectedPostDetails: {
+        type: Object,
+        required: false
+    }
+});
 
 // Computed properties
-const currentImageUrl = computed(() => viewpostdetials.imageUrls[currentIndex.value]);
+const currentImageUrl = computed(() => selectedReportDetails.value.photos[currentIndex.value]);
 const hasPrev = computed(() => currentIndex.value > 0);
-const hasNext = computed(() => currentIndex.value < viewpostdetials.imageUrls.length - 1);
+const hasNext = computed(() => currentIndex.value < selectedReportDetails.value.photos.length - 1);
+const formattedDate = computed(() => {
+  if (selectedReportDetails.value.date) {
+    const date = new Date(selectedReportDetails.value.date);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  }
+  return "Invalid date";
+});
 
 // Methods
 const nextImage = () => {
@@ -54,6 +73,12 @@ const prevImage = () => {
         currentIndex.value--;
     }
 };
+
+onMounted(() => {
+    selectedReportDetails.value = props.selectedPostDetails;
+    console.log("props", selectedReportDetails.value);
+
+})
 
 const emit = defineEmits(['close']) // for closing the modal
 
@@ -74,9 +99,9 @@ const open = ref(true)
                         leave-from="opacity-100 translate-y-0 sm:scale-100"
                         leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                         <DialogPanel
-                            class="relative transform overflow-hidden p-10 lg:px-10 xl:px-20 transition-all sm:my-8 sm:w-full sm:max-w-fit">
+                            class="relative transform overflow-hidden p-10 lg:px-10 xl:px -20 transition-all sm:my-8 sm:w-full sm:max-w-fit">
                             <div
-                                class="absolute z-10 sm:right-1 sm:top-1 md:right-3.5 rounded-full flex items-center p-1 group">
+                                class="absolute z-10 sm:right-1 sm:top-1 md:right-3.5 rounded-full flex items-center p-1">
                                 <button @click="$emit('close')" ref="cancelButtonRef">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                         stroke="currentColor" stroke-width="2"
@@ -96,7 +121,7 @@ const open = ref(true)
                                             <img :src="viewpostdetials.profile" alt="profile"
                                                 class="w-10 h-10 rounded-full object-cover" />
                                             <span class="font-bold sm:text-base xl:text-xl">
-                                                {{ viewpostdetials.username }}</span>
+                                                {{ selectedReportDetails.posted_by }}</span>
                                         </div>
                                     </div>
                                     <div
@@ -109,7 +134,7 @@ const open = ref(true)
                                             </button>
                                         </div>
                                         <div class="flex">
-                                            <img :src="currentImageUrl" alt="Image post"
+                                            <img :src="postImageUrl" alt="Image post"
                                                 class="flex-shrink-0 aspect-auto sm:w-full xl:w-[80rem] xl:h-[50rem] object-contain" />
                                         </div>
                                         <div
@@ -121,25 +146,27 @@ const open = ref(true)
                                         </div>
                                     </div>
                                     <div
-                                        class="text-gray-700 sm:w-full md:w-[40%] xl:w-[30%] sm:py-[1rem] rounded-r-2xl flex flex-col text-sm sm:border-t lg:border-l ">
+                                        class="text-gray-700 sm:w-full md:w-[40%] xl:w-[30%] sm:py-[1rem] flex flex-col text-sm sm:border-t lg:border-l ">
                                         <!-- display details in large screen -->
                                         <div
                                             class="flex items-center justify-between sm:hidden md:flex gap-x-2 border-b px-[2rem] pb-4">
-                                            <div class="flex items-center gap-x-3">
+                                            <div class="flex items- center gap-x-3">
                                                 <img :src="viewpostdetials.profile" alt="profile"
                                                     class="w-10 h-10 rounded-full object-cover" />
                                                 <span class="font-bold sm:text-base xl:text-xl">{{
-                                                    viewpostdetials.username }}</span>
+                                                    selectedReportDetails.posted_by }}</span>
                                             </div>
                                         </div>
                                         <div class="flex flex-col text-left mx-8 my-4 sm:text-sm md:text-base">
                                             <div class="flex justify-center border-b pb-7">
                                                 <dd class="flex flex-col justify-center gap-x-3 gap-y-1">
-                                                    <p class="max-w-2xl text-sm leading-6 text-gray-500 font-semibold flex justify-center">Report Status
+                                                    <p
+                                                        class="max-w-2xl text-sm leading-6 text-gray-500 font-semibold flex justify-center">
+                                                        Report Status
                                                     </p>
                                                     <span
-                                                        class="text-[12px] font-medium leading-6 text-red-600 bg-red-50 border border-red-100 px-4 rounded-full w-fit">{{
-                                                            viewpostdetials.reportstatus }}</span>
+                                                        class="text-[12px] font-medium leading-6 text-red-600 bg-red-50 border border-red-100 px-4 rounded-full w-fit">
+                                                        {{ selectedReportDetails.report_status }}</span>
                                                 </dd>
                                             </div>
                                             <div class="my-4">
@@ -156,47 +183,43 @@ const open = ref(true)
                                                             </dt>
                                                             <dd
                                                                 class="text-sm leading-6 font-bold text-red-600 xl:col-span-2">
-                                                                {{ viewpostdetials.reporttype }}</dd>
+                                                                {{ selectedReportDetails.post_type }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-white px-4 py-6 sm:grid xl:grid-cols-3 sm:gap-y-2 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Pet Category</dt>
-                                                            <dd
-                                                                class="text-sm leading-6 text-gray-700 xl:col-span-2">
-                                                                {{ viewpostdetials.petcategory }}</dd>
+                                                            <dd class="text-sm leading-6 text-gray-700 xl:col-span-2">
+                                                                {{ selectedReportDetails.category }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-gray-50 px-4 py-6 sm:grid xl:grid-cols-3 gap-y-1 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Pet Condition</dt>
-                                                            <dd
-                                                                class="text-sm leading-6 text-gray-700 xl:col-span-2">
-                                                                {{ viewpostdetials.petcondition }}</dd>
+                                                            <dd class="text-sm leading-6 text-gray-700 xl:col-span-2">
+                                                                {{ selectedReportDetails.pet_condition }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-white px-4 py-6 sm:grid xl:grid-cols-3 sm:gap-y-2 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Report Location</dt>
-                                                            <dd
-                                                                class="text-sm leading-6 text-gray-700 xl:col-span-2">
-                                                                {{ viewpostdetials.location }}</dd>
+                                                            <dd class="text-sm leading-6 text-gray-7 00 xl:col-span-2">
+                                                                {{ selectedReportDetails.report_address_location }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-gray-50 px-4 py-6 sm:grid xl:grid-cols-3 gap-y-1 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Report Details</dt>
-                                                            <dd
-                                                                class="text-sm leading-6 xl:col-span-2 text-gray-700">
-                                                                {{ viewpostdetials.reportdetails }}</dd>
+                                                            <dd class="text-sm leading-6 xl:col-span-2 text-gray-700">
+                                                                {{ selectedReportDetails.content }}</dd>
                                                         </div>
                                                         <div
-                                                            class="bg-gray-100 px-4 py-6 sm:grid xl:grid-cols-3 gap-y-1 gap-x-4 sm:px-3">
+                                                            class="px-4 py-6 sm:grid xl:grid-cols-3 gap-y-1 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Date Reported</dt>
                                                             <dd
                                                                 class="text-sm leading-6 xl:col-span-2 text-gray-500 font-bold">
-                                                                {{ viewpostdetials.reportdate }}
+                                                                {{ formattedDate }}
                                                             </dd>
                                                         </div>
                                                         <div>

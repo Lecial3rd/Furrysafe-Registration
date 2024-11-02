@@ -1,5 +1,15 @@
 <script>
-import statusbuttons from '@/components/Shelter/shelter_RescueOp_ReportCard_ReportStatusButtons.vue'
+import { ref, onMounted } from 'vue';
+import axios from "axios";
+import statusbuttons from '@/components/Shelter/shelter_RescueOp_ReportCard_ReportStatusButtons.vue';
+import previewhover from '@/components/Shelter/shelter_HoverName.vue';
+import viewpostdetials from '@/components/Shelter/shelter_RescueOp_ReportViewdetailsModal.vue';
+
+const showRescueCancelButtons = ref(false);
+const showSuccessMessage = ref(false);
+const hoveredIndex = ref(null);
+const selectedPostViewDetailsId = ref(null);
+const posts = ref([]);
 
 export default {
     components: {

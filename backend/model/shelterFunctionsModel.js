@@ -865,9 +865,72 @@ export const addShelterPost = async (req, res) => {
   }
 };
 
-// In progresss Shelter Rescue Operations
+// This is the function for accepting rescue reports
 export const acceptRescueReport = async (req, res) => {
+  try {
+    const { post_id, shelter_id, status } = req.body;
 
+    // First, update the report status in tbl_post_details
+    const { data: updateData, error: updateError } = await supabase
+      .from('tbl_post_details')
+      .update({ report_status: status })
+      .eq('post_id', post_id);
+
+    if (updateError) {
+      console.error("Error updating report status:", updateError);
+      return res.status(500).json({ success: false, message: "Failed to update report status" });
+    }
+
+    // If status is "Rescued", create an entry in tbl_report_handler
+    if (status === "Rescued") {
+      const { data: handlerData, error: handlerError } = await supabase
+        .from('tbl_report_handler')
+        .insert([
+          {
+            post_id: post_id,
+            handled_by: shelter_id,
+            created_at: new Date()
+          }
+        ]);
+
+      if (handlerError) {
+        console.error("Error creating handler record:", handlerError);
+        return res.status(500).json({ success: false, message: "Failed to create handler record" });
+      }
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: `Report ${status === "Rescued" ? "accepted" : "cancelled"} successfully` 
+    });
+
+  } catch (err) {
+    console.error("Error in acceptRescueReport:", err);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
 };
+
+//fetch reports in shelter
+export const retrieveReports = async (req, res) => {
+  try {
+    let { _post_id, _post_type } = req.body
+
+    _post_id = (_post_id == null) ? null : _post_id
+
+    const { data, error } = await supabase.rpc("get_filtered_posts", {
+      _post_id: _post_id,
+      _post_type: _post_type,
+    });
+    if(!error){
+      res.status(200).send(data);
+    }
+    else{
+      
+    }
+  }
+  catch (err) {
+    console.log("error occured in retrieveReports", err)
+  }
+}
 
 export default { addShelterAddress };
