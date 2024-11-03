@@ -800,7 +800,7 @@ export const getAllShelters = async (req, res) => {
 };
 // end of added from salpocial's code
 
-
+// Add new shelter post
 export const addShelterPost = async (req, res) => {
   try {
     // Extract and parse parameters
@@ -932,5 +932,71 @@ export const retrieveReports = async (req, res) => {
     console.log("error occured in retrieveReports", err)
   }
 }
+
+// Create new event function
+export const addShelterEvent = async (req, res) => {
+  try {
+    console.log("Received event data:", req.body);
+    console.log("Received files:", req.files);
+
+    const { host_id, event_name, date_time_start, date_time_end, location_lat, location_long, caption } = req.body;
+    const files = req.files;
+    let photoUrls = [];
+
+    // Handle multiple file uploads
+    if (files && files.length > 0) {
+      for (const photo of files) {
+        const photoPath = `events/${Date.now()}_${photo.originalname}`;
+        
+        console.log("Uploading photo:", photoPath);
+        
+        const { data: photoUploadData, error: photoUploadError } = await supabase.storage
+          .from("pets_images")
+          .upload(photoPath, photo.buffer, {
+            contentType: photo.mimetype,
+          });
+
+        if (!photoUploadError) {
+          const { data: photoUrlData } = supabase.storage
+            .from("pets_images")
+            .getPublicUrl(photoPath);
+          photoUrls.push(photoUrlData.publicUrl);
+          console.log("Photo uploaded successfully:", photoUrlData.publicUrl);
+        } else {
+          console.error("Photo upload error:", photoUploadError);
+          return res.status(500).send({ message: "Failed to upload event photo." });
+        }
+      }
+    }
+
+    console.log("Inserting event into database");
+
+    // Insert into tbl_events
+    const { data, error } = await supabase
+      .from('tbl_events')
+      .insert([{
+        host_id: parseInt(host_id),
+        event_name: event_name,
+        date_time_start: date_time_start,
+        date_time_end: date_time_end,
+        location_lat: parseFloat(location_lat),
+        location_long: parseFloat(location_long),
+        caption: caption,
+        photo_display_url: photoUrls // Store array of URLs
+      }]);
+
+    if (error) {
+      console.error("Database insert error:", error);
+      return res.status(500).send({ success: false, message: "Failed to create event", error: error.message });
+    }
+
+    console.log("Event created successfully");
+    res.status(200).send({ success: true, message: "Event created successfully", photoUrls: photoUrls });
+
+  } catch (err) {
+    console.error("Error in addShelterEvent:", err);
+    res.status(500).send({ success: false, message: "Internal server error", error: err.message });
+  }
+};
 
 export default { addShelterAddress };

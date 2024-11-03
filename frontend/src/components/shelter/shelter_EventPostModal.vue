@@ -32,7 +32,7 @@
                   class="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-teal-300 focus-within:ring-1 focus-within:ring-indigo-500">
                   <div>
                     <label for="title" class="sr-only">Event Title</label>
-                    <input type="text" name="title" id="title"
+                    <input v-model="eventTitle" type="text" name="title" id="title"
                       class="w-full py-2.5 px-[1rem] text-lg font-medium placeholder:text-gray-400 focus:outline-none"
                       placeholder="Event Title" />
                   </div>
@@ -88,7 +88,7 @@
                       <li v-for="(imageUrl, index) in imageUrls" :key="index" class="relative">
                         <div
                           class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
-                          <img :src="imageUrl" alt="" class="pointer-events-none w-full h-44 object-cover" />
+                          <img :src="imageUrl.url" alt="" class="pointer-events-none w-full h-44 object-cover" />
                           <button @click.prevent="removeImage(index)"
                             class="absolute top-0 right-0 p-1 text-red-500 hover:text-red-700">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -103,9 +103,10 @@
                 </div>
 
                 <div class="flex justify-center mt-2">
-                  <button type="button"
+                  <button type="button" @click="submitEvent"
                     class="flex rounded-lg px-[46%] bgteal justify-center py-2 text-sm font-semibold text-white shadow-sm hover:bg-bgteal sm:w-auto">
-                    Post</button>
+                    Post
+                  </button>
                 </div>
               </div>
             </DialogPanel>
@@ -118,6 +119,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
+import axios from 'axios'; // Make sure to import axios
 
 const emit = defineEmits(['close']) // for closing the modal
 
@@ -127,14 +129,20 @@ const imageUrls = ref([]);
 const images = 'https://img.icons8.com/fluency/48/stack-of-photos.png';
 const startDateTime = ref('');
 const endDateTime = ref('');
+const caption = ref('');
+const eventTitle = ref('');
+
+// New refs for latitude and longitude
+const latitude = ref(null);
+const longitude = ref(null);
 
 const handleFileChange = (event) => {
   const files = event.target.files;
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const reader = new FileReader();
-    reader.onload = (event) => {
-      imageUrls.value.push(event.target.result);
+    reader.onload = (e) => {
+      imageUrls.value.push({ file: file, url: e.target.result });
     };
     reader.readAsDataURL(file);
   }
@@ -182,6 +190,45 @@ const handleEndDateTimeInput = (event) => {
 
 const startDateInput = ref(null);
 const endDateInput = ref(null);
+
+// New function to submit the event
+const submitEvent = async () => {
+  try {
+    const formData = new FormData();
+    formData.append('host_id', localStorage.getItem('c_id'));
+    formData.append('event_name', eventTitle.value);
+    formData.append('date_time_start', startDateTime.value);
+    formData.append('date_time_end', endDateTime.value);
+    formData.append('location_lat', latitude.value || '0');
+    formData.append('location_long', longitude.value || '0');
+    formData.append('caption', caption.value);
+    
+    // Append multiple photos
+    imageUrls.value.forEach((image, index) => {
+      formData.append(`photos`, image.file);
+    });
+
+    console.log("Submitting event data:", Object.fromEntries(formData));
+
+    const response = await axios.post('http://localhost:5000/create-event', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    console.log("Server response:", response.data);
+
+    if (response.data.success) {
+      console.log('Event created successfully');
+      console.log('Photo URLs:', response.data.photoUrls);
+      emit('close');
+    } else {
+      console.error("Event creation failed:", response.data.message);
+    }
+  } catch (err) {
+    console.error("Error creating event:", err.response ? err.response.data : err.message);
+  }
+};
 
 onMounted(() => {
   if (startDateInput.value) {

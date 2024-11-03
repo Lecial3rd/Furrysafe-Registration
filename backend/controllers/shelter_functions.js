@@ -18,7 +18,8 @@ import {
   getAllShelters, //added getAllShelters from salpocial's code
   addShelterPost,
   acceptRescueReport,
-  retrieveReports
+  retrieveReports,
+  addShelterEvent
 } from "../model/shelterFunctionsModel.js";
 
 export const insertShelterAddress = (req, res) => {
@@ -80,6 +81,11 @@ export const insertShelterPost = (req, res) => {
   addShelterPost(req, res);
 };
 
+// Function for shelter create new post
+export const insertShelterEvent = (req, res) => {
+  addShelterEvent(req, res);
+};
+
 
 // In progresss Shelter Rescue Operations
 export const insertShelterRescue = (req, res) => {
@@ -90,3 +96,4 @@ export const insertShelterRescue = (req, res) => {
 export const getReports = (req, res) => {
   retrieveReports(req, res);
 };
+
