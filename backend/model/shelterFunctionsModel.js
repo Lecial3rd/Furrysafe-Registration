@@ -803,12 +803,17 @@ export const getAllShelters = async (req, res) => {
 // Add new shelter post
 export const addShelterPost = async (req, res) => {
   try {
+    console.log("Received request body:", req.body);
+    console.log("Received files:", req.files);
+    
     // Extract and parse parameters
     let user_id = parseInt(req.body.user_id);
     let pet_id = req.body.pet_id === "" ? null : parseInt(req.body.pet_id); // Handle empty string
     const { content } = req.body;
     const files = req.files;
 
+    console.log("Parsed data:", { user_id, pet_id, content, filesCount: files ? files.length : 0 });
+    
     // Check for required fields
     if (!user_id) {
       return res.status(400).json({ success: false, message: 'User  ID is required' });

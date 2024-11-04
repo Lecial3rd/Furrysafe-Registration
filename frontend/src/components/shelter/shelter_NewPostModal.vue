@@ -141,7 +141,6 @@ const post = reactive({
 
 // Handle file change and load images
 const handleFileChange = (event) => {
-  console.log("file Change")
   const files = event.target.files
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
@@ -151,7 +150,6 @@ const handleFileChange = (event) => {
     }
     reader.readAsDataURL(file)
   }
-  fileInput.value.value = null;
 }
 
 // Remove image from list
@@ -165,7 +163,7 @@ function handlePetSelected(info) {
   selectedPetInfo.value = info
 
   if (selectedPetInfo.value.length > 0) {
-    imageUrls.value = [];
+    imageUrls.value = [] 
     const selectedPet = selectedPetInfo.value[0]
     post.pet_id = selectedPet.id
     nickname.value = selectedPet.nickname
