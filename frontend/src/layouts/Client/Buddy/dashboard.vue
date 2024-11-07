@@ -283,7 +283,7 @@ const sidebarOpen = ref(false)
                 </div>
             </div>
 
-            <main class="py-10 bg-gray-50">
+            <main class="py-10 bg-gray-50 h-screen">
                 <div class="px-4 sm:px-6 lg:px-8">
                     <RouterView /> <!-- diri mang display ang mga child sa dashboard -->
                     <CreateReportModal v-if="openCreateModal" mode="create" @close="openCreateModal = false" />

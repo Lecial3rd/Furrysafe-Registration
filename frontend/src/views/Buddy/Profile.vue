@@ -1,21 +1,35 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { PencilIcon, UserIcon, Square2StackIcon } from "@heroicons/vue/20/solid";
+import { PencilIcon, UserIcon, Square2StackIcon, DocumentPlusIcon } from "@heroicons/vue/20/solid";
 import axios from 'axios';
-import viewpostdetials from '@/components/Buddy/buddy_Profile_GridViewdetailsModal.vue';
+import Linkfooter from '@/components/footerLink.vue'
+import viewpostdetials from '@/components/Buddy/buddy_Profile_GridReportViewdetailsModal.vue';
 import default_avatar from '@/assets/images/buddy_default.jpg'
+
+// joey added
+import CreateReportModal from '@/components/Buddy/buddy_CreateReportPost_Modal.vue'
+const openCreateModal = ref(false) // for create report modal
+
+import viewprofiledetials from '@/components/Buddy/buddy_Profile_GridProfileViewdetailsModal.vue'; // for view profile details
+// view detials on grid profile images
+const selectedProfileViewDetailsId = ref(null);
+const toggleModalProfileViewDetails = (id) => {
+  selectedProfileViewDetailsId.value = selectedProfileViewDetailsId.value === id ? null : id;
+  console.log(id);
+};
+// end
+
 
 const _id = localStorage.getItem('u_id')
 
 // view detials on grid images
 const selectedPostViewDetailsId = ref(null);
 const selectedPostDetails = ref([])
-const selectedTab = ref('feed'); // Default selected tab
+const selectedTab = ref('Report'); // Default selected tab
 const user = ref({})
 
 
 onMounted(() => { //pag load sa page mag load ni =)
-  console.log("D:")
   getUserDetails()
   getBuddyPost()
 })
@@ -30,7 +44,7 @@ const toggleModalViewDetails = (id) => {
   if (foundPost) {
     selectedPostDetails.value = foundPost
     console.log(selectedPostDetails.value)
-  } 
+  }
 };
 
 async function getUserDetails() {
@@ -70,7 +84,8 @@ async function getBuddyPost() {
   }
 }
 
-const feedImages = ref([ //predefined by joey
+
+const petprofiles = ref([ //predefined by joey
   {
     id: 1,
     imageUrl: [
@@ -90,11 +105,35 @@ const feedImages = ref([ //predefined by joey
       require('@/assets/images/eric.png'),
       require('@/assets/images/eric.png')
     ]
+  },
+  {
+    id: 4,
+    imageUrl: [
+      require('@/assets/images/bals.png'),
+      require('@/assets/images/eric.png'),
+      require('@/assets/images/eric.png')
+    ]
+  },
+  {
+    id: 5,
+    imageUrl: [
+      require('@/assets/images/bals.png'),
+      require('@/assets/images/eric.png'),
+      require('@/assets/images/eric.png')
+    ]
+  },
+  {
+    id: 6,
+    imageUrl: [
+      require('@/assets/images/bals.png'),
+      require('@/assets/images/eric.png'),
+      require('@/assets/images/eric.png')
+    ]
   }
 ]);
 </script>
 <template>
-  <div class="flex h-screen">
+  <div>
     <main class="flex-1">
       <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex sm:flex-col md:flex-row justify-between gap-y-4 items-center mb-6 px-8">
@@ -110,7 +149,7 @@ const feedImages = ref([ //predefined by joey
             </div>
           </div>
           <RouterLink to="/buddy_editprofile"
-            class="px-8 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex items-center gap-x-2 text-sm">
+            class="px-8 py-2 bg-gray-100 hover:bg-gray-50 text-gray-700 hover:text-gray-900 border rounded-lg  flex items-center gap-x-2 text-sm">
             <PencilIcon class="h-4 w-4" />
             Edit Profile
           </RouterLink>
@@ -123,19 +162,19 @@ const feedImages = ref([ //predefined by joey
 
         <div class="border-b mb-6 sm:mx-0 md:mx-8 text-sm">
           <div class="flex space-x-4 text-lg">
-            <button @click="selectTab('feed')" class="px-4 py-2"
-              :class="{ 'text-gray-900 border-b-2 border-gray-900': selectedTab === 'feed' }">Feed</button>
-            <button @click="selectTab('dog')" class="px-4 py-2"
-              :class="{ 'text-gray-900 border-b-2 border-gray-900': selectedTab === 'dog' }">Pet Profile</button>
-            <button @click="selectTab('skills')" class="px-4 py-2"
-              :class="{ 'text-gray-900 border-b-2 border-gray-900': selectedTab === 'skills' }">Badge</button>
+            <button @click="selectTab('Report')" class="px-4 py-2"
+              :class="{ 'text-gray-900 border-b-2 border-gray-900': selectedTab === 'Report' }">Report</button>
+            <button @click="selectTab('Profile')" class="px-4 py-2"
+              :class="{ 'text-gray-900 border-b-2 border-gray-900': selectedTab === 'Profile' }">Pet Profile</button>
+            <button @click="selectTab('Badge')" class="px-4 py-2"
+              :class="{ 'text-gray-900 border-b-2 border-gray-900': selectedTab === 'Badge' }">Badge</button>
           </div>
         </div>
 
-        <div v-if="selectedTab === 'feed'" class="sm:mx-0 md:mx-8">
+        <div v-if="selectedTab === 'Report'" class="sm:mx-0 md:mx-8">
           <!-- grid images of buddy post -->
-          <div>
-            <ul role="list" class="grid grid-cols-3 gap-x-2 gap-y-2 md:grid-cols-3 xl:grid-cols-4">
+          <div v-if="buddyPosts && buddyPosts.length > 0" class="xl:container sm:mx-0 2xl:mx-auto">
+            <ul role="list" class="grid grid-cols-3 gap-x-2 gap-y-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               <li v-for="post in buddyPosts" :key="post.post_id" class="relative">
                 <button @click="toggleModalViewDetails(post.post_id)"
                   class="group block w-full overflow-hidden bg-white">
@@ -147,90 +186,77 @@ const feedImages = ref([ //predefined by joey
                   <Square2StackIcon v-if="Array.isArray(post.photos) && post.photos.length > 1"
                     class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
                 </button>
-                <viewpostdetials  v-if="selectedPostViewDetailsId === post.post_id" :selectedPostDetails="selectedPostDetails"
-                  @close="toggleModalViewDetails(post.post_id)" />
+                <viewpostdetials v-if="selectedPostViewDetailsId === post.post_id"
+                  :selectedPostDetails="selectedPostDetails" @close="toggleModalViewDetails(post.post_id)" />
               </li>
             </ul>
           </div>
-        </div>
 
-        <div v-if="selectedTab === 'dog'" class="sm:mx-0 md:mx-8">
-          <h2 class="text-2xl font-bold mb-4">Dog Profiles</h2>
-          <div class="grid grid-cols-3 mt-10 gap-5">
-            <div>
-              <div class="rounded-lg border bg-zinc-100 p-3">
-                <img :src="require('/src/assets/images/bals.png')" alt="placeholder"
-                  class="h-full w-full rounded-lg object-cover" />
-                <div class="pt-5 space-y-5">
-                  <h3 class="font-semibold">Rhona; Golden Retriever</h3>
-                  <button class="w-full py-5 bg-gray-900 text-white rounded-lg">View Profile</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="rounded-lg border bg-zinc-100 p-3">
-                <img :src="require('/src/assets/images/bals.png')" alt="placeholder"
-                  class="h-full w-full rounded-lg object-cover" />
-                <div class="pt-5 space-y-5">
-                  <h3 class="font-semibold">Rhona; Golden Retriever</h3>
-                  <button class="w-full py-5 bg-gray-900 text-white rounded-lg">View Profile</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="rounded-lg border bg-zinc-100 p-3">
-                <img :src="require('/src/assets/images/bals.png')" alt="placeholder"
-                  class="h-full w-full rounded-lg object-cover" />
-                <div class="pt-5 space-y-5">
-                  <h3 class="font-semibold">Rhona; Golden Retriever</h3>
-                  <button class="w-full py-5 bg-gray-900 text-white rounded-lg">View Profile</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="rounded-lg border bg-zinc-100 p-3">
-                <img :src="require('/src/assets/images/bals.png')" alt="placeholder"
-                  class="h-full w-full rounded-lg object-cover" />
-                <div class="pt-5 space-y-5">
-                  <h3 class="font-semibold">Rhona; Golden Retriever</h3>
-                  <button class="w-full py-5 bg-gray-900 text-white rounded-lg">View Profile</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="rounded-lg border bg-zinc-100 p-3">
-                <img :src="require('/src/assets/images/bals.png')" alt="placeholder"
-                  class="h-full w-full rounded-lg object-cover" />
-                <div class="pt-5 space-y-5">
-                  <h3 class="font-semibold">Rhona; Golden Retriever</h3>
-                  <button class="w-full py-5 bg-gray-900 text-white rounded-lg">View Profile</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="rounded-lg border bg-zinc-100 p-3">
-                <img :src="require('/src/assets/images/bals.png')" alt="placeholder"
-                  class="h-full w-full rounded-lg object-cover" />
-                <div class="pt-5 space-y-5">
-                  <h3 class="font-semibold">Rhona; Golden Retriever</h3>
-                  <button class="w-full py-5 bg-gray-900 text-white rounded-lg">View Profile</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="rounded-lg border bg-zinc-100 p-3">
-                <img :src="require('/src/assets/images/bals.png')" alt="placeholder"
-                  class="h-full w-full rounded-lg object-cover" />
-                <div class="pt-5 space-y-5">
-                  <h3 class="font-semibold">Rhona; Golden Retriever</h3>
-                  <button class="w-full py-5 bg-gray-900 text-white rounded-lg">View Profile</button>
-                </div>
-              </div>
-            </div>
+          <div v-else class="flex flex-col place-items-center text-gray-500 mx-8 gap-y-1 sm:my-[5rem] lg:my-[8.5rem]">
+            <img width="100" height="100"
+              src="https://img.icons8.com/external-becris-lineal-becris/100/737373/external-pet-hotel-service-becris-lineal-becris.png"
+              alt="external-pet-hotel-service-becris-lineal-becris" />
+            <h1 class="sm:text-xl lg:text-2xl font-extrabold">Your Pet Reports</h1>
+            <p class="text-sm font-medium flex text-center">When you create a Reports about Strays or your Missing
+              pets, they'll appear here.</p>
+            <button @click="openCreateModal = true; currentModalMode = 'create'" type="button"
+              class="underline underline-offset-4 hover:text-red-600">Create Report</button>
+            <CreateReportModal v-if="openCreateModal" mode="create" @close="openCreateModal = false" />
+          </div>
+          <div>
+            <linkfooter />
           </div>
         </div>
-        <div v-if="selectedTab === 'skills'" class="sm:mx-0 md:mx-8">
-          <!-- Content for Skills -->
+
+        <div v-if="selectedTab === 'Profile'" class="sm:mx-0 md:mx-8">
+          <div v-if="petprofiles && petprofiles.length > 0">
+            <div class="flex justify-between items-center mb-4">
+              <h1 class="font-semibold sm:text-base md:text-lg">My Pet Profile's</h1>
+
+              <!-- reusing the profile_CreateNewProfile.vue -->
+              <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'create' } }"
+                class="flex items-center gap-x-2 bg-gray-700 py-2 sm:px-4 md:px-8 rounded-lg sm:text-sm lg:text-base text-white font-medium hover:bg-gray-600">
+                <img width="25" height="25" src="https://img.icons8.com/ios-glyphs/25/FFFFFF/pet-bowl.png"
+                  alt="pet-bowl" />
+                <span>Create New Profile</span>
+              </RouterLink>
+
+            </div>
+            <!-- pet profile grid -->
+            <div class="xl:container sm:mx-0 2xl:mx-auto">
+              <ul role="list" class="grid grid-cols-3 gap-x-2 gap-y-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                <li v-for="Profile in petprofiles" :key="Profile.id" class="relative">
+                  <button @click="toggleModalProfileViewDetails(Profile.id)"
+                    class="group block w-full overflow-hidden bg-white">
+                    <!-- Display the first image in the array or the single image if it's not an array -->
+                    <img :src="Array.isArray(Profile.imageUrl) ? Profile.imageUrl[0] : Profile.imageUrl" alt=""
+                      class="pointer-events-none aspect-square object-cover group-hover:opacity-75" />
+
+                    <!-- Display the overlay icon if there are multiple images -->
+                    <Square2StackIcon v-if="Array.isArray(Profile.imageUrl) && Profile.imageUrl.length > 1"
+                      class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
+                  </button>
+                  <viewprofiledetials v-if="selectedProfileViewDetailsId === Profile.id"
+                    @close="toggleModalProfileViewDetails(Profile.id)" />
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div v-else class="flex flex-col place-items-center text-gray-500 mx-8 gap-y-1 sm:my-[5rem] lg:my-[8.5rem]">
+            <img width="100" height="100"
+              src="https://img.icons8.com/external-photo3ideastudio-lineal-photo3ideastudio/100/737373/external-pawprint-pet-shop-photo3ideastudio-lineal-photo3ideastudio.png"
+              alt="external-pawprint-pet-shop-photo3ideastudio-lineal-photo3ideastudio" />
+            <h1 class="sm:text-xl lg:text-2xl font-extrabold">Your Pet's Profile</h1>
+            <p class="text-sm font-medium flex text-center">When you create your pet's profile, they'll appear here.</p>
+            <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'create' } }"
+              class="underline underline-offset-4 hover:text-gray-900">Create Pet Profile</RouterLink>
+          </div>
+          <div>
+            <linkfooter />
+          </div>
+        </div>
+        <div v-if="selectedTab === 'Badge'" class="sm:mx-0 md:mx-8">
+          <!-- Content for Badge -->
         </div>
         <div v-if="selectedTab === 'achievements'">
           <!-- Content for Achievements -->

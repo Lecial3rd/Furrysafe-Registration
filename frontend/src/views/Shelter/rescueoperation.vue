@@ -1,10 +1,12 @@
 <script setup>
 import reports from '@/components/Shelter/shelter_RescueOp_ReportsCard.vue'
 import chats from '@/components/Shelter/shelter_RescueOp_ChatBox.vue'
+import ongoing_operations from '@/components/Shelter/shelter_RescueOp_OnGoingOperations.vue'
 import { ref } from 'vue'
 
 const tabs = ref([
-    { name: 'Rescue Operation', current: true },
+    { name: 'Community Reports', current: true },
+    { name: 'Ongoing Operations', current: false }
     // { name: 'Chats', current: false },
 ])
 
@@ -30,15 +32,19 @@ const updateCurrentTab = (tabName) => {
                 </nav>
             </div>
         </div>
-        <div v-show="currentTab === 'Rescue Operation'">
+        <div v-show="currentTab === 'Community Reports'">
             <div class="pt-4 mx-auto flex justify-center">
                 <div class="w-fit">
                     <reports />
                 </div>
             </div>
         </div>
-        <div v-show="currentTab === 'Chats'">
-            <chats />
+        <div v-show="currentTab === 'Ongoing Operations'">
+            <div class="pt-4 mx-auto flex justify-center">
+                <div class="w-fit">
+                    <ongoing_operations />
+                </div>
+            </div>
         </div>
     </div>
 </template>

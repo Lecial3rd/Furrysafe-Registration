@@ -18,10 +18,7 @@ import mockup from "../views/mockup.vue";
 
 // Shelter Views
 import shelterdashboardContent from "../views/Shelter/dashboard.vue";
-// import shelterprofile from "../views/Shelter/myshelter.vue";
-import shelterprofile from "../views/Shelter/tryshelterprofile.vue";
-
-
+import shelterprofile from "../views/Shelter/myshelter.vue";
 
 import shelteranimalprofile from "../views/Shelter/animalprofile.vue";
 import rescueoperation from "../views/Shelter/rescueoperation.vue";
@@ -59,7 +56,7 @@ import buddymessages from "../views/Buddy/Message.vue"
 import buddyprofile from "../views/Buddy/Profile.vue"
 import buddyeditprofile from "@/components/Buddy/buddy_Profile_EditProfile.vue"
 import buddyshelterprofile from "@/components/Buddy/buddy_ViewShelterProfile.vue"
-
+import buddycreateanimalprofile from "../views/Buddy/profile_CreateNewProfile.vue";
 
 
 const routes = [
@@ -284,6 +281,12 @@ const routes = [
         path: "/shelter_profile",
         name: "shelter_profile",
         component: buddyshelterprofile,
+      },
+      {
+        // create new animal profile
+        path: "/create_newanimalprofile",
+        name: "create_newanimalprofile",
+        component: buddycreateanimalprofile,
       },
     ],
   },

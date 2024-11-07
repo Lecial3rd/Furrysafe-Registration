@@ -49,8 +49,17 @@ async function loadProfileCard() {
                 });
             });
 
-            profileUrl.value = profiles.value[0]?.profileurl;
-            console.log("profile url", profileUrl.value)
+            try {
+                let url = profiles.value[0]?.profileurl;
+                const imgResponse = await axios.post("http://localhost:5000/image", {
+                    profileUrl: url // Assuming you're using shelterid to fetch the image
+                });
+                console.log(imgResponse) 
+                profileUrl.value = imgResponse.data.data; // Set the profile image URL
+            } catch (err) {
+                console.error("Error fetching image:", err);
+                profileUrl.value = require('@/assets/images/default-profile.png'); // Default image
+            }
         } else {
             console.error("No profile data received:", response);
         }
@@ -58,11 +67,6 @@ async function loadProfileCard() {
         console.error("An error occurred getting shelter details:", err);
     }
 }
-
-onMounted(() => {
-    loadProfileCard();
-});
-
 
 onMounted(() => {
     loadProfileCard();

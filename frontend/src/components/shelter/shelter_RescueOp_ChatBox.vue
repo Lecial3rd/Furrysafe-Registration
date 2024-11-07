@@ -4,6 +4,8 @@ import { MagnifyingGlassIcon, PaperAirplaneIcon, PaperClipIcon } from "@heroicon
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
+import default_avatar from '@/assets/images/buddy_default.jpg'
+
 // Reactive user ID
 const user_id = ref(localStorage.getItem('u_id'));
 // Other reactive references
@@ -22,20 +24,18 @@ let receiverName = ref('');
 let userFullName; //user fullname
 const url = ref([])
 
-let tempurl = 'https://iwdfzrnksrvgrkpptfah.supabase.co/storage/v1/object/public/message_images/pets_photos/1729076713966_kebin.jpg'
-
 // Selected conversation
 const selectedConversation = ref({
     NameFrom: '',
     messages: [],
     timestamp: '',
-    lastMessageDate: null
+    lastMessageDate: null,
+    profile: ''
 });
 
 //socket connections, and routes
 const socket = io('http://localhost:5000');
 socket.on('connect', () => {
-    console.log("Connected to socket with id", socket.id);
 });
 socket.on('receive-message', (messageData) => {
     if (messageData.chat_id == selectedChat_id.value) {
@@ -55,6 +55,7 @@ const fetchInbox = async () => {
             // Optionally, include other parameters if needed
         });
 
+        console.log("fetch inbox", response)
         response.data.forEach(chat => {
             let room = chat.chat_id;
             socket.emit('join-chat', room); // Ensure both users emit this to join the room
@@ -114,10 +115,8 @@ const updateConversationsList = (messageData) => {
 const selectConversation = async (conversation) => {
     receiverName.value = conversation.other_participant_name || conversation.p2_name
     receiverId.value = null; // Corrected spelling
-    console.log("ambot basta kani", conversation)
 
     if (!conversation || !conversation.chat_id) {
-        console.log("Invalid conversation selected.");
         return;
     }
     selectedChat_id.value = conversation.chat_id;
@@ -138,8 +137,11 @@ const selectConversation = async (conversation) => {
                 messages: response.data, // Array of messages
                 photo_url: parsedPhotos(conversation.photo_url),
                 timestamp: conversation.date,
-                lastMessageDate: new Date(conversation.date)
+                lastMessageDate: new Date(conversation.date),
+                profile: response.data[0].profile_url
             };
+
+            console.log("selected convo", response.data[0].profile_url)
 
             await nextTick(); // Ensure DOM is updated
             scrollToBottom(); // Scroll after messages are loaded
@@ -148,7 +150,8 @@ const selectConversation = async (conversation) => {
                 NameFrom: receiverName.value,
                 messages: [],
                 timestamp: conversation.date,
-                lastMessageDate: new Date(conversation.date)
+                lastMessageDate: new Date(conversation.date),
+                profile: response.profile_url
             };
             await nextTick(); // Ensure DOM is updated
             scrollToBottom();
@@ -159,14 +162,13 @@ const selectConversation = async (conversation) => {
 };
 //check here
 async function sendMessage(thisformData) {
-    for (let pair of thisformData.entries()) {
-        console.log("send message", pair[0], pair[1]);
-    }
+    // for (let pair of thisformData.entries()) {
+    //     console.log("send message", pair[0], pair[1]);
+    // }
     if (!newMessage.value) {
         newMessage.value = null;
     }
 
-    console.log("send message data", selectedChat_id.value)
     // Ensure a chat ID is selected
     if (!selectedChat_id.value) {
         createNewMessage(); // Await the creation of a new chat
@@ -241,13 +243,10 @@ const createNewMessage = async () => {
             receiverid: receiverId.value
         });
 
-        console.log("this is create new message")
         if (response.data) {
             selectedChat_id.value = response.data[0].chat_id;
             // Join the new chat room
-            console.log("id value", selectedChat_id.value)
             socket.emit('join-chat', selectedChat_id.value);
-            console.log("New chat created with ID:", selectedChat_id.value);
             await retrieveMessage(); // Ensure that retrieveMessage is awaited
         }
     }
@@ -309,7 +308,7 @@ const getUserFullName = async () => {
 
         if (response.data) {
             userFullName = response.data.fullName; // Adjust based on your API response structure
-            console.log("User full name:", userFullName);
+            console.log("User full name:", response.data);
         } else {
             console.log("No data received for user full name.");
         }
@@ -323,7 +322,6 @@ const fileInput = ref(null);
 const files = ref([])
 const handleMultipleFileChange = (event) => {
     const filesArray = event.target.files
-    console.log("handle multiple file change", filesArray)
 
     for (let i = 0; i < filesArray.length; i++) {
         const file = filesArray[i]
@@ -336,12 +334,8 @@ const handleMultipleFileChange = (event) => {
     }
 }
 const triggerFileInput = () => {
-    console.log("trigger")
     if (fileInput.value) {
         fileInput.value.click(); // Accessing the DOM element
-    }
-    else {
-        console.log("tite")
     }
 };
 const removeImage = (index) => {
@@ -356,8 +350,6 @@ async function retrieveMessage() {
         formData.append(`url`, fileobj.file);
     })
 
-    console.log("start of retrieveMessage", selectedChat_id.value)
-
     let messageData = [
         ["chat_id", selectedChat_id.value],
         ["user_id", parseInt(user_id.value)],
@@ -368,13 +360,11 @@ async function retrieveMessage() {
         ["p2_name", receiverName.value] // Ensure receiverName is set
     ];
 
-    console.log("start of retrieveMessage", selectedChat_id.value)
     messageData.forEach(([key, value]) => formData.append(key, value));
 
-    for (let pair of formData.entries()) {
-        console.log("retrieveMessage", pair[0], pair[1]);
-    }
-    console.log("end of retrieveMessage")
+    // for (let pair of formData.entries()) {
+    //     console.log("retrieveMessage", pair[0], pair[1]);
+    // }
     sendMessage(formData)
 }
 const parsedPhotos = (photoUrl) => {
@@ -425,10 +415,7 @@ const handleItemClick = (itemId, name) => {
     receiverName.value = name;
     selectedChat_id.value = null;
 
-    console.log("Selected receiver:", receiverId.value, receiverName.value);
-
     const existingChat = conversations.value.find(chat => chat.other_participant_name === name);
-    console.log("exisiting chat", existingChat)
     if (existingChat) {
         selectConversation(existingChat);
         createConversation.value = false;
@@ -562,7 +549,7 @@ onMounted(async () => {
                         <!-- here jeneh - joey added -->
                         <div class="flex justify-between">
                             <div class="flex items-center gap-x-2">
-                                <img alt="profile" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                                <img :src="conversation.profile_url || default_avatar" alt="profile" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
                                 <!-- here jeneh put :scr="" sa <img> -->
                                 <span class="font-medium truncate">{{ conversation.other_participant_name }}</span>
                             </div>
@@ -599,9 +586,9 @@ onMounted(async () => {
             </div> -->
 
             <div class="flex items-center gap-x-2 p-4 border-b">
-                <img alt="profile image" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                <img :src="selectedConversation?.profile || default_avatar" alt="profile image" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
                 <!-- here jeneh put :scr="" sa <img> -->
-                <span class="text-lg font-semibold">{{ selectedConversation?.NameFrom }}</span>
+                <span class="text-lg font-semibold">{{ selectedConversation?.NameFrom }} </span>
 
             </div>
 
@@ -612,7 +599,7 @@ onMounted(async () => {
                     <div v-if="message.user_id == user_id" class="flex text-sm text-gray-600 p-3 justify-end">
                         <div class="text-sm text-gray-600 p-3">
                             <div class="text-right">
-                                <span class="font-medium">{{ selectedConversation?.NameFrom }}</span>
+                                <span class="font-medium">You</span>
                                 <span class="text-[10px] ml-2">{{ formatTime(message.date) }}</span>
                             </div>
                             <div v-if="message.message?.includes('https')">

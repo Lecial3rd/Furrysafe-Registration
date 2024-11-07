@@ -119,12 +119,12 @@ export const createBuddyReport = async (req, res) => { //create report
 export const retrieveBuddyDetails = async (req, res) => { //retrieve buddy details
     const { _id } = req.body
 
+    console.log("id recieved", _id)
     try {
         const { data, error } = await supabase.rpc("get_buddy_details", {
             user_id_input: _id
         })
         if (error) {
-            console.error("Database insert error:", error);
             return res
                 .status(500)
                 .send({ message: "Failed to save details to the database." });
@@ -136,7 +136,6 @@ export const retrieveBuddyDetails = async (req, res) => { //retrieve buddy detai
         console.error("Unexpected error:", err);
         res.status(500).send({ message: err });
     }
-
 }
 export const updateBuddyDetails = async (req, res) => { //update buddy details
     const { _buddy_id, _user_name, _firstname, _lastname, _dob, _gender, _bio } = req.body;

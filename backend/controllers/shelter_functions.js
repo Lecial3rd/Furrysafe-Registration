@@ -16,10 +16,14 @@ import {
   getFullName,
   createNewChat,
   getAllShelters, //added getAllShelters from salpocial's code
-  addShelterPost,
-  acceptRescueReport,
   retrieveReports,
-  addShelterEvent
+  retrieveEvents,
+  addShelterPost, //Nov5 added addShelterPost, acceptRescueReport, addShelterEvent from salpocial's code
+  acceptRescueReport,
+  addShelterEvent,
+  getOngoingOperations,
+  confirmRescue,
+  cancelOperation
 } from "../model/shelterFunctionsModel.js";
 
 export const insertShelterAddress = (req, res) => {
@@ -70,14 +74,17 @@ export const getUserFullName = (req, res) => {
 export const insertNewChat = (req, res) => {
   createNewChat(req, res);
 };
-
-// New function to fetch all shelters for the map - from salpocial's code
 export const fetchAllShelters = (req, res) => {
   getAllShelters(req, res);
 };
+export const getReports = (req, res) => {
+  retrieveReports(req, res);
+};
 
+// Nov5 start of salpocial's new code
 // Function for shelter create new post
 export const insertShelterPost = (req, res) => {
+  ``
   addShelterPost(req, res);
 };
 
@@ -86,14 +93,20 @@ export const insertShelterEvent = (req, res) => {
   addShelterEvent(req, res);
 };
 
-
 // In progresss Shelter Rescue Operations
 export const insertShelterRescue = (req, res) => {
   acceptRescueReport(req, res);
 };
-
-// In progresss Shelter Rescue Operations
-export const getReports = (req, res) => {
-  retrieveReports(req, res);
+// Nov5 end of salpocial's new codeexport 
+export const getEvents = (req, res) => {
+  retrieveEvents(req, res);
 };
-
+export const getongoingoperation = (req, res) => {
+  getOngoingOperations(req, res);
+};
+export const setConfirmRescued = (req, res) => {
+  confirmRescue(req, res);
+};
+export const setCancelOperation = (req, res) => {
+  cancelOperation(req, res);
+};

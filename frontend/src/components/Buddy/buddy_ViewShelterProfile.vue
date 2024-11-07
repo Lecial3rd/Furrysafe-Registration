@@ -133,7 +133,7 @@ import { onMounted, ref } from 'vue';
 import { PhoneIcon, LinkIcon, EnvelopeIcon, MapPinIcon } from '@heroicons/vue/20/solid'
 import { SparklesIcon, RectangleStackIcon } from '@heroicons/vue/24/outline'
 
-import viewpostdetials from '@/components/Buddy/buddy_Profile_GridViewdetailsModal.vue';
+import viewpostdetials from '@/components/Buddy/buddy_Profile_GridReportViewdetailsModal.vue';
 import linkfooter from '@/components/footerLink.vue'; // footer
 
 // view detials

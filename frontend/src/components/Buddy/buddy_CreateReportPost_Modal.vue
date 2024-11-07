@@ -23,7 +23,7 @@ const selectedCategory = ref('')
 const lat = ref('');
 const lng = ref('');
 const selectedLocationAddress = ref('')
-const selectedreportCategory = ref('') 
+const selectedreportCategory = ref('')
 const petcondition = ref('')
 const reportDetails = ref('')
 const reportPhoto = ref(['this is url'])
@@ -35,8 +35,8 @@ const images = 'https://img.icons8.com/fluency/48/stack-of-photos.png';
 const category = ref([]);
 
 const selectedPostDetailsValue = ref([])
-const stringselectedreportCategory = ref(''); 
-const stringselectedPetCategory = ref(''); 
+const stringselectedreportCategory = ref('');
+const stringselectedPetCategory = ref('');
 
 import { defineProps } from 'vue'; // for reusing the form defining mode receive either edit or create yeahhh - joey
 const props = defineProps({ // for reuse form defines mode if either edit or create - joey
@@ -242,22 +242,22 @@ async function loadPostDetails() { //used in edit for retrieval of post details
 import default_avatar from '@/assets/images/buddy_default.jpg'
 const user_avatar = ref({})
 async function getUserDetails() {
-    try {
-        const _id = localStorage.getItem('u_id')
-        const response = await axios.post("http://localhost:5000/getbuddydetails",
-            {
-                _id: _id
-            }
-        )
-        if (response.data.success) {
-            console.log("response", response.data.data)
-            user_avatar.value = response.data.data[0]
-            console.log("user avatar", user_avatar.value.user_name) // Check to confirm values are set
-        }
+  try {
+    const _id = localStorage.getItem('u_id')
+    const response = await axios.post("http://localhost:5000/getbuddydetails",
+      {
+        _id: _id
+      }
+    )
+    if (response.data.success) {
+      console.log("response", response.data.data)
+      user_avatar.value = response.data.data[0]
+      console.log("user avatar", user_avatar.value.user_name) // Check to confirm values are set
     }
-    catch (err) {
-        console.log("error", err)
-    }
+  }
+  catch (err) {
+    console.log("error", err)
+  }
 }
 
 // Remove image from list
@@ -301,7 +301,8 @@ onMounted(async () => {
               class="relative transform overflow-hidden rounded-lg bg-white shadow-lg transition-all sm:max-w-[60rem] sm:mx-4 sm:w-full p-6">
               <div class="flex justify-between items-center">
                 <DialogTitle as="h3" class="text-lg font-semibold leading-6 text-gray-900">
-                  Create Report
+                  <!-- if edit "Edit report.." if create "create report..."- joey -->
+                  {{ mode === 'edit' ? 'Edit Report' : 'Create Report' }}
                 </DialogTitle>
                 <button @click="$emit('close')" ref="cancelButtonRef" class="text-gray-500 hover:text-gray-700">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -315,7 +316,7 @@ onMounted(async () => {
                   <img class="h-16 w-16 border border-gray-500 rounded-full object-cover" :src="profileUrl"
                     alt="profile image" />
                   <div class="flex flex-col gap-y-1">
-                    <span  class="text-base font-medium"> {{ fullname }}</span>
+                    <span class="text-base font-medium"> {{ fullname }}</span>
                     <select v-model="selectedreportCategory"
                       class="border text-gray-700 bg-slate-50 font-medium rounded-lg text-sm px-5 py-2.5  inline-flex text-left  ">
                       <option value="" selected disabled hidden>Report Type</option>

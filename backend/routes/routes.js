@@ -16,6 +16,7 @@ import {
   addVaccineCategory, //admin
   getAdminPosition,
   insertAdminAccount,
+  getUserDetails
 } from "../controllers/user.js";
 
 import {
@@ -36,10 +37,14 @@ import {
   getUserFullName,
   insertNewChat,
   fetchAllShelters, //added fetchAllShelters
-  insertShelterPost,
-  insertShelterRescue,
   getReports,
-  insertShelterEvent
+  getEvents,
+  insertShelterPost, // Nov5 added insertShelterPost, insertShelterRescue, insertShelterEvent from salpocial's code
+  insertShelterRescue,
+  insertShelterEvent,
+  getongoingoperation,
+  setConfirmRescued,
+  setCancelOperation
 } from "../controllers/shelter_functions.js";
 
 import {
@@ -105,10 +110,12 @@ router.post("/sterilization", getSterilization);
 router.get("/pet_status", getPetStatus);
 router.post("/save_pet_profile", upload2.any(), insertPetProfile);
 router.post("/update_pet_profile", upload2.any(), updatePetProfile);
+
+// Nov5 start of salpocial's new code
 router.post("/insertshelterpost", upload2.any(), insertShelterPost);  //New route for shelter post
-router.post("/accept-rescue", insertShelterRescue); // New route for rescue operations
-router.get("/getereports", getReports);  // New route for getting rescue reports
+router.post("/accept-report", insertShelterRescue); // New route for rescue operations
 router.post("/create-event", upload2.any(), insertShelterEvent); // new route for shelter event
+// Nov5 end of salpocial's new code
 
 //chat
 router.post("/search", searchUserName);
@@ -128,5 +135,20 @@ router.post("/insertbuddyreport", upload2.any(), insertBuddyReport)
 router.post("/getbuddydetails", upload2.any(), getBuddyDetails)
 router.post("/setbuddydetails", upload2.any(), setBuddyDetails) 
 router.post("/getbuddypost", upload2.any(), getBuddyPost) 
+
+//shelter function 
+router.post("/getereports", getReports) 
+router.post("/insertshelterpost", upload2.any(), insertShelterPost);  //New route for shelter post
+router.post("/getevents", upload2.any(), getEvents);  
+router.post("/getongoingoperations", upload2.any(), getongoingoperation);  
+router.post("/confirmRescue", upload2.any(), setConfirmRescued);  
+router.post("/cancelOperation", upload2.any(), setCancelOperation);  
+
+
+//all 
+router.post("/getusedetails", getUserDetails) 
+
+
+
 
 export default router;

@@ -1,12 +1,13 @@
+
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import axios from "axios"
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { ChevronLeftIcon, ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/vue/20/solid";
-import statusbuttons from '@/components/Shelter/shelter_RescueOp_ReportCard_ReportStatusButtons.vue';
-import axios from "axios"
-
 import CreateReportModal from '@/components/Buddy/buddy_CreateReportPost_Modal.vue' // for edit modal
+
 const openEditModal = ref(false) // for create report modal
+const selectedPost = ref()
 
 // dropdown button (edit and delete)
 const isOpen = ref(false);
@@ -14,33 +15,40 @@ const toggleDropdown = () => {
     isOpen.value = !isOpen.value;
 };
 
-// Reactive state
-const currentIndex = ref(0);
-const postImageUrl = computed(() => selectedReportDetails.value.photos[currentIndex.value]);
-
-const selectedReportDetails = ref([])
-
-const props = defineProps({ // for reuse form defines mode if either edit or create - joey
+const props = defineProps({
     selectedPostDetails: {
         type: Object,
-        required: false
-    }
+        required: true,
+    },
 });
+
+// Reactive state
+const currentIndex = ref(0);
+
+const viewpostdetials = {
+    id: 1,
+    username: 'June',
+    profile: require("@/assets/images/homepage.png"),
+    reportstatus: "In process",
+    reporttype: "Missing Dog",
+    location: "Acacia Davao City",
+    petcategory: 'Dog',
+    petcondition: "Abandoned and injured",
+    reportdetails: "Found this dog at abandoned lot near STI College Davao please rescue it...",
+    imageUrls: [
+        require("@/assets/images/homepage.png"),
+        require("@/assets/images/charles.png"),
+        require("@/assets/images/eric.png"),
+        require("@/assets/images/bals.png"),
+    ],
+};
+
 // Computed properties
-const currentImageUrl = computed(() => selectedReportDetails.value.photos[currentIndex.value]);
+// const currentImageUrl = computed(() => viewpostdetials.imageUrls[currentIndex.value]);
+const postImageUrl = computed(() => selectedPost.value.photos[currentIndex.value]);
 const hasPrev = computed(() => currentIndex.value > 0);
-const hasNext = computed(() => currentIndex.value < selectedReportDetails.value.photos.length - 1);
-const formattedDate = computed(() => {
-    if (selectedReportDetails.value.date) {
-        const date = new Date(selectedReportDetails.value.date);
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric"
-        });
-    }
-    return "Invalid date";
-});
+const hasNext = computed(() => currentIndex.value < selectedPost.value.photos.length - 1);
+
 
 // Methods
 const nextImage = () => {
@@ -54,7 +62,6 @@ const prevImage = () => {
         currentIndex.value--;
     }
 };
-
 //functions 
 let _user_id = ref(null)
 let userdetails = ref([])
@@ -76,17 +83,17 @@ async function getUserDetailsOnHover() {
     }
 
 }
-onMounted(async () => {
-    selectedReportDetails.value = props.selectedPostDetails;
-    console.log("props", selectedReportDetails.value);
-    _user_id.value = selectedReportDetails.value.user_id
+onMounted (async () => {
+    selectedPost.value = props.selectedPostDetails
+    _user_id.value = selectedPost.value.user_id
+
     await getUserDetailsOnHover()
 })
 
 const emit = defineEmits(['close']) // for closing the modal
-
 const open = ref(true)
 </script>
+
 <template>
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @click.self="$emit('close')">
@@ -118,29 +125,38 @@ const open = ref(true)
                             <div class="flex flex-col bg-white sm:rounded-2xl md:rounded-none">
                                 <div class="flex sm:flex-col md:flex-row">
                                     <!-- display username on small screen -->
-                                    <!-- Nov5 salpocial's replacement -->
-                                    <!-- <div
+                                    <div
                                         class="flex items-center justify-between text-gray-700 md:hidden gap-x-2 border-b px-[2rem] py-4">
-                                        <div class="flex items-center gap-x-2">
-                                            <img :src="viewpostdetials.profile" alt="profile"
-                                                class="w-10 h-10 rounded-full object-cover" />
-                                            <span class="font-bold sm:text-base xl:text-xl">
-                                                {{ selectedReportDetails.posted_by }}</span>
-                                        </div> -->
-                                    <!-- Nov5 salpocial's replacement but not use-->
-
-                                    <!-- orig code -->
-                                    <div v-if="userdetails[0]"
-                                        class="flex items-center justify-between text-gray-700 md:hidden gap-x-2 border-b px-[2rem] py-4">
-                                        <div class="flex items-center gap-x-2">
+                                        <div v-if="userdetails[0]" class="flex items-center gap-x-2">
                                             <img :src="userdetails[0].profile_url" alt="profile"
                                                 class="w-10 h-10 rounded-full object-cover" />
                                             <span class="font-bold sm:text-base xl:text-xl">
-                                                {{ selectedReportDetails.posted_by }}</span>
+                                                {{ selectedPost.posted_by }}</span>
                                         </div>
+
+                                        <!-- dropdown buttons -->
+                                        <div class="relative inline-block text-left">
+                                            <button @click="toggleDropdown" class="focus:outline-none">
+                                                <EllipsisHorizontalIcon class="h-6 w-6 text-gray-500" />
+                                            </button>
+
+                                            <div v-if="isOpen"
+                                                class="absolute right-0 w-[10rem] text-sm font-medium border rounded-lg shadow-lg bg-white z-10">
+                                                <div role="menu" aria-orientation="vertical"
+                                                    aria-labelledby="options-menu">
+                                                    <button @click="editPost"
+                                                        class="block w-full py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-t-lg"
+                                                        role="menuitem">Edit Post</button>
+                                                    <button @click="deletePost"
+                                                        class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-b-lg"
+                                                        role="menuitem">Delete Post</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
                                     <div
-                                        class="relative overflow-hidden bg-black flex justify-center items-center sm:w-full md:w-[60%] xl:w-[70%]">
+                                        class="relative bg-black flex justify-center items-center sm:w-full md:w-[60%] xl:w-[70%]">
                                         <div
                                             class="absolute left-4 z-10 bg-white bg-opacity-40 rounded-full flex items-center hover:bg-gray-100 hover:bg-opacity-50">
                                             <button v-if="hasPrev" @click="prevImage">
@@ -150,7 +166,7 @@ const open = ref(true)
                                         </div>
                                         <div class="flex">
                                             <img :src="postImageUrl" alt="Image post"
-                                                class="flex-shrink-0 aspect-auto sm:w-full xl:w-[80rem] xl:h-[55rem] object-contain" />
+                                                class="flex-shrink-0 aspect-auto sm:w-full xl:w-[80rem] xl:h-[50rem] object-contain" />
                                         </div>
                                         <div
                                             class="absolute right-4 z-10 bg-white bg-opacity-40 rounded-full flex items-center hover:bg-gray-100 hover:bg-opacity-50">
@@ -161,41 +177,54 @@ const open = ref(true)
                                         </div>
                                     </div>
                                     <div
-                                        class="text-gray-700 sm:w-full md:w-[40%] xl:w-[30%] sm:py-[1rem] flex flex-col text-sm sm:border-t lg:border-l ">
+                                        class="text-gray-700 sm:w-full md:w-[40%] xl:w-[30%] sm:py-[1rem] rounded-r-2xl flex flex-col text-sm sm:border-t lg:border-l ">
                                         <!-- display details in large screen -->
                                         <div
                                             class="flex items-center justify-between sm:hidden md:flex gap-x-2 border-b px-[2rem] pb-4">
-                                            <!-- Nov5 salpocial's replacement -->
-                                            <!-- <div class="flex items- center gap-x-3">
-                                                <img :src="viewpostdetials.profile" alt="profile"
-                                                    class="w-10 h-10 rounded-full object-cover" />
-                                                <span class="font-bold sm:text-base xl:text-xl">{{
-                                                    selectedReportDetails.posted_by }}</span>
-                                            </div> -->
-                                            <!-- Nov5 salpocial's replacement but not use-->
-
-                                            <!-- orig code -->
-                                            <div v-if="userdetails[0]" class="flex items-center gap-x-3">
+                                            <div v-if="userdetails[0]" class="flex items-center gap-x-2">
                                                 <img :src="userdetails[0].profile_url" alt="profile"
                                                     class="w-10 h-10 rounded-full object-cover" />
                                                 <span class="font-bold sm:text-base xl:text-xl">{{
-                                                    selectedReportDetails.posted_by }}</span>
+                                                    selectedPost.posted_by }}</span>
+                                            </div>
+
+                                            <!-- dropdown buttons -->
+                                            <div class="relative inline-block text-left">
+                                                <button @click="toggleDropdown" class="focus:outline-none">
+                                                    <EllipsisHorizontalIcon class="h-6 w-6 text-gray-500" />
+                                                </button>
+
+                                                <div v-if="isOpen"
+                                                    class="absolute right-0 w-[10rem] text-base font-medium border rounded-lg shadow-lg bg-white z-10">
+                                                    <div role="menu" aria-orientation="vertical"
+                                                        aria-labelledby="options-menu">
+
+                                                        <button @click="openEditModal = true; currentModalMode = 'edit'"
+                                                            class="block w-full py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-t-lg"
+                                                            role="menuitem">Edit Post</button>
+                                                        <CreateReportModal v-if="openEditModal && selectedPost" mode="edit"
+                                                            :selectedPostDetails="selectedPost"
+                                                            @close="openEditModal = false" />
+
+                                                        <button @click="deletePost"
+                                                            class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-b-lg"
+                                                            role="menuitem">Delete Post</button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="flex flex-col text-left mx-8 my-4 sm:text-sm md:text-base">
-                                            <div class="flex justify-center border-b pb-7">
-                                                <dd class="flex flex-col justify-center gap-x-3 gap-y-1">
-                                                    <p
-                                                        class="max-w-2xl text-sm leading-6 text-gray-500 font-semibold flex justify-center">
-                                                        Report Status
+                                        <div class="flex flex-col text-left mx-8 my-4 xl:my-8 sm:text-sm md:text-base">
+                                            <div class="flex justify-center border-b pb-8">
+                                                <dd class="flex flex-col justify-center gap-x-3">
+                                                    <p class="max-w-2xl text-sm leading-6 text-gray-500">Report Status
                                                     </p>
                                                     <span
-                                                        class="text-[12px] font-medium leading-6 text-red-600 bg-red-50 border border-red-100 px-4 rounded-full w-fit">
-                                                        {{ selectedReportDetails.report_status }}</span>
+                                                        class="text-[12px] font-medium leading-6 text-gray-900 bg-green-50 py-1 px-4 rounded-2xl w-fit">{{
+                                                            selectedPost.report_status }}</span>
                                                 </dd>
                                             </div>
                                             <div class="my-4">
-                                                <div class="flex justify-center lg:justify-start">
+                                                <div>
                                                     <h3 class="text-base font-semibold leading-7 text-gray-900">
                                                         Report Information</h3>
                                                 </div>
@@ -207,54 +236,55 @@ const open = ref(true)
                                                                 Report Type
                                                             </dt>
                                                             <dd
-                                                                class="text-sm leading-6 font-bold text-red-600 xl:col-span-2">
-                                                                {{ selectedReportDetails.post_type }}</dd>
+                                                                class="mt-1 text-sm leading-6 text-gray-700 xl:col-span-2 sm:mt-0">
+                                                                {{ selectedPost.post_type }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-white px-4 py-6 sm:grid xl:grid-cols-3 sm:gap-y-2 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Pet Category</dt>
-                                                            <dd class="text-sm leading-6 text-gray-700 xl:col-span-2">
-                                                                {{ selectedReportDetails.category }}</dd>
+                                                            <dd
+                                                                class="mt-1 text-sm leading-6 text-gray-700 xl:col-span-2 sm:mt-0">
+                                                                {{ selectedPost.pet_category }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-gray-50 px-4 py-6 sm:grid xl:grid-cols-3 gap-y-1 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Pet Condition</dt>
-                                                            <dd class="text-sm leading-6 text-gray-700 xl:col-span-2">
-                                                                {{ selectedReportDetails.pet_condition }}</dd>
+                                                            <dd
+                                                                class="mt-1 text-sm leading-6 text-gray-700 xl:col-span-2 sm:mt-0">
+                                                                {{ selectedPost.pet_condition }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-white px-4 py-6 sm:grid xl:grid-cols-3 sm:gap-y-2 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Report Location</dt>
-                                                            <dd class="text-sm leading-6 text-gray-700 xl:col-span-2">
-                                                                {{ selectedReportDetails.report_address_location }}</dd>
+                                                            <dd
+                                                                class="mt-1 text-sm leading-6 text-gray-700 xl:col-span-2 sm:mt-0">
+                                                                {{ selectedPost.report_address_location }}</dd>
                                                         </div>
                                                         <div
                                                             class="bg-gray-50 px-4 py-6 sm:grid xl:grid-cols-3 gap-y-1 gap-x-4 sm:px-3">
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Report Details</dt>
-                                                            <dd class="text-sm leading-6 xl:col-span-2 text-gray-700">
-                                                                {{ selectedReportDetails.content }}</dd>
-                                                        </div>
-                                                        <div
-                                                            class="px-4 py-6 sm:grid xl:grid-cols-3 gap-y-1 gap-x-4 sm:px-3">
-                                                            <dt class="text-sm font-medium leading-6 text-gray-900">
-                                                                Date Reported</dt>
                                                             <dd
-                                                                class="text-sm leading-6 xl:col-span-2 text-gray-500 font-bold">
-                                                                {{ formattedDate }}
-                                                            </dd>
+                                                                class="mt-1 text-sm leading-6 xl:col-span-2 text-gray-700">
+                                                                {{ selectedPost.content }}</dd>
                                                         </div>
-                                                        <div>
-                                                            <button class="w-full">
-                                                                <statusbuttons />
-                                                            </button>
-                                                        </div>
+
                                                     </dl>
                                                 </div>
                                             </div>
+                                            <!-- <div class="flex justify-center sm:mt-4 xl:mt-8">
+                                                <dd class="flex flex-col justify-center gap-y-1">
+                                                    <p class="max-w-2xl text-sm leading-6 text-gray-500">Report Status
+                                                    </p>
+                                                    <span
+                                                        class="text-[12px] font-medium leading-6 text-gray-900 bg-green-50 py-1 px-4 rounded-2xl w-fit">{{
+                                                            viewpostdetials.reportstatus }}</span>
+                                                </dd>
+                                            </div> -->
+
                                         </div>
                                     </div>
                                 </div>

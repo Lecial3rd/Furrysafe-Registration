@@ -263,3 +263,26 @@ export const logoutUser = async (req, res) =>{
     }
 }
 
+export const retrieveUserDetails = async (req, res) => { //retrieve user details
+    const { _id } = req.body
+
+    console.log("id recieved", _id)
+    try {
+        const { data, error } = await supabase.rpc("get_user_details", {
+            user_id_input: _id
+        })
+        if (error) {
+            return res
+                .status(500)
+                .send({ message: "Failed to retrieve user from database." });
+        } else {
+            res.status(200).send({ success: true, data: data });
+            console.log(data)
+        }
+    }
+    catch (err) {
+        console.error("Unexpected error:", err);
+        res.status(500).send({ message: err });
+    }
+}
+

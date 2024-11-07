@@ -1,9 +1,9 @@
-import { validateUser, createUser, logoutUser} from "../model/userModel.js";
+import { validateUser, createUser, logoutUser, retrieveUserDetails} from "../model/userModel.js";
 
 import { getShelterRequests, getShelterRequestsDetails, getImage,
          update_reviewFunction, statusDisplay, loadPetCategory,
          addBreed, insertPetCategory, insertVaccineCategory, 
-         loadAdminPositions, registerAdminAccount } from "../model/adminModel.js" 
+         loadAdminPositions, registerAdminAccount,  } from "../model/adminModel.js" 
 
 // import { insertShelterAddress } from "../model/shelterFunctionsModel.js"
 
@@ -54,6 +54,10 @@ export const getAdminPosition = (req, res) => {
 export const insertAdminAccount = (req, res) => {
     registerAdminAccount (req,res)
 }
+export const getUserDetails = (req, res) => {
+    retrieveUserDetails(req, res);
+  };
+  
 
 // //shelter functions 
 // export const addshelteraddress = (req, res) => {

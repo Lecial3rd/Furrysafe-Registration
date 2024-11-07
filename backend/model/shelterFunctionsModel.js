@@ -74,7 +74,18 @@ export const retrieveProfile = async (req, res) => {
 //save modified shelter details and links
 export const saveShelter_and_Link = async (req, res) => {
   try {
-    const { shelterid, sheltername, shelteraddress, image, contact, email, latitude, longitude, bio, links } = req.body;
+    const {
+      shelterid,
+      sheltername,
+      shelteraddress,
+      image,
+      contact,
+      email,
+      latitude,
+      longitude,
+      bio,
+      links,
+    } = req.body;
     const file = req.file;
     let filePath = null;
 
@@ -92,7 +103,7 @@ export const saveShelter_and_Link = async (req, res) => {
         const { data: profileUrlData } = supabase.storage
           .from("images")
           .getPublicUrl(filePath);
-          filePath = profileUrlData.publicUrl; // Profile photo URL
+        filePath = profileUrlData.publicUrl; // Profile photo URL
 
         console.error("Profile uploaded:", filePath);
       } else {
@@ -100,8 +111,7 @@ export const saveShelter_and_Link = async (req, res) => {
           .status(500)
           .send({ message: "Failed to upload profile image." });
       }
-    }
-    else {
+    } else {
       filePath = image;
     }
 
@@ -140,7 +150,7 @@ export const saveShelter_and_Link = async (req, res) => {
       contactValue = contact; // Leave as is if it's already a number
     }
 
-    console.log("file path to save", filePath)
+    console.log("file path to save", filePath);
     // Call the RPC function to update shelter details
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       "update_shelter_details",
@@ -176,16 +186,20 @@ export const saveShelter_and_Link = async (req, res) => {
 };
 //retrieve pet details and EVERYTHING KATUNG FOCKING 14??? TABLE QUERY
 export const retrievePetProfile = async (req, res) => {
-  const { _userid, _petid } = req.body;
+  let { _userid, _petid, _post_id } = req.body;
+
+  _post_id = (_post_id == null || _post_id == 'null') ? null : _post_id
 
   try {
     const { data, error } = await supabase.rpc("retrieve_pet_profiles", {
       _user_id: _userid,
       _pet_id: _petid,
+      _post_id: _post_id
     });
     if (error) {
       console.log("Error:", error);
     } else {
+      console.log(data)
       return res.status(200).json(data);
     }
   } catch (err) {
@@ -687,14 +701,14 @@ export const sendMessage = async (req, res) => {
     }
     console.log(extraPhotoUrls);
 
-    if (message == '') {
+    if (message == "") {
       message = null;
     }
 
     if (extraPhotoUrls.length == 0) {
-      extraPhotoUrls = null
+      extraPhotoUrls = null;
     }
-    console.log(extraPhotoUrls, message)
+    console.log(extraPhotoUrls, message);
     const { data, error } = await supabase.rpc("insert_chat_message", {
       _user_id: user_id,
       _chat_id: chat_id,
@@ -800,27 +814,85 @@ export const getAllShelters = async (req, res) => {
 };
 // end of added from salpocial's code
 
+//fetch reports in shelter
+export const retrieveReports = async (req, res) => {
+  try {
+    let { _post_id, _post_type, _user_id } = req.body;
+
+    _post_id = _post_id == null || _post_id == '' ? null : _post_id;
+    _user_id = (_user_id == null || _user_id == '') ? null : _user_id
+    _post_type = (_post_type == null || _post_type == '') ? null : _post_type
+
+    const { data, error } = await supabase.rpc("get_filtered_posts", {
+      _post_id: _post_id,
+      _post_type: _post_type,
+      _user_id: _user_id
+    });
+    if (!error) {
+      res.status(200).send(data);
+    } else {
+    }
+  } catch (err) {
+    console.log("error occured in retrieveReports", err);
+  }
+};
+
+export const retrieveEvents = async (req, res) => {
+  try {
+    let { _event_id, _shelter_id } = req.body
+
+    _event_id = (_event_id == null || _event_id == '') ? null : _event_id
+    _shelter_id = (_shelter_id == null || _shelter_id == '') ? null : _shelter_id
+
+    const { data, error } = await supabase.rpc("get_events_by_shelter", {
+      _shelter_id: _shelter_id,
+      _event_id: _event_id
+    });
+    if (!error) {
+      res.status(200).send(data);
+    }
+    else {
+      res.status(500).send({ success: false, error: error.message, message: 'An Error Occured' });
+    }
+  }
+  catch (err) {
+    console.log("an error occured in the backend | retrieve Events")
+  }
+}
+export default { addShelterAddress };
+
+// Nov5 start of salpocial's code
 // Add new shelter post
 export const addShelterPost = async (req, res) => {
   try {
     console.log("Received request body:", req.body);
     console.log("Received files:", req.files);
-    
+
     // Extract and parse parameters
     let user_id = parseInt(req.body.user_id);
     let pet_id = req.body.pet_id === "" ? null : parseInt(req.body.pet_id); // Handle empty string
     const { content } = req.body;
     const files = req.files;
 
-    console.log("Parsed data:", { user_id, pet_id, content, filesCount: files ? files.length : 0 });
-    
+    console.log("Parsed data:", {
+      user_id,
+      pet_id,
+      content,
+      filesCount: files ? files.length : 0,
+    });
+
     // Check for required fields
     if (!user_id) {
-      return res.status(400).json({ success: false, message: 'User  ID is required' });
+      return res
+        .status(400)
+        .json({ success: false, message: "User  ID is required" });
     }
 
     if (!files || files.length === 0) {
-      return res.status(400).json({ success: false, message: 'Each post must contain at least one photo.' });
+      return res.status(400).json({
+        success: false,
+        message: "Each post must contain at least one photo.",
+      });
     }
 
     // Handle file uploads
@@ -828,7 +900,7 @@ export const addShelterPost = async (req, res) => {
     for (const file of files) {
       const filePath = `post_photos/${Date.now()}_${file.originalname}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('pets_images')
+        .from("pets_images")
         .upload(filePath, file.buffer, {
           contentType: file.mimetype,
         });
@@ -836,37 +908,42 @@ export const addShelterPost = async (req, res) => {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from('pets_images')
+        .from("pets_images")
         .getPublicUrl(filePath);
-      
+
       photoUrls.push(urlData.publicUrl);
     }
 
     // Set report status to "Pending"
-    const reportStatus = "Pending";
+    const reportStatus = "In Progress";
 
     // Insert post
-    const { data, error } = await supabase.rpc('insert_post_with_details', {
+    const { data, error } = await supabase.rpc("insert_post_with_details", {
       _user_id: user_id,
       _post_type: 1,
       _content: content,
       _lat: null,
       _long: null,
-      _address: null, 
+      _address: null,
       _pet_condition: null,
       _photo_urls: photoUrls,
       _pet_category: null,
       _other_pet_category: null,
       _pet_id: pet_id,
-      _report_status: reportStatus // Pass the report status here
+      _report_status: reportStatus, // Pass the report status here
     });
 
     if (error) throw error;
 
-    res.status(200).json({ success: true, message: 'Post created successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: "Post created successfully" });
   } catch (err) {
-    console.error('Error in addShelterPost:', err);
-    res.status(500).json({ success: false, message: err.message || 'Failed to create post' });
+    console.error("Error in addShelterPost:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Failed to create post",
+    });
   }
 };
 
@@ -874,67 +951,176 @@ export const addShelterPost = async (req, res) => {
 export const acceptRescueReport = async (req, res) => {
   try {
     const { post_id, shelter_id, status } = req.body;
-
     // First, update the report status in tbl_post_details
-    const { data: updateData, error: updateError } = await supabase
-      .from('tbl_post_details')
-      .update({ report_status: status })
-      .eq('post_id', post_id);
 
-    if (updateError) {
-      console.error("Error updating report status:", updateError);
-      return res.status(500).json({ success: false, message: "Failed to update report status" });
+    const { data: handlerData, error: handlerError } = await supabase  //insert to tbl_report_handler
+      .from("tbl_report_handler")
+      .insert([
+        {
+          post_id: post_id,
+          handled_by: shelter_id
+        },
+      ]);
+
+    if (handlerError) {
+      console.error("Error creating handler record:", handlerError);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to create handler record" });
     }
+    else {
+      const { data: updateData, error: updateError } = await supabase //update in post_Details
+        .from("tbl_post_details")
+        .update({ report_status: "Pending" })
+        .eq("post_id", post_id);
 
-    // If status is "Rescued", create an entry in tbl_report_handler
-    if (status === "Rescued") {
-      const { data: handlerData, error: handlerError } = await supabase
-        .from('tbl_report_handler')
-        .insert([
-          {
-            post_id: post_id,
-            handled_by: shelter_id,
-            created_at: new Date()
-          }
-        ]);
-
-      if (handlerError) {
+      if (updateError) {
         console.error("Error creating handler record:", handlerError);
-        return res.status(500).json({ success: false, message: "Failed to create handler record" });
+        return res
+          .status(500)
+          .json({ success: false, message: "Failed to update record" });
       }
     }
 
-    return res.status(200).json({ 
-      success: true, 
-      message: `Report ${status === "Rescued" ? "accepted" : "cancelled"} successfully` 
+    return res.status(200).json({
+      success: true,
+      message: `Report ${status === "Rescued" ? "Accepted" : "Cancelled"
+        } successfully`,
     });
-
   } catch (err) {
     console.error("Error in acceptRescueReport:", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
-//fetch reports in shelter
-export const retrieveReports = async (req, res) => {
+export const confirmRescue = async (req, res) => {
+  const { post_id, shelter_id } = req.body;
+
   try {
-    let { _post_id, _post_type } = req.body
+      console.log('Starting rescue confirmation process:', { post_id, shelter_id });
 
-    _post_id = (_post_id == null) ? null : _post_id
+      // First, get the user_id associated with the shelter
+      const { data: shelterData, error: shelterError } = await supabase
+          .from('tbl_shelter')
+          .select('user_id')
+          .eq('shelter_id', shelter_id)
+          .single();
 
-    const { data, error } = await supabase.rpc("get_filtered_posts", {
-      _post_id: _post_id,
-      _post_type: _post_type,
+      if (shelterError) {
+          console.error('Error fetching shelter data:', shelterError);
+          return res.status(400).json({
+              success: false,
+              message: 'Could not find shelter data',
+              error: shelterError
+          });
+      }
+
+      const user_id = shelterData.user_id;
+
+      // Verify if the post exists and get its details
+      const { data: postDetails, error: postError } = await supabase
+          .from('tbl_post_details')
+          .select('*')
+          .eq('post_id', post_id)
+          .single();
+
+      if (postError) {
+          console.error('Error fetching post details:', postError);
+          return res.status(400).json({
+              success: false,
+              message: 'Could not find post details',
+              error: postError
+          });
+      }
+
+      // Use insert_pet_data function to create the pet record
+      const { data, error } = await supabase.rpc('insert_pet_data', {
+          _owner_id: user_id,
+          _gender: 'm', // default gender
+          _pet_type: postDetails.pet_category,
+          _other_pet_type: postDetails.other_pet_category,
+          _breed_id: null,
+          _other_breed: null,
+          _status_id: 1, // Assuming 1 is "Available" status
+          _pet_name: 'Rescued Pet',
+          _pet_nickname: null,
+          _date_rehomed: null,
+          _age: null,
+          _size_weight: null,
+          _energy_level: null,
+          _coat_fur: null,
+          _about_pet: postDetails.content,
+          _sterilization_id: null,
+          _other_sterilization: null,
+          _medical_condition: postDetails.pet_condition,
+          _special_needs: null,
+          _vaccine_id: [], // empty array for no vaccines
+          _other_vaccine: null,
+          _pet_profile_url: null,
+          _pet_extra_photos: []
+      });
+
+      if (error) {
+          console.error('Error creating pet record:', error);
+          return res.status(500).json({
+              success: false,
+              message: 'Failed to create pet record',
+              error: error
+          });
+      }
+
+      // Update post details with status
+      const { error: updateError } = await supabase
+          .from('tbl_post_details')
+          .update({
+              report_status: 'Rescued'
+          })
+          .eq('post_id', post_id);
+
+      if (updateError) {
+          console.error('Error updating post details:', updateError);
+          return res.status(500).json({
+              success: false,
+              message: 'Failed to update post status',
+              error: updateError
+          });
+      }
+
+      // If everything succeeded
+      return res.status(200).json({
+          success: true,
+          message: 'Pet rescued successfully'
+      });
+
+  } catch (error) {
+      console.error('Unexpected error in confirmRescue:', error);
+      return res.status(500).json({
+          success: false,
+          message: 'An unexpected error occurred',
+          error: error.message
+      });
+  }
+};
+
+export const cancelOperation = async (req, res)=>{
+  try {
+    const { _shelter_id, _post_id} = req.body
+
+    const { data, error } = await supabase.rpc("cancel_operation", {
+      input_handled_by: _shelter_id,
+      input_post_id: _post_id
     });
-    if(!error){
-      res.status(200).send(data);
+    if (!error) {
+      res.status(200).send({success: true});
     }
-    else{
-      
+    else {
+      res.status(500).send({ success: false, error: error.message, message: 'An Error Occured' });
     }
   }
   catch (err) {
-    console.log("error occured in retrieveReports", err)
+    console.log("An error occured: Cancel Operation", err)
   }
 }
 
@@ -944,7 +1130,15 @@ export const addShelterEvent = async (req, res) => {
     console.log("Received event data:", req.body);
     console.log("Received files:", req.files);
 
-    const { host_id, event_name, date_time_start, date_time_end, location_lat, location_long, caption } = req.body;
+    const {
+      host_id,
+      event_name,
+      date_time_start,
+      date_time_end,
+      location_lat,
+      location_long,
+      caption,
+    } = req.body;
     const files = req.files;
     let photoUrls = [];
 
@@ -952,14 +1146,15 @@ export const addShelterEvent = async (req, res) => {
     if (files && files.length > 0) {
       for (const photo of files) {
         const photoPath = `events/${Date.now()}_${photo.originalname}`;
-        
+
         console.log("Uploading photo:", photoPath);
-        
-        const { data: photoUploadData, error: photoUploadError } = await supabase.storage
-          .from("pets_images")
-          .upload(photoPath, photo.buffer, {
-            contentType: photo.mimetype,
-          });
+
+        const { data: photoUploadData, error: photoUploadError } =
+          await supabase.storage
+            .from("pets_images")
+            .upload(photoPath, photo.buffer, {
+              contentType: photo.mimetype,
+            });
 
         if (!photoUploadError) {
           const { data: photoUrlData } = supabase.storage
@@ -969,39 +1164,80 @@ export const addShelterEvent = async (req, res) => {
           console.log("Photo uploaded successfully:", photoUrlData.publicUrl);
         } else {
           console.error("Photo upload error:", photoUploadError);
-          return res.status(500).send({ message: "Failed to upload event photo." });
+          return res
+            .status(500)
+            .send({ message: "Failed to upload event photo." });
         }
       }
     }
 
     console.log("Inserting event into database");
-
+    console.log(photoUrls)
     // Insert into tbl_events
-    const { data, error } = await supabase
-      .from('tbl_events')
-      .insert([{
-        host_id: parseInt(host_id),
-        event_name: event_name,
-        date_time_start: date_time_start,
-        date_time_end: date_time_end,
-        location_lat: parseFloat(location_lat),
-        location_long: parseFloat(location_long),
-        caption: caption,
-        photo_display_url: photoUrls // Store array of URLs
-      }]);
+    const { data, error } = await supabase.rpc("insert_event", {
+      _host_id: parseInt(host_id),
+      _event_name: event_name,
+      _date_time_start: date_time_start,
+      _date_time_end: date_time_end,
+      _lat: parseFloat(location_lat),
+      _long: parseFloat(location_long),
+      _caption: caption,
+      _photo_url: photoUrls
+    })
+
+    // from("tbl_events").insert([
+    //   {
+    //     host_id: parseInt(host_id),
+    //     event_name: event_name,
+    //     date_time_start: date_time_start,
+    //     date_time_end: date_time_end,
+    //     location_lat: parseFloat(location_lat),
+    //     location_long: parseFloat(location_long),
+    //     caption: caption,
+    //     photo_display_url: photoUrls, // Store array of URLs
+    //   },
+    // ]);
 
     if (error) {
       console.error("Database insert error:", error);
-      return res.status(500).send({ success: false, message: "Failed to create event", error: error.message });
+      return res.status(500).send({
+        success: false,
+        message: "Failed to create event",
+        error: error.message,
+      });
     }
 
-    console.log("Event created successfully");
-    res.status(200).send({ success: true, message: "Event created successfully", photoUrls: photoUrls });
-
+    res.status(200).send({
+      success: true,
+      message: "Event created successfully",
+      photoUrls: photoUrls,
+    });
   } catch (err) {
     console.error("Error in addShelterEvent:", err);
-    res.status(500).send({ success: false, message: "Internal server error", error: err.message });
+    res.status(500).send({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
   }
 };
 
-export default { addShelterAddress };
+export const getOngoingOperations = async (req, res) => {
+  try {
+    const { _shelter_id, _status} = req.body
+
+    const { data, error } = await supabase.rpc("get_handled_reports", {
+      handled_by_id: _shelter_id,
+      _status: _status
+    });
+    if (!error) {
+      res.status(200).send(data);
+    }
+    else {
+      res.status(500).send({ success: false, error: error.message, message: 'An Error Occured' });
+    }
+  }
+  catch (err) {
+
+  }
+}

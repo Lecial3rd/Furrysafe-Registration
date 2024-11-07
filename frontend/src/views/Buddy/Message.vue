@@ -1,3 +1,68 @@
+<script setup>
+import { ref, onMounted, computed, watch, nextTick , reactive} from 'vue';
+import { MagnifyingGlassIcon, PaperAirplaneIcon, PaperClipIcon } from "@heroicons/vue/20/solid";
+import axios from 'axios';
+import { io } from 'socket.io-client';
+
+import default_avatar from '@/assets/images/buddy_default.jpg'
+
+const showNewMessage = ref(false);
+const newMessage = ref('');
+const uploadedFile = ref(null);
+const searchTerm = ref('');
+const isModalVisible = ref(false);
+const selectedUser = ref('');
+const users = ['June Cyril Dolendo', 'afdsafsdafsda', 'afsdafas', 'afsdafsa', 'CAPSTONE : UI | FURSAFE', 'afdsafsad', 'weqrewqrewq', 'zvxczvzvz'];
+const filteredUsers = ref([]);
+const messages = reactive([]);
+
+function toggleModal() {
+  isModalVisible.value = !isModalVisible.value;
+}
+
+function toggleNewMessage() {
+  showNewMessage.value = !showNewMessage.value;
+}
+
+function sendMessage() {
+  if (newMessage.value.trim() || uploadedFile.value) {
+    const message = {
+      text: newMessage.value.trim(),
+      photo: uploadedFile.value ? URL.createObjectURL(uploadedFile.value) : null,
+      isSent: true,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    messages.push(message);
+    newMessage.value = '';
+    uploadedFile.value = null;
+  }
+}
+
+function handleFileUpload(event) {
+  uploadedFile.value = event.target.files[0];
+}
+
+function triggerFileInput() {
+  document.getElementById('fileInput').click();
+}
+
+function filterUsers() {
+  filteredUsers.value = users.filter(user => user.toLowerCase().includes(searchTerm.value.toLowerCase()));
+}
+
+function selectUser(user) {
+  searchTerm.value = user;
+  filteredUsers.value = [];
+}
+
+function startChat() {
+  if (selectedUser.value) {
+    console.log(`Starting chat with ${selectedUser.value}`);
+    toggleModal();
+  }
+}
+</script>
+
 <template>
   <div class="flex h-screen bg-white">
       <!-- Left Sidebar -->
@@ -129,65 +194,8 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "messageUser", 
-  data() {
-      return {
-          showNewMessage: false,
-          newMessage: '',
-          uploadedFile: null, // To store the uploaded file
-          messages: [], // To store sent messages
-          searchTerm: '', // New property for search input
-          users: ['June Cyril Dolendo', 'afdsafsdafsda', 'afsdafas', 'afsdafsa', 'CAPSTONE : UI | FURSAFE', 'afdsafsad', 'weqrewqrewq', 'zvxczvzvz'], // Example user list
-          filteredUsers: [], // New property for filtered users
-          isModalVisible: false, // New property for modal visibility
-          selectedUser: '' // New property for selected user in dropdown
-      };
-  },
-  methods: {
-      toggleModal() {
-          this.isModalVisible = !this.isModalVisible; // Toggle modal visibility
-      },
-      toggleNewMessage() {
-          this.showNewMessage = !this.showNewMessage;
-      },
-      sendMessage() {
-          if (this.newMessage.trim() || this.uploadedFile) {
-              const message = {
-                  text: this.newMessage.trim(),
-                  photo: this.uploadedFile ? URL.createObjectURL(this.uploadedFile) : null, // Create a URL for the uploaded file
-                  isSent: true,
-                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Format time
-              };
-              this.messages.push(message); // Add the new message to the messages array
-              this.newMessage = ''; // Clear the input after sending
-              this.uploadedFile = null; // Clear the uploaded file after sending
-          }
-      },
-      handleFileUpload(event) {
-          this.uploadedFile = event.target.files[0]; // Store the uploaded file
-      },
-      triggerFileInput() {
-          this.$refs.fileInput.click(); // Trigger the file input click
-      },
-      filterUsers() {
-          this.filteredUsers = this.users.filter(user => user.toLowerCase().includes(this.searchTerm.toLowerCase()));
-      },
-      selectUser(user) {
-          this.searchTerm = user; // Set the input to the selected user
-          this.filteredUsers = []; // Clear the dropdown
-      },
-      startChat() {
-          if (this.selectedUser) {
-              // Logic to start chat with the selected user
-              console.log(`Starting chat with ${this.selectedUser}`);
-              this.toggleModal(); // Close the modal after starting the chat
-          }
-      }
-  }
-};
-</script>
+
+
 
 <style scoped>
 .modal {
