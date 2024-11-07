@@ -1035,6 +1035,9 @@ export const confirmRescue = async (req, res) => {
           });
       }
 
+      // Get current date
+      const currentDate = new Date().toISOString().split('T')[0];
+
       // Use insert_pet_data function to create the pet record
       const { data, error } = await supabase.rpc('insert_pet_data', {
           _owner_id: user_id,
@@ -1046,7 +1049,7 @@ export const confirmRescue = async (req, res) => {
           _status_id: 1, // Assuming 1 is "Available" status
           _pet_name: 'Rescued Pet',
           _pet_nickname: null,
-          _date_rehomed: null,
+          _date_rehomed: currentDate,
           _age: null,
           _size_weight: null,
           _energy_level: null,
