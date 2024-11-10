@@ -17,9 +17,9 @@ const EventImages = [
 import vieweventdetials from '@/components/Shelter/shelter_Myshelter_GridEventViewdetailsModal.vue';
 
 // view detials on grid images
-const selectedPostViewDetailsId = ref(null);
+const selectedEventViewDetailsId = ref(null);
 const toggleModalViewDetails = (id) => {
-    selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? null : id;
+    selectedEventViewDetailsId.value = selectedEventViewDetailsId.value === id ? null : id;
     console.log(id);
 };
 
@@ -88,7 +88,7 @@ onMounted(async () => {
                     <Square2StackIcon v-if="Array.isArray(post.imageUrl) && post.imageUrl.length > 1"
                         class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
                 </button>
-                <vieweventdetials v-if="selectedPostViewDetailsId === post.id"
+                <vieweventdetials v-if="selectedEventViewDetailsId === post.id"
                     @close="toggleModalViewDetails(post.id)" />
             </li>
         </ul>
@@ -105,7 +105,7 @@ onMounted(async () => {
                     <img :src="getFirstPhoto(event.photo_urls)" alt="Event image"
                         class="pointer-events-none aspect-square object-cover group-hover:opacity-75" />
                 </button>
-                <viewpostdetials v-if="selectedPostViewDetailsId === event.event_id"
+                <vieweventdetials v-if="selectedEventViewDetailsId === event.event_id"
                     @close="toggleModalViewDetails(event.event_id)" />
             </li>
         </ul>

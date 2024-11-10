@@ -112,7 +112,7 @@ router.post("/save_pet_profile", upload2.any(), insertPetProfile);
 router.post("/update_pet_profile", upload2.any(), updatePetProfile);
 
 // Nov5 start of salpocial's new code
-router.post("/insertshelterpost", upload2.any(), insertShelterPost);  //New route for shelter post
+// router.post("/insertshelterpost", upload2.any(), insertShelterPost);  //New route for shelter post
 router.post("/accept-report", insertShelterRescue); // New route for rescue operations
 router.post("/create-event", upload2.any(), insertShelterEvent); // new route for shelter event
 // Nov5 end of salpocial's new code

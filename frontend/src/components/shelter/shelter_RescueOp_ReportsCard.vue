@@ -41,8 +41,8 @@ async function retrieveReports() { //display
 
         // Nov5 start of salpocial's new code replace jeneh's old code
         if (response.data && response.data.length > 0) {
-            // Filter out reports that are already rescued
-            posts.value = response.data.filter(report => report.report_status !== 'Rescued');
+            // Filter out reports that are already rescued and pending
+            posts.value = response.data.filter(report => report.report_status !== 'Rescued' && report.report_status !== 'Pending');
         } ``
         console.log(posts.value)
         // Nov5 end of salpocial's new code

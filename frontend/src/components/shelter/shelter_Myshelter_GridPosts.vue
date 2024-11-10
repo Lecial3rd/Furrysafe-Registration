@@ -6,11 +6,18 @@ import popupNewpost from '@/components/Shelter/shelter_NewPostModal.vue'
 const showModalCreatePost = ref(false)
 import viewpostdetials from '@/components/Shelter/shelter_Myshelter_GridPostViewdetailsModal.vue';
 
-// view detials on grid images
+// view detials on grid post images
 const selectedPostViewDetailsId = ref(null);
-const toggleModalViewDetails = (id) => {
+let selectedPostDetails = ref([])
+
+const toggleModalViewPostDetails = (id) => {
     selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? null : id;
-    console.log(id);
+    const foundPost = posts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+
+    if (foundPost) {
+        selectedPostDetails.value = foundPost
+        console.log("found post in posts shelter", selectedPostDetails.value)
+    }
 };
 
 //function
@@ -26,6 +33,8 @@ async function retrieveReports() {
             posts.value = response.data
         }
         console.log("post value", posts.value)
+        console.log("posts photos", posts.value[0].photos)
+
     }
     catch (err) {
         console.log("error in retrieve reports", err)
@@ -34,6 +43,7 @@ async function retrieveReports() {
 
 function hasMultiplePhotos(photo_display_url) {
     try {
+        
         // // Double parse to handle stringified JSON
         // const photos = JSON.parse(JSON.parse(`"${photo_display_url}"`));
         // return Array.isArray(photos) && photos.length > 1;
@@ -46,13 +56,14 @@ function hasMultiplePhotos(photo_display_url) {
 
 onMounted(async () => {
     await retrieveReports()
+
 })
 </script>
 <template>
     <div v-if="posts && posts.length > 0" class="xl:container mx-auto my-2">
         <ul role="list" class="grid grid-cols-3 gap-x-2 gap-y-2 md:grid-cols-3 xl:grid-cols-4">
             <li v-for="post in posts" :key="post.post_id" class="relative">
-                <button @click="toggleModalViewDetails(post.post_id)"
+                <button @click="toggleModalViewPostDetails(post.post_id)"
                     class="group block w-full overflow-hidden bg-white">
                     <!-- Display the image (single or first in array) -->
                     <img :src="Array.isArray(post.photos) ? post.photos[0] : post.photos" alt="Post image"
@@ -62,8 +73,8 @@ onMounted(async () => {
                     <Square2StackIcon  v-if="hasMultiplePhotos(post.photos)"
                         class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
                 </button>
-                <viewpostdetials v-if="selectedPostViewDetailsId === post.post_id"
-                    @close="toggleModalViewDetails(post.post_id)" />
+                <viewpostdetials v-if="selectedPostViewDetailsId === post.post_id"  :selectedPostDetails="selectedPostDetails"
+                    @close="toggleModalViewPostDetails(post.post_id)" />
             </li>
         </ul>
     </div>
@@ -76,6 +87,6 @@ onMounted(async () => {
             here.</p>
         <button @click="showModalCreatePost = true" type="button"
             class="underline underline-offset-4 hover:text-amber-600">Create your first Post</button>
-        <popupNewpost v-if="showModalCreatePost" @close="showModalCreatePost = false" />
+        <popupNewpost v-if="showModalCreatePost" @close="showModalCreatePost = false"/>
     </div>
 </template>

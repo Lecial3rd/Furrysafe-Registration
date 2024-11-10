@@ -388,6 +388,7 @@ export const savepetprofie = async (req, res) => {
       (pet_type || other_pet_category) &&
       (other_sterilization || sterilization_id_int)
     ) {
+
       const { data, error } = await supabase.rpc("insert_pet_data", {
         _about_pet: about,
         _age: age,
@@ -555,8 +556,8 @@ export const updatepetprofile = async (req, res) => {
       // Handle the case where vaccines is null
       vaccines = null;
     }
-    console.log("vaccine", vaccines);
-
+    console.log("date rehomed here", daterehomed);
+ 
     const { data, err } = await supabase.rpc("update_animal_profile_details", {
       _pet_id: pet_id,
       _gender: gender,
@@ -823,6 +824,7 @@ export const retrieveReports = async (req, res) => {
     _user_id = (_user_id == null || _user_id == '') ? null : _user_id
     _post_type = (_post_type == null || _post_type == '') ? null : _post_type
 
+    console.log("here", _post_id, _post_type, _user_id)
     const { data, error } = await supabase.rpc("get_filtered_posts", {
       _post_id: _post_id,
       _post_type: _post_type,
@@ -915,7 +917,7 @@ export const addShelterPost = async (req, res) => {
     }
 
     // Set report status to "Pending"
-    const reportStatus = "In Progress";
+    const reportStatus = "Pending";
 
     // Insert post
     const { data, error } = await supabase.rpc("insert_post_with_details", {
@@ -975,7 +977,7 @@ export const acceptRescueReport = async (req, res) => {
         .eq("post_id", post_id);
 
       if (updateError) {
-        console.error("Error creating handler record:", handlerError);
+        console.error("Error updating record:", handlerError);
         return res
           .status(500)
           .json({ success: false, message: "Failed to update record" });
@@ -996,114 +998,31 @@ export const acceptRescueReport = async (req, res) => {
 };
 
 export const confirmRescue = async (req, res) => {
-  const { post_id, shelter_id } = req.body;
-
   try {
-      console.log('Starting rescue confirmation process:', { post_id, shelter_id });
+    const { post_id, shelter_id } = req.body;
+    // First, update the report status in tbl_post_details
+    const { data: updateData, error: updateError } = await supabase
+      .from("tbl_post_details")
+      .update({ report_status: 'Rescued' })
+      .eq("post_id", post_id);
 
-      // First, get the user_id associated with the shelter
-      const { data: shelterData, error: shelterError } = await supabase
-          .from('tbl_shelter')
-          .select('user_id')
-          .eq('shelter_id', shelter_id)
-          .single();
+    if (updateError) {
+      console.error("Error updating report status:", updateError);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to update report status" });
+    }
 
-      if (shelterError) {
-          console.error('Error fetching shelter data:', shelterError);
-          return res.status(400).json({
-              success: false,
-              message: 'Could not find shelter data',
-              error: shelterError
-          });
-      }
-
-      const user_id = shelterData.user_id;
-
-      // Verify if the post exists and get its details
-      const { data: postDetails, error: postError } = await supabase
-          .from('tbl_post_details')
-          .select('*')
-          .eq('post_id', post_id)
-          .single();
-
-      if (postError) {
-          console.error('Error fetching post details:', postError);
-          return res.status(400).json({
-              success: false,
-              message: 'Could not find post details',
-              error: postError
-          });
-      }
-
-      // Get current date
-      const currentDate = new Date().toISOString().split('T')[0];
-
-      // Use insert_pet_data function to create the pet record
-      const { data, error } = await supabase.rpc('insert_pet_data', {
-          _owner_id: user_id,
-          _gender: 'm', // default gender
-          _pet_type: postDetails.pet_category,
-          _other_pet_type: postDetails.other_pet_category,
-          _breed_id: null,
-          _other_breed: null,
-          _status_id: 1, // Assuming 1 is "Available" status
-          _pet_name: 'Rescued Pet',
-          _pet_nickname: null,
-          _date_rehomed: currentDate,
-          _age: null,
-          _size_weight: null,
-          _energy_level: null,
-          _coat_fur: null,
-          _about_pet: postDetails.content,
-          _sterilization_id: null,
-          _other_sterilization: null,
-          _medical_condition: postDetails.pet_condition,
-          _special_needs: null,
-          _vaccine_id: [], // empty array for no vaccines
-          _other_vaccine: null,
-          _pet_profile_url: null,
-          _pet_extra_photos: []
-      });
-
-      if (error) {
-          console.error('Error creating pet record:', error);
-          return res.status(500).json({
-              success: false,
-              message: 'Failed to create pet record',
-              error: error
-          });
-      }
-
-      // Update post details with status
-      const { error: updateError } = await supabase
-          .from('tbl_post_details')
-          .update({
-              report_status: 'Rescued'
-          })
-          .eq('post_id', post_id);
-
-      if (updateError) {
-          console.error('Error updating post details:', updateError);
-          return res.status(500).json({
-              success: false,
-              message: 'Failed to update post status',
-              error: updateError
-          });
-      }
-
-      // If everything succeeded
-      return res.status(200).json({
-          success: true,
-          message: 'Pet rescued successfully'
-      });
-
-  } catch (error) {
-      console.error('Unexpected error in confirmRescue:', error);
-      return res.status(500).json({
-          success: false,
-          message: 'An unexpected error occurred',
-          error: error.message
-      });
+    return res.status(200).json({
+      success: true,
+      message: `Rescued successfully`,
+    });
+  }
+  catch (err) {
+    console.error("Error in acceptRescueReport:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 

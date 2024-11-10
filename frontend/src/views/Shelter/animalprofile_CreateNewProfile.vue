@@ -364,9 +364,6 @@ async function retrieveData() {
     }
 }
 async function savePetProfile(formData) { //Save pet profile, pet profile photo, and additional images
-    console.log("profile picture to save", profileToUpload.value)
-    console.log("extra photos", files.value)
-
     try {
         const response = await axios.post("http://localhost:5000/save_pet_profile",
             formData,
@@ -375,10 +372,9 @@ async function savePetProfile(formData) { //Save pet profile, pet profile photo,
             }
         );
 
-        console.log("tite", response.data.success)
         if (response.data.success) {
             // navigateTo("/myshelter", { query: { showToast: true, message: 'Saved Successfully', from: 'edit' } });
-            navigateTo({
+            navigateTo({ 
                 path: "/animalprofile",
                 query: { showToast: true, message: 'Pet Profile Saved Successfuly', from: 'create' }
             });

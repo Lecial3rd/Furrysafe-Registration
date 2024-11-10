@@ -41,6 +41,7 @@ async function loadPetProfiles() {
                     }));
                 }
 
+                console.log("profile.date_rehomed", profile.date_rehomed)
                 petDetails.value = {
                     petid: profile.id,
                     name: name,

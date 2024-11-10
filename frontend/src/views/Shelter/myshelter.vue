@@ -52,6 +52,7 @@ async function loadProfileCard() {
 
 onMounted(() => {
     loadProfileCard();
+    console.log(id)
 });
 
 

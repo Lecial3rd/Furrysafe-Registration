@@ -1,9 +1,3 @@
-backend/node_modules
-backend/request.rest
-
-frontend/node_modules
-/node_modulesfirebase init hosting
-
 # Logs
 logs
 *.log

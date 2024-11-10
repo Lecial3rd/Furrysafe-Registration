@@ -58,13 +58,13 @@
                     class="border rounded-lg py-[1rem] px-6 w-full h-[8rem]" />
                 </div>
 
-                <div v-if="imageUrls.length > 0" class="border border-dashed my-2">
+                <div v-if="imageUrls.length > 0" class="outline-dashed outline-2 outline-offset-3 outline-gray-200 rounded-lg p-2 my-2">
                   <div class="px-4 my-2 mx-2 sm:col-span-2 sm:px-0">
-                    <ul role="list" class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-3">
+                    <ul role="list" class="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-2 sm:gap-x-4 lg:grid-cols-3">
                       <li v-for="(imageUrl, index) in imageUrls" :key="index" class="relative">
                         <div
-                          class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
-                          <img :src="imageUrl" alt="" class="pointer-events-none w-full h-32 object-cover" />
+                          class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-md bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                          <img :src="imageUrl" alt="" class="pointer-events-none w-full sm:h-52 lg:h-40 object-cover" />
                           <button @click.prevent="removeImage(index)"
                             class="absolute top-0 right-0 p-1 text-red-500 hover:text-red-700">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -106,10 +106,10 @@
   </TransitionRoot>
 </template>
 <script setup>
-import { ref, reactive } from 'vue'
-import PetList from '@/components/Shelter/shelter_NewPostModal_dropdown_PetList.vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import axios from "axios"
+import PetList from '@/components/Shelter/shelter_NewpostModal_SearchPetProfile.vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import axios from 'axios';
 
 // joey added not use because of Salpocial's new code Nov5
 // import { defineProps } from 'vue'; // for reusing the form defining mode receive either edit or create yeahhh - joey
@@ -137,6 +137,13 @@ import axios from 'axios';
 // Nov5 added 'post-created' - salpocial's code
 // Emit events for modal control and post creation
 const emit = defineEmits(['close', 'post-created']) // for closing the modal with close button - joey added
+
+// to close press esc
+onMounted(() => {
+  const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+  window.addEventListener('keydown', closeModalOnEsc)
+  onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
 
 // Reactive state
 const open = ref(true);
@@ -210,71 +217,185 @@ const removeImage = (index) => {
 
 // Nov5 Salpocial's replacement
 // Handle pet selection from the PetList component
+// function handlePetSelected(info) {
+//   console.log("Selected Pet Info:", info); // Debugging line
+//   selectedPetInfo.value = info
+
+//   if (selectedPetInfo.value.length > 0) {
+//     imageUrls.value = []
+//     const selectedPet = selectedPetInfo.value[0]
+//     post.pet_id = selectedPet.id
+//     nickname.value = selectedPet.nickname
+//     breed.value = selectedPet.breed
+//     daterehomed.value = selectedPet.rehomed
+//     imageUrls.value.push(selectedPet.profile)
+//     console.log("Pet ID set to:", post.pet_id); // Debugging line
+//   } else {
+//     post.pet_id = null
+//   }
+// }
+
+
+
+// new added line in newpostmodal, changes because of the search combobox
 function handlePetSelected(info) {
   console.log("Selected Pet Info:", info); // Debugging line
-  selectedPetInfo.value = info
 
-  if (selectedPetInfo.value.length > 0) {
-    imageUrls.value = []
-    const selectedPet = selectedPetInfo.value[0]
-    post.pet_id = selectedPet.id
-    nickname.value = selectedPet.nickname
-    breed.value = selectedPet.breed
-    daterehomed.value = selectedPet.rehomed
-    imageUrls.value.push(selectedPet.profile)
-    console.log("Pet ID set to:", post.pet_id); // Debugging line
+  // Ensure selectedPet is defined and reactive
+  if (info) {
+    selectedPetInfo.value = info; // Set the reactive selectedPet value
+
+    const selected = selectedPetInfo.value; // Access the value of selectedPet
+
+    if (selected && selected.id) {
+      // Proceed with logic for a valid selected pet
+      imageUrls.value = [];  // Clear previous images
+      post.pet_id = selected.id;  // Set pet id
+      nickname.value = selected.nickname;  // Set nickname
+      breed.value = selected.breed;  // Set breed
+      daterehomed.value = selected.rehomed;  // Set rehomed date
+
+      // Check if a valid profile image exists - joey added
+      if (selected.profile) {
+        imageUrls.value.push(selected.profile);  // Add profile image URL
+      } else {
+        console.warn("No profile image found for the selected pet.");
+        alert('No profile image found for the selected pet.');
+      }
+
+      console.log("Pet ID set to:", post.pet_id); // Debugging line
+    } else {
+      console.error("Invalid selected pet:", selected);  // Handle invalid selection
+    }
   } else {
-    post.pet_id = null
+    console.error("No pet info received:", info);  // Handle case where info is invalid
   }
 }
+// end of new line added in Nov8 - joey
+
 
 // Submit Post
+// async function submitPost() {
+//   console.log("User ID:", post.user_id);
+//   console.log("Pet ID:", post.pet_id);
+//   console.log("Content:", newpost.value);
+
+//   if (isLoading.value) return
+
+//   // Check for required fields
+//   if (!post.user_id || !post.pet_id || !newpost.value) {
+//     alert("Please complete all required fields.")
+//     return
+//   }
+
+//   try {
+//     isLoading.value = true
+
+//     const formData = new FormData()
+//     formData.append('user_id', post.user_id.toString())
+//     formData.append('pet_id', post.pet_id)
+//     formData.append('content', newpost.value)
+//     formData.append('photo_urls', JSON.stringify(imageUrls.value))
+
+//     const fileInput = document.getElementById('file-input')
+
+//     if (fileInput && fileInput.files) {
+//       Array.from(fileInput.files).forEach((file) => {
+//         formData.append('photos', file)
+//       })
+//     }
+
+//     const response = await axios.post('http://localhost:5000/insertshelterpost', formData, {
+//       headers: {
+//         'Content-Type': 'multipart/form-data'
+//       }
+//     })
+
+//     if (response.data.success) {
+//       emit('post-created')
+//       emit('close')
+//     } else {
+//       throw new Error(response.data.message || 'Failed to create post')
+//     }
+//   } catch (error) {
+//     console.error('Error submitting post:', error)
+//     alert('Error submitting post: ' + error.message)
+//   } finally {
+//     isLoading.value = false
+//   }
+// }
 async function submitPost() {
   console.log("User ID:", post.user_id);
   console.log("Pet ID:", post.pet_id);
   console.log("Content:", newpost.value);
 
-  if (isLoading.value) return
+  // Check if loading
+  if (isLoading.value) return;
 
   // Check for required fields
   if (!post.user_id || !post.pet_id || !newpost.value) {
-    alert("Please complete all required fields.")
-    return
+    alert("Please complete all required fields.");
+    return;
   }
 
   try {
-    isLoading.value = true
+    // Set loading state to true
+    isLoading.value = true;
 
-    const formData = new FormData()
-    formData.append('user_id', post.user_id.toString())
-    formData.append('pet_id', post.pet_id)
-    formData.append('content', newpost.value)
-    formData.append('photo_urls', JSON.stringify(imageUrls.value))
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('user_id', post.user_id.toString());
+    formData.append('pet_id', post.pet_id.toString()); // Ensure pet_id is a string if required
+    formData.append('content', newpost.value);
 
-    const fileInput = document.getElementById('file-input')
-    if (fileInput && fileInput.files) {
-      Array.from(fileInput.files).forEach((file) => {
-        formData.append('photos', file)
-      })
+    // Add photo URLs (if any) to the FormData
+    if (imageUrls.value && imageUrls.value.length > 0) {
+      formData.append('photo_urls', JSON.stringify(imageUrls.value));
     }
 
+    // Handle file input and append to FormData
+    const fileInput = document.getElementById('file-input');
+    if (fileInput && fileInput.files.length > 0) {
+      Array.from(fileInput.files).forEach((file) => {
+        formData.append('photos', file); // Ensure this field name matches server expectations
+      });
+    }
+
+    // Log the FormData contents for debugging
+    formData.forEach((value, key) => {
+      console.log(key, value);
+    });
+
+    // Send the request
     const response = await axios.post('http://localhost:5000/insertshelterpost', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
       }
-    })
+    });
 
+    // Check response
     if (response.data.success) {
-      emit('post-created')
-      emit('close')
+      emit('post-created');
+      emit('close');
     } else {
-      throw new Error(response.data.message || 'Failed to create post')
+      throw new Error(response.data.message || 'Failed to create post');
     }
+
   } catch (error) {
-    console.error('Error submitting post:', error)
-    alert('Error submitting post: ' + error.message)
+    console.error('Error submitting post:', error);
+
+    // Improved error handling to include more server-side details
+    if (error.response && error.response.data) {
+      console.error('Server responded with:', error.response.data);
+      alert('Error submitting post: ' + (error.response.data.message || error.message));
+    } else {
+      alert('Error submitting post: ' + error.message);
+    }
+
   } finally {
-    isLoading.value = false
+    // Reset loading state
+    isLoading.value = false;
   }
 }
+
 </script>

@@ -503,14 +503,16 @@ async function loadPetDetails() {
         }
     }
 }
-async function updatePetDetails(formData) {
+async function updatePetDetails(thisformdata) {
     try {
         const response = await axios.post("http://localhost:5000/update_pet_profile",
-            formData,
+            thisformdata,
             {
                 headers: { 'Content-Type': 'multipart/form-data' } // Correct header placement
             }
-        )
+        ) 
+        console.log(response.data)
+        return
         if (response.data.success) {
             navigateTo({
                 path: `/view_animalprofileform/${petid}`,

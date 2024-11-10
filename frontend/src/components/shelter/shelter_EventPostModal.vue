@@ -146,6 +146,12 @@ const handleSubmit = () => {
 
 
 const emit = defineEmits(['close']) // for closing the modal
+// to close press esc
+onMounted(() => {
+  const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+  window.addEventListener('keydown', closeModalOnEsc)
+  onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
 
 const open = ref(true);
 const fileInput = ref(null);

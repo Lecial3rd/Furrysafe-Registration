@@ -8,48 +8,6 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/20/solid";
 // Reactive state
 const currentIndex = ref(0);
 
-const viewpostdetials = {
-    id: 1,
-    sheltername: 'Shelter Ni Eric',
-    profile: [require("@/assets/images/eric.png"), require("@/assets/images/talldog.webp"), require("@/assets/images/smalldog.jpg")],
-    name: "Eric",
-    nickname: "ric",
-    rehomed: "10/22/2024",
-    type: "Dog",
-    breed: "Bulldog",
-    gender: "Male",
-    age: '2 yrs old',
-    size: "50 pounds",
-    coat: "Medium Fur",
-    energylvl: "high",
-    about: "jdsjdsjdsjd;l yehhhh dshd hdsahdo  idsoidh disj hsoi ihhs ihuh hsa gu hgp  ihdhasoh  ihuidgsa  ugui gdsugd ugug dus usgduia",
-    vacstatus: "rabies",
-    surgerystatus: "Chemical Sterilazation",
-    medcondition: "none",
-    needs: "Lambing ni Rhe...",
-};
-
-const healthAndMedical = reactive([
-    {
-        label: 'Vaccinations Status',
-        status: "Up-to-date",
-        details: "including rabies and FVRCP"
-    },
-    {
-        label: 'Spay / Neuter',
-        status: "Neuter"
-    },
-    {
-        label: 'Medical Conditions',
-        status: "None known",
-        details: "but has a slight dental issue that requires regular cleaning"
-    },
-    {
-        label: 'Special Needs',
-        status: "None"
-    }
-]);
-
 let selectedPostDetails = ref([])
 const props = defineProps({ // for reuse form defines mode if either edit or create - joey
     selectedPostDetails: {
@@ -57,12 +15,6 @@ const props = defineProps({ // for reuse form defines mode if either edit or cre
         required: false
     }
 });
-
-// Combine the profile image with the imageUrls array if they exist if wla kay iyakkkk
-const combinedImages = [
-    viewpostdetials.profile ? viewpostdetials.profile : null, // Include the profile image if it exists, otherwise null
-    ...(viewpostdetials.imageUrls || []) // Spread the imageUrls into the array; if imageUrls is null or undefined, use an empty array
-].filter(image => image !== null); // Filter out any null values, resulting in an array of valid image URLs
 
 // Computed properties
 const currentImageUrl = computed(() => details_photos.value[currentIndex.value]); // Get the current image URL based on the current index
@@ -82,7 +34,6 @@ const prevImage = () => {
         currentIndex.value--; // Decrement the current index to show the previous image
     }
 };
-
 
 //functions 
 let post_details = ref([])

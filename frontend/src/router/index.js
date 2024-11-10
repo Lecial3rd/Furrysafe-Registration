@@ -34,11 +34,11 @@ import viewanimalprofile from "../views/Shelter/animalprofile_ViewProfile.vue";
 import editanimalprofile from "../views/Shelter/animalprofile_EditProfile.vue";
 
 import viewreportdetails from "@/components/Shelter/shelter_RescueOp_ViewReport.vue"; // joey added
-import viewprofile from "@/components/Shelter/shelter_RescueOp_ViewProfile.vue"; // joey added
+// import viewprofile from "@/components/Shelter/shelter_RescueOp_ViewProfile.vue"; // joey added
 
 //jene
 import login from "../views/login.vue";
-import buddy_registration from "../views/registration.vue";
+import buddy_registration from "../views/buddy_registration.vue";
 import shelter_registration from "@/views/shelter_registration.vue";
 import map from "../views/mapview.vue";
 import confirm_email from "../views/confirm_Email.vue";
@@ -57,6 +57,9 @@ import buddyprofile from "../views/Buddy/Profile.vue"
 import buddyeditprofile from "@/components/Buddy/buddy_Profile_EditProfile.vue"
 import buddyshelterprofile from "@/components/Buddy/buddy_ViewShelterProfile.vue"
 import buddycreateanimalprofile from "../views/Buddy/profile_CreateNewProfile.vue";
+
+import viewshelterprofile from "../views/pov_shelterProfile.vue";
+import viewbuddyprofile from "../views/pov_buddyprofile.vue"
 
 
 const routes = [
@@ -232,13 +235,19 @@ const routes = [
         component: viewreportdetails,
       },
       {
-        // rescue operation - view profile details
-        path: "/viewprofile",
-        name: "viewprofile",
-        component: viewprofile,
+        path: 'viewshelterprofile', // Relative to /FurrySafe_shelter
+        name: 'pov_viewshelterprofile_shelter', // Unique name for this route
+        component: viewshelterprofile,
+        props: true
       },
       {
-        // rescue operation - view profile details
+        path: 'viewbuddyprofile', // Relative to /FurrySafe_shelter
+        name: 'pov_viewbuddyprofile_shelter', // Unique name for this route
+        component: viewbuddyprofile,
+        props: true
+      },
+      {
+        // messages
         path: "/messages",
         name: "sheltermessages",
         component: sheltermessages,
