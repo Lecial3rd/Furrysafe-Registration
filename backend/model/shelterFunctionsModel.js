@@ -999,30 +999,21 @@ export const acceptRescueReport = async (req, res) => {
 
 export const confirmRescue = async (req, res) => {
   try {
-    const { post_id, shelter_id } = req.body;
-    // First, update the report status in tbl_post_details
-    const { data: updateData, error: updateError } = await supabase
-      .from("tbl_post_details")
-      .update({ report_status: 'Rescued' })
-      .eq("post_id", post_id);
+      const { post_id, shelter_id } = req.body;
+      const { data: updateData, error: updateError } = await supabase
+          .from("tbl_post_details")
+          .update({ report_status: 'Rescued' })
+          .eq("post_id", post_id);
 
-    if (updateError) {
-      console.error("Error updating report status:", updateError);
-      return res
-        .status(500)
-        .json({ success: false, message: "Failed to update report status" });
-    }
+      if (updateError) {
+          console.error("Error updating report status:", updateError);
+          return res.status(500).json({ success: false, message: "Failed to update report status" });
+      }
 
-    return res.status(200).json({
-      success: true,
-      message: `Rescued successfully`,
-    });
-  }
-  catch (err) {
-    console.error("Error in acceptRescueReport:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+      return res.status(200).json({ success: true, message: `Rescued successfully` });
+  } catch (err) {
+      console.error("Error in confirmRescue:", err);
+      return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

@@ -17,8 +17,10 @@ const toggleModalViewDetails = (id) => {
     const foundPost = posts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
 
     if (foundPost) {
-        selectedPostDetails.value = foundPost
-        console.log("found post", selectedPostDetails.value)
+        selectedPostDetails.value = foundPost;
+        console.log("Found post", selectedPostDetails.value);
+    } else {
+        console.error("Post not found for ID:", id);
     }
 };
 const handleStatusUpdate = () => {
@@ -32,21 +34,22 @@ let posts = ref([])
 let selectedPostDetails = ref([])
 let _shelter_id = localStorage.getItem('c_id')
 async function retrieveReports() {
-    try {
-        console.log("retrieveReports")
-        const response = await axios.post("http://localhost:5000/getongoingoperations", {
-            _shelter_id: _shelter_id,
-            _status: 'Pending'
-        });
+  try {
+    console.log("retrieveReports");
+    const response = await axios.post("http://localhost:5000/getongoingoperations", {
+      _shelter_id: _shelter_id,
+      _status: 'Pending',
+    });
 
-        if (response.data && response.data.length > 0) {
-            posts.value = response.data
-        }
-        console.log("post value", posts.value)
+    if (response.data && response.data.length > 0) {
+      posts.value = response.data;
+    } else {
+      posts.value = []; // Clear posts if no data is returned
     }
-    catch (err) {
-        console.log("error in retrieve operations", err)
-    }
+    console.log("post value", posts.value);
+  } catch (err) {
+    console.log("error in retrieve operations", err);
+  }
 }
 
 onMounted(async () => {

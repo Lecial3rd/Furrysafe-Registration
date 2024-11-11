@@ -451,13 +451,16 @@
     </TransitionRoot>
 </template>
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch, computed, toRaw } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed, toRaw, defineProps } from 'vue'
 import axios from "axios"
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { PhotoIcon } from '@heroicons/vue/24/solid'
 import { useRouter } from 'vue-router';
 
+
 const emit = defineEmits(['close', 'post-created']) // for closing the modal with close button - joey added
+const props = defineProps(['postId']);
+console.log('Received postId:', props.postId); // Debug line
 
 // to close press esc
 onMounted(() => {
@@ -466,6 +469,7 @@ onMounted(() => {
     onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
 })
 
+const toastRef = ref(null);
 
 // jeneh's code from shelter create new profile geh reuse nlng nkong form...
 const router = useRouter();
@@ -474,24 +478,24 @@ function navigateTo(path) {
 }
 
 //user details
-const userid = localStorage.getItem('u_id')
+const userid = localStorage.getItem('u_id');
 
 // const formData = new FormData()
-const dataEntries = ref([])
+const dataEntries = ref([]);
 //pet details
-const name = ref('')
-const nickname = ref('')
-const daterehomed = ref('')
-const genderchar = ref('')
-const age = ref('')
-const sizeweight = ref('')
-const energylevel = ref('')
-const coat = ref('')
-const about = ref('')
-const specialneed = ref('')
-const medicalcondition = ref('')
-const selectedGender = ref('')
-const selectedSterilization = ref('')
+const name = ref('');
+const nickname = ref('');
+const daterehomed = ref('');
+const genderchar = ref('');
+const age = ref('');
+const sizeweight = ref('');
+const energylevel = ref('');
+const coat = ref('');
+const about = ref('');
+const specialneed = ref('');
+const medicalcondition = ref('');
+const selectedGender = ref('');
+const selectedSterilization = ref('');
 
 const profileInput = ref(null); // Initialized with a value of null, but it will eventually hold a reference to the file input element. (profile photo)
 const selectedImage = ref(null); // Initialized with a value of null, but it will eventually hold the selected image data (e.g., a URL string or a blob)
@@ -754,9 +758,10 @@ async function loadPetStatus() { // load pet status... tf do u want
 }
 async function retrieveData() {
     const formData = new FormData();
-    dataEntries.value = [];
     const vaccineArray = getSelectedVaccineIds();
-    dataEntries.value = [ //details eg: name, nickname
+
+    // Populate dataEntries
+    const entries = [
         ['id', localStorage.getItem('u_id')],
         ['gender', `${genderchar.value}`],
         ['pet_category_id', selectedAnimalType.value],
@@ -774,26 +779,28 @@ async function retrieveData() {
         ['about', about.value],
         ['special_needs', specialneed.value],
         ['med_condition', medicalcondition.value],
-        // ['vaccines', vaccineArray],
         ['other_vaccines', otherVaccines.value],
         ['other_sterilization', `${selectedSterilization.value}`],
         ['sterilization_id', `${getSelectedSterilization()}`]
     ];
 
-    vaccineArray.forEach((vaccineId, index) => { //vaccine details
+    // Append vaccines
+    vaccineArray.forEach((vaccineId) => {
         formData.append(`vaccines`, vaccineId);
     });
 
-    if (!profileToUpload.value) {
-        profileToUpload.value = null;
-    }
-    formData.append('profile', profileToUpload.value)
+    // Append profile image
+    formData.append('profile', profileToUpload.value || null);
 
+    // Append extra photos
     files.value.forEach((fileobj) => {
         formData.append(`extra_photo`, fileobj.file);
-    })
+    });
 
-    dataEntries.value.forEach(([key, value]) => formData.append(key, value));
+    // Append data entries to FormData
+    entries.forEach(([key, value]) => formData.append(key, value));
+
+    // Validate required fields
     const name_ = formData.get('name');
     const gender_ = formData.get('gender');
     const pet_ = formData.get('pet_category_id');
@@ -803,47 +810,91 @@ async function retrieveData() {
     const steril2_ = formData.get('sterilization_id');
 
     if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_)) {
-        savePetProfile(formData)
-    }
-    else {
-        if (toastRef.value) {
-            toastRef.value.showToast('Error: Missing inputs');
-        }
-        console.log("empty isa heee", name_, gender_, status_, pet_, pet2_, steril_,steril2_)
-    }
-}
-async function savePetProfile(formData) {
-    console.log("Profile data being sent to server:", formData); // Log the FormData contents
-
-    try {
-        const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
-            headers: { 'Content-Type': 'multipart/form-data' } // Ensure correct header
-        });
-
-        console.log("Response from server:", response.data); // Log the response from the server
-
-        if (response.data.success) {
-            navigateTo({
-                path: "/animalprofile",
-                query: { showToast: true, message: 'Pet Profile Saved Successfully', from: 'create' }
+        try {
+            // Save pet profile
+            const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
-        } else {
-            console.error('Failed to save profile:', response.data.message);
-            if (toastRef.value) {
-                toastRef.value.showToast('Error: ' + response.data.message); // Show error message
+
+            console.log("Response from save_pet_profile:", response.data);
+
+            if (response.data.success) {
+                const postId = props.postId; // Ensure this is correctly returned from the API
+                const shelterId = localStorage.getItem('c_id');
+
+                console.log("Post ID:", postId);
+                console.log("Shelter ID:", shelterId);
+
+                if (postId && shelterId) {
+                    // Confirm rescue
+                    const rescueResponse = await axios.post("http://localhost:5000/confirmRescue", {
+                        post_id: postId,
+                        shelter_id: shelterId
+                    });
+
+                    console.log("Response from confirmRescue:", rescueResponse.data);
+
+                    if (rescueResponse.data.success) {
+                        navigateTo({
+                            path: "/animalprofile",
+                            query: { showToast: true, message: 'Pet Profile Saved and Rescued Successfully', from: 'create' }
+                        });
+                    } else {
+                        console.error('Failed to confirm rescue:', rescueResponse.data.message);
+                    }
+                } else {
+                    console.error('Post ID or Shelter ID is undefined');
+                }
+            } else {
+                console.error('Failed to save profile:', response.data.message);
             }
+        } catch (err) {
+            console.error("Error occurred during the process:", err);
         }
-    } catch (err) {
-        console.error("Error occurred while saving pet profile:", err);
-        if (toastRef.value) {
-            toastRef.value.showToast('An error occurred: ' + err.message); // Show error message
-        }
+    } else {
+        console.log("Validation failed for inputs:", {
+            name_, gender_, status_, pet_, pet2_, steril_, steril2_
+        });
     }
 }
+
+
+// async function savePetProfile(formData) {
+//     console.log("Profile data being sent to server:", formData); // Log the FormData contents
+
+//     try {
+//         const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
+//             headers: { 'Content-Type': 'multipart/form-data' } // Ensure correct header
+//         });
+
+//         console.log("Response from server:", response.data); // Log the response from the server
+
+//         if (response.data.success) {
+//             navigateTo({
+//                 path: "/animalprofile",
+//                 query: { showToast: true, message: 'Pet Profile Saved Successfully', from: 'create' }
+//             });
+//         } else {
+//             console.error('Failed to save profile:', response.data.message);
+//             if (toastRef.value) {
+//                 toastRef.value.showToast('Error: ' + response.data.message); // Show error message
+//             }
+//         }
+//     } catch (err) {
+//         console.error("Error occurred while saving pet profile:", err);
+//         if (toastRef.value) {
+//             toastRef.value.showToast('An error occurred: ' + err.message); // Show error message
+//         }
+//     }
+// }
+
+
 //SMALL FUNCTIONS
+
 const removeImage = (index) => {
     files.value.splice(index, 1)
 }
+
 function getSelectedOption(event) { //for energy level
     const selectedOption = event.target.options[event.target.selectedIndex].text;
     energylevel.value = selectedOption
