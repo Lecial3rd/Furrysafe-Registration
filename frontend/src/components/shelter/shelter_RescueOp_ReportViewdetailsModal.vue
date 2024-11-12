@@ -189,8 +189,12 @@ const open = ref(true)
                                                         class="max-w-2xl text-sm leading-6 text-gray-500 font-semibold flex justify-center">
                                                         Report Status
                                                     </p>
-                                                    <span
-                                                        class="text-[12px] font-medium leading-6 text-red-600 bg-red-50 border border-red-100 px-4 rounded-full w-fit">
+                                                    <span :class="{
+                                                        'bg-green-50 text-green-600 border-green-100': selectedReportDetails.report_status === 'Rescued',
+                                                        'bg-red-50 text-red-600 border-red-100': selectedReportDetails.report_status === 'Pending',
+                                                        'bg-amber-50 text-amber-600 border-amber-100': selectedReportDetails.report_status === 'In progress'
+                                                    }"
+                                                        class="text-[12px] font-medium leading-6 border px-4 rounded-full w-fit">
                                                         {{ selectedReportDetails.report_status }}</span>
                                                 </dd>
                                             </div>
@@ -206,7 +210,11 @@ const open = ref(true)
                                                             <dt class="text-sm font-medium leading-6 text-gray-900">
                                                                 Report Type
                                                             </dt>
-                                                            <dd
+                                                            <dd :class="{
+                                                                'text-green-600': selectedReportDetails.report_status === 'Rescued',
+                                                                'text-red-600': selectedReportDetails.report_status === 'Pending',
+                                                                'text-amber-600': selectedReportDetails.report_status === 'In progress'
+                                                            }"
                                                                 class="text-sm leading-6 font-bold text-red-600 xl:col-span-2">
                                                                 {{ selectedReportDetails.post_type }}</dd>
                                                         </div>
@@ -247,7 +255,7 @@ const open = ref(true)
                                                                 {{ formattedDate }}
                                                             </dd>
                                                         </div>
-                                                        <div>
+                                                        <div v-if="selectedReportDetails.report_status === 'Pending'">
                                                             <button class="w-full">
                                                                 <statusbuttons />
                                                             </button>

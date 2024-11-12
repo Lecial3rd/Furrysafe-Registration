@@ -728,6 +728,7 @@ export const sendMessage = async (req, res) => {
     res.status(500).send({ success: false, error: "Internal server error" });
   }
 };
+
 //get full name for sender info
 export const getFullName = async (req, res) => {
   const { id } = req.body;

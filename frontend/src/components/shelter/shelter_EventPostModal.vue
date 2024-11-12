@@ -59,6 +59,13 @@
                       placeholder="Write a caption or description of this Event..."
                       class="py-[10px] px-6 w-full h-[8rem] focus:outline-none" />
                   </div>
+                  <div class="py-2 flex flex-col gap-y-2">
+                    <div>
+                      <div class="text-red-400 text-[12px] italic" v-if="locationflag == false">dsagdjgsd</div>
+                      <input id="location" placeholder="Enter your Location" v-model="selectedLocationAddress"
+                        class="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2" />
+                    </div>
+                  </div>
                   <div class="flex justify-between mb-3 mx-[1.5rem]">
                     <div>
                       <span class="text-gray-400 text-[14px]">Add to your post</span>
@@ -72,7 +79,7 @@
                         </label>
                       </div>
                       <div>
-                        <button>
+                        <button @click.prevent="showMapModal = true, clearflags()">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="25" height="25">
                             <path fill="#f03d3d"
                               d="M172.3 501.7C27 291 0 269.4 0 192 0 86 86 0 192 0s192 86 192 192c0 77.4-27 99-172.3 309.7-9.5 13.8-29.9 13.8-39.5 0zM192 272c44.2 0 80-35.8 80-80s-35.8-80-80-80-80 35.8-80 80 35.8 80 80 80z" />
@@ -114,6 +121,9 @@
           </TransitionChild>
         </div>
       </div>
+      <mapoverlay @dataSent="handleData" v-if="showMapModal" @close="showMapModal = false" />
+      <Toast ref="toastRef" @closed="refreshRoute($router)" />
+      <!--  :shelterlatitude="lat" :shelterlongitude="lng"  -->
     </Dialog>
   </TransitionRoot>
 </template>
@@ -121,6 +131,10 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
+
+// Added Map
+import mapoverlay from '@/components/buddy_PinModal.vue'
+
 
 // joey added
 import { defineProps } from 'vue'; // for reusing the form defining mode receive either edit or create yeahhh - joey
@@ -144,6 +158,15 @@ const handleSubmit = () => {
 };
 // end of reuse the modal
 
+// Function to handle data sent from the map overlay
+function handleData(data) {
+  console.log(data);
+  // Assuming data contains address, lat, and lng
+  selectedLocationAddress.value = data.address; // Automatically update the address input
+  latitude.value = data.lat; // Update latitude if needed
+  longitude.value = data.lng; // Update longitude if needed
+}
+
 
 const emit = defineEmits(['close']) // for closing the modal
 // to close press esc
@@ -163,7 +186,18 @@ const eventTitle = ref('')
 const latitude = ref(null)
 const longitude = ref(null)
 const caption = ref(null)
+const showMapModal = ref(false) //Added for map
+const selectedLocationAddress = ref('')
 
+
+//flags
+const photoflag = ref(true);
+const locationflag = ref(true);
+
+function clearflags() {
+  locationflag.value = true
+  photoflag.value = true
+}
 
 const handleFileChange = (event) => {
   const files = event.target.files;
