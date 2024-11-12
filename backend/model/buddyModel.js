@@ -89,6 +89,8 @@ export const createBuddyReport = async (req, res) => { //create report
     try {
         console.log(req.body)
 
+        const reportStatus = "Pending";
+        
         const { data, error } = await supabase.rpc("insert_post_with_details", {
             _user_id: _user_id,
             _post_type: _post_type,
@@ -100,7 +102,8 @@ export const createBuddyReport = async (req, res) => { //create report
             _photo_urls: photoUrl,
             _pet_category: _pet_category,
             _other_pet_category: _other_pet_category,
-            _pet_id: _pet_id
+            _pet_id: _pet_id,
+            _report_status: reportStatus,
         })
         if (error) {
             console.error("Database insert error:", error);

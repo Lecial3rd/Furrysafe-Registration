@@ -38,7 +38,7 @@ async function retrieveReports() {
     console.log("retrieveReports");
     const response = await axios.post("http://localhost:5000/getongoingoperations", {
       _shelter_id: _shelter_id,
-      _status: 'Pending',
+      _status: 'In progress',
     });
 
     if (response.data && response.data.length > 0) {
