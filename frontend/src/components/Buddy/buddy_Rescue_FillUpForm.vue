@@ -81,14 +81,14 @@
                                                 <div class="mt-[1rem] grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                     <div class="md:col-span-3 sm:col-span-full">
                                                         <label for="given-name"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Name</label>
+                                                            class="block text-sm font-medium leading-6 text-gray-900">Temporary Name</label>
                                                         <div class="mt-2">
                                                             <input v-model="name" type="text" name="given-name"
                                                                 id="given-name" autocomplete="given-name"
                                                                 class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
                                                         </div>
                                                     </div>
-                                                    <div class="md:col-span-3 sm:col-span-full">
+                                                    <!-- <div class="md:col-span-3 sm:col-span-full">
                                                         <label for="alias"
                                                             class="block text-sm font-medium leading-6 text-gray-900">Nickname</label>
                                                         <div class="mt-2">
@@ -96,7 +96,7 @@
                                                                 id="alias"
                                                                 class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
                                                         </div>
-                                                    </div>
+                                                    </div> -->
                                                     <div id="rehomed" class="lg:col-span-1 sm:col-span-full">
                                                         <label for="rehome"
                                                             class="block text-sm font-medium leading-6 text-gray-900">
@@ -195,7 +195,7 @@
                                                             </select>
                                                         </div>
                                                     </div>
-                                                    <div id="fur" class="md:col-span-4 sm:col-span-full">
+                                                    <!-- <div id="fur" class="md:col-span-4 sm:col-span-full">
                                                         <label for="coatfur"
                                                             class="block text-sm font-medium leading-6 text-gray-900">
                                                             Coat / Fur</label>
@@ -214,8 +214,8 @@
                                                                 id="animalAge" placeholder="Ex. 2 yrs old"
                                                                 class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
                                                         </div>
-                                                    </div>
-                                                    <div id="size" class="md:col-span-4 sm:col-span-full">
+                                                    </div> -->
+                                                    <!-- <div id="size" class="md:col-span-4 sm:col-span-full">
                                                         <label for="animalSize"
                                                             class="block text-sm font-medium leading-6 text-gray-900">Size</label>
                                                         <div class="mt-2">
@@ -242,8 +242,8 @@
                                                                 <option>Very High</option>
                                                             </select>
                                                         </div>
-                                                    </div>
-                                                    <div id="lvl" class="md:col-span-2 sm:col-span-full">
+                                                    </div> -->
+                                                    <!-- <div id="lvl" class="md:col-span-2 sm:col-span-full">
                                                         <label for="status"
                                                             class="block text-sm font-medium leading-6 text-gray-900">Status</label>
                                                         <div class="mt-2">
@@ -256,7 +256,7 @@
                                                                         status.name }} </option>
                                                             </select>
                                                         </div>
-                                                    </div>
+                                                    </div> -->
                                                     <!-- <div class="col-span-full border-t border-gray-900/10">
                                                         <div class="border-b border-gray-900/10 py-5">
                                                             <h2 class="text-base font-semibold leading-7 text-gray-900">
@@ -374,7 +374,7 @@
                                                             </p>
                                                         </div>
                                                     </div> -->
-                                                    <div class="col-span-full">
+                                                    <!-- <div class="col-span-full">
                                                         <label for="aboutInfo"
                                                             class="block text-sm font-medium leading-6 text-gray-900">
                                                             Tell me more about this Furry Animal</label>
@@ -383,7 +383,7 @@
                                                                 rows="3"
                                                                 class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
                                                         </div>
-                                                    </div>
+                                                    </div> -->
                                                     <div class="col-span-full">
                                                         <label for="otherPhotos"
                                                             class="block text-sm font-medium leading-6 text-gray-900">Photos</label>
@@ -768,7 +768,7 @@ async function retrieveData() {
         ['other_pet_category', animaltype.value],
         ['breed_id', selectedAnimalBreed.value],
         ['other_breed', animalbreed.value],
-        ['status', selectedstatus.value],
+        ['status', selectedstatus.value || 1], //Default to available
         ['name', name.value],
         ['nickname', nickname.value],
         ['daterehomed', daterehomed.value],
@@ -800,6 +800,11 @@ async function retrieveData() {
     // Append data entries to FormData
     entries.forEach(([key, value]) => formData.append(key, value));
 
+    // Log FormData contents
+    for (let [key, value] of formData.entries()) {
+    console.log(key, value);
+}
+
     // Validate required fields
     const name_ = formData.get('name');
     const gender_ = formData.get('gender');
@@ -809,29 +814,32 @@ async function retrieveData() {
     const steril_ = formData.get('other_sterilization');
     const steril2_ = formData.get('sterilization_id');
 
- 
-        try {
-            // Save pet profile
-            const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-
-            console.log("Response from save_pet_profile:", response.data);
-
-            if (response.data.success) {
-                const postId = props.postId; // Ensure this is correctly returned from the API
-                const shelterId = localStorage.getItem('c_id');
-
-                console.log("Post ID:", postId);
-                console.log("Shelter ID:", shelterId);
-
-                if (postId && shelterId) {
-                    // Confirm rescue
-                    const rescueResponse = await axios.post("http://localhost:5000/confirmRescue", {
-                        post_id: postId,
-                        shelter_id: shelterId
+    if (!name.value || !selectedAnimalType.value || !selectedGender.value) {
+    console.error("Required fields are missing");
+    return; // Prevent submission if required fields are missing
+    
+}
+    try {
+        // Save pet profile
+        const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        console.log("Response from save_pet_profile:", response.data);
+        
+        if (response.data.success) {
+            const postId = props.postId; // Ensure this is correctly returned from the API
+            const shelterId = localStorage.getItem('c_id');
+            
+            console.log("Post ID:", postId);
+            console.log("Shelter ID:", shelterId);
+            
+            if (postId && shelterId) {
+                // Confirm rescue
+                const rescueResponse = await axios.post("http://localhost:5000/confirmRescue", {
+                    post_id: postId,
+                    shelter_id: shelterId
                     });
-
+                    
                     console.log("Response from confirmRescue:", rescueResponse.data);
 
                     if (rescueResponse.data.success) {
@@ -854,7 +862,11 @@ async function retrieveData() {
             }
         } catch (err) {
             console.error("Error occurred during the process:", err);
-        }
+            if (err.response) {
+                console.error("Response data:", err.response.data); // Log server response
+                console.error("Response status:", err.response.status); // Log status code
+                }
+            }
 }
 
 async function sendMessagetoUser(){
