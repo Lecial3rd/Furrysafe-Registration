@@ -1,40 +1,121 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, reactive } from 'vue'
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 
-const selectedPost = ref()
+// Nov12 to close press esc - Joey
+onMounted(() => {
+    const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+    window.addEventListener('keydown', closeModalOnEsc)
+    onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
+
+// Nov12 to close press esc - Joey
+onMounted(() => {
+    const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+    window.addEventListener('keydown', closeModalOnEsc)
+    onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
+
+const selectedProfile = ref()
 
 const props = defineProps({
-    selectedPostDetails: {
+    selectedProfileDetails: {
         type: Object,
         required: true,
     },
 });
 
+// Nov12
+const name = ref(null)
+const nickname = ref(null)
+const healthAndMedical = reactive([])
+const allPhotos = ref([]);
+
 onMounted(() => {
-    selectedPost.value = props.selectedPostDetails
-    // console.log("selected Post", selectedPost.value)
-})
+    // selectedPost.value = props.selectedPostDetails
+    // Nov12
+//     if (selectedProfile.value && selectedProfile.value.name_nickname) {
+//         const [firstName, nickName] = selectedProfile.value.name_nickname.split('/');
+//         name.value = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+//         nickname.value = nickName.charAt(0).toUpperCase() + nickName.slice(1);
+
+//         healthAndMedical.length = 0;
+//         healthAndMedical.push(
+//             {
+//                 label: 'Vaccinations Status',
+//                 details: selectedProfile.value.vaccinename || "Not vaccinated"
+//             },
+//             {
+//                 label: 'Spay / Neuter',
+//                 status: selectedProfile.value.sterilization || "Unknown"
+//             },
+//             {
+//                 label: 'Medical Conditions',
+//                 status: selectedProfile.value.condition || "None known"
+//             },
+//             {
+//                 label: 'Special Needs',
+//                 status: selectedProfile.value.need || "None"
+//             }
+//         );
+
+//         const { profileurl, post_photos } = selectedProfile.value;
+
+//         // Ensure profile URL is added if it exists
+//         allPhotos.value = profileurl ? [profileurl] : [];
+
+//         // Add additional photos if they exist and aren't just "No additional photos"
+//         if (Array.isArray(post_photos) && post_photos[0] !== 'No post photos') {
+//             allPhotos.value = allPhotos.value.concat(post_photos);
+//         }
+//     }
+// });
+    const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+    window.addEventListener('keydown', closeModalOnEsc)
+    onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+
+    selectedProfile.value = props.selectedProfileDetails
+
+    if (selectedProfile.value && selectedProfile.value.name_nickname) {
+        const [firstName, nickName] = selectedProfile.value.name_nickname.split('/');
+        name.value = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+        nickname.value = nickName.charAt(0).toUpperCase() + nickName.slice(1);
+
+        healthAndMedical.length = 0;
+        healthAndMedical.push(
+            {
+                label: 'Vaccinations Status',
+                details: selectedProfile.value.vaccinename || "Not vaccinated"
+            },
+            {
+                label: 'Spay / Neuter',
+                status: selectedProfile.value.sterilization || "Unknown"
+            },
+            {
+                label: 'Medical Conditions',
+                status: selectedProfile.value.condition || "None known"
+            },
+            {
+                label: 'Special Needs',
+                status: selectedProfile.value.need || "None"
+            }
+        );
+
+        const { profileurl, post_photos } = selectedProfile.value;
+
+        // Ensure profile URL is added if it exists
+        allPhotos.value = profileurl ? [profileurl] : [];
+
+        // Add additional photos if they exist and aren't just "No additional photos"
+        if (Array.isArray(post_photos) && post_photos[0] !== 'No post photos') {
+            allPhotos.value = allPhotos.value.concat(post_photos);
+        }
+
+        console.log("photos", allPhotos.value)
+    }
+});
 
 const viewpostdetials = {
-    id: 1,
-    username: 'June',
-    profile: require("@/assets/images/eric.png"),
-    name: "Eric",
-    nickname: "ric",
-    rehomed: "10/22/2024",
-    type: "Dog",
-    breed: "Bulldog",
-    gender: "Male",
-    age: '2 yrs old',
-    size: "50 pounds",
-    coat: "Medium Fur",
-    energylvl: "high",
-    about: "This is all about me, idk what to say okey byeeee",
-    vacstatus: "rabies",
-    surgerystatus: "Chemical Sterilazation",
-    medcondition: "none",
-    needs: "Lambing ni Rhe...",
     imageUrls: [
         require("@/assets/images/homepage.png"),
         require("@/assets/images/charles.png"),
@@ -43,29 +124,6 @@ const viewpostdetials = {
         require("@/assets/images/bert.png"),
     ],
 };
-
-
-const healthAndMedical = ref([
-    {
-        label: 'Vaccinations Status',
-        status: "Up-to-date",
-        details: "including rabies and FVRCP"
-    },
-    {
-        label: 'Spay / Neuter',
-        status: "Neuter"
-    },
-    {
-        label: 'Medical Conditions',
-        status: "None known",
-        details: "but has a slight dental issue that requires regular cleaning"
-    },
-    {
-        label: 'Special Needs',
-        status: "None"
-    }
-]);
-
 
 import viewimagepreview from '@/components/Buddy/buddy_Profile_GridProfileImagePreview.vue';
 // view image preview
@@ -121,30 +179,28 @@ const open = ref(true)
 
                                 <!-- display image styling -->
                                 <!-- if one image -->
-                                <div v-if="viewpostdetials.imageUrls.length === 1"
+                                <div v-if="allPhotos.length === 1"
                                     class="flex my-4 h-[30rem] rounded-2xl bg-black">
-                                    <img :src="viewpostdetials.imageUrls[0]" alt="first image"
+                                    <img :src="allPhotos[0]" alt="first image"
                                         class="w-full object-contain rounded-l-2xl" />
                                 </div>
-                                <!-- if two image -->
-                                <div v-else-if="viewpostdetials.imageUrls.length === 2"
+                                <div v-else-if="allPhotos.length === 2"
                                     class="grid grid-flow-col gap-2 my-4 h-[35rem]">
-                                    <img :src="viewpostdetials.imageUrls[0]" alt="first image"
+                                    <img :src="allPhotos[0]" alt="first image"
                                         class="col-span-3 w-full h-full object-cover rounded-l-2xl bg-black" />
-                                    <img :src="viewpostdetials.imageUrls[1]" alt="second image"
+                                    <img :src="allPhotos[1]" alt="second image"
                                         class="col-span-3 object-cover w-full h-full rounded-tr-2xl bg-black" />
                                 </div>
-                                <!-- if three or more images -->
-                                <div v-else-if="viewpostdetials.imageUrls.length >= 3"
-                                    @click="toggleModalViewImagePreview(viewpostdetials.id)"
+                                <div v-else-if="allPhotos.length >= 3"
+                                    @click="toggleModalViewImagePreview(selectedProfile.id)"
                                     class="grid grid-rows-6 grid-flow-col gap-2 my-4 aspect-auto sm:h-[20rem] md:h-[30rem] lg:h-[50rem]">
-                                    <img :src="viewpostdetials.imageUrls[0]" alt="first image"
+                                    <img :src="allPhotos[0]" alt="first image"
                                         class="sm:col-span-3 lg:col-span-3 row-span-6 w-full h-full object-cover rounded-l-2xl bg-black cursor-pointer" />
-                                    <img :src="viewpostdetials.imageUrls[1]" alt="second image"
+                                    <img :src="allPhotos[1]" alt="second image"
                                         class="row-span-3 sm:col-span-2 lg:col-span-3 object-cover w-full h-full rounded-tr-2xl bg-black cursor-pointer" />
 
                                     <div class="relative row-span-3 sm:col-span-2 lg:col-span-3 w-full h-full">
-                                        <img :src="viewpostdetials.imageUrls[2]" alt="third image"
+                                        <img :src="allPhotos[2]" alt="third image"
                                             :class="['w-full h-full object-cover rounded-br-2xl bg-black', { 'brightness-50': hasUndisplayedImages }]" />
 
                                         <button v-if="hasUndisplayedImages"
@@ -152,21 +208,21 @@ const open = ref(true)
                                             {{ remainingImagesText }}
                                         </button>
                                     </div>
-                                    <viewimagepreview v-if="selectedViewImagePreviewId === viewpostdetials.id"
-                                        @close="toggleModalViewImagePreview(viewpostdetials.id)" />
+                                    <viewimagepreview v-if="selectedViewImagePreviewId === selectedProfile.id"
+                                        @close="toggleModalViewImagePreview(selectedProfile.id)" />
                                 </div>
 
                                 <!-- buttons with edit and archive-->
                                 <div
                                     class="flex justify-between mb-4 mx-4 items-center sm:text-sm md:text-base font-bold mt-4 text-gray-700">
-                                    <span class="sm:text-base lg:text-lg">Pet Information</span>
+                                    <span class="sm:text-base lg:text-lg">{{ name }}'s Information</span>
 
                                     <div class="flex sm:gap-x-2 md:gap-x-4">
                                         <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'edit' } }"
                                             class="bg-gray-800 py-1 sm:px-4 md:px-8 rounded-lg text-white hover:bg-gray-700">
                                             Edit Profile</RouterLink>
-                                        <button
-                                            class="border bg-gray-200 py-1 sm:px-4 md:px-8 rounded-lg hover:bg-gray-100">Archive</button>
+                                        <!-- <button
+                                            class="border bg-gray-200 py-1 sm:px-4 md:px-8 rounded-lg hover:bg-gray-100">Archive</button> -->
                                     </div>
                                 </div>
 
@@ -176,47 +232,62 @@ const open = ref(true)
                                     <div
                                         class="border rounded-xl border-gray-100 text-start sm:w-full lg:w-[45%] sm:text-sm md:text-base">
                                         <dl class="divide-y divide-gray-100">
+                                            <!-- Nov12 -->
                                             <div
                                                 class="bg-gray-50 rounded-t-xl px-4 py-4 sm:grid md:grid-cols-3 sm:gap-y-2 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Date Re-homed</dt>
                                                 <dd class="leading-6 text-gray-700">
-                                                    {{ viewpostdetials.rehomed }}"</dd>
+                                                    {{ selectedProfile.date_rehomed }}</dd>
                                             </div>
                                             <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Given-Name</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2">
-                                                    {{ viewpostdetials.name }}, "{{ viewpostdetials.nickname }}"</dd>
+                                                    {{ name }}, "{{ nickname }}"</dd>
                                             </div>
                                             <div class="bg-gray-50 px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Pet Type</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                    {{ viewpostdetials.type }}</dd>
+                                                    {{ selectedProfile.pet_category }}</dd>
                                             </div>
                                             <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Breed / Mix</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                    {{ viewpostdetials.breed }}</dd>
+                                                    {{ selectedProfile.breed }}</dd>
                                             </div>
                                             <div class="bg-gray-50 px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Age / Gender</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                    {{ viewpostdetials.age }}, {{ viewpostdetials.gender }}</dd>
+                                                    {{ selectedProfile.age }}
+                                                    <span v-if="selectedProfile.age > 1">
+                                                        years old
+                                                    </span>
+                                                    <span v-if="selectedProfile.age == 1">
+                                                        year old
+                                                    </span>
+                                                    <span class="i" v-else>
+                                                        To be Confirmed
+                                                    </span>
+                                                    <span v-if="selectedProfile.gender == 'f'">Female</span>
+                                                    <span v-else>Male</span>
+                                                </dd>
+                                                 
                                             </div>
                                             <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Size</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                    {{ viewpostdetials.size }}</dd>
+                                                    {{ selectedProfile.size }}</dd>
                                             </div>
                                             <div class="bg-gray-50 px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Coat / Fur</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                    {{ viewpostdetials.coat }}</dd>
+                                                    {{ selectedProfile.coat }}</dd>
                                             </div>
                                             <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Energy Level</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                    {{ viewpostdetials.energylvl }}</dd>
+                                                    {{ selectedProfile.energylevel }}</dd>
                                             </div>
+                                            <!-- Nov12 end line changes -->
                                         </dl>
                                     </div>
 
@@ -224,14 +295,15 @@ const open = ref(true)
                                         <div class="border rounded-xl text-start">
                                             <div
                                                 class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-100 rounded-t-xl">
+                                                <!-- Nov12 name -->
                                                 <span
                                                     class="text-lg font-semibold leading-6 text-gray-900 sm:col-span-3">
-                                                    About Me</span>
+                                                    About {{ name }}</span>
                                             </div>
                                             <div class="px-4 py-4 sm:gap-y-2 sm:px-6">
-
+                                                <!-- Nov12 selectedProfile.about -->
                                                 <dd class="leading-6 text-gray-700">
-                                                    {{ viewpostdetials.about }}"</dd>
+                                                    {{ selectedProfile.about }}"</dd>
                                             </div>
                                         </div>
 
@@ -249,7 +321,7 @@ const open = ref(true)
                                                     <dt class="font-medium leading-6 text-gray-900 mr-[2rem]">{{
                                                         item.label }}</dt>
                                                     <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                        {{ item.status }} {{ item.details ? `(${item.details})` : '' }}
+                                                        {{ item.status }} {{ item.details ? `${item.details}` : '' }}
                                                     </dd>
                                                 </div>
                                             </dl>

@@ -105,11 +105,24 @@ onMounted(async () => {
 </script> -->
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, onBeforeUnmount  } from 'vue'
 import axios from "axios"
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/20/solid";
+import { ChevronLeftIcon, ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/vue/20/solid";
+// to close press esc
+onMounted(() => {
+  const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+  window.addEventListener('keydown', closeModalOnEsc)
+  onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
+
+import CreatePostModal from '@/components/Shelter/shelter_NewPostModal.vue' // for edit modal reusing the create post modal
+// dropdown button (edit and delete)
+const isOpen = ref(false);
+const toggleDropdown = () => {
+    isOpen.value = !isOpen.value;
+};
 
 // Reactive state
 const currentIndex = ref(0);
@@ -119,7 +132,11 @@ const props = defineProps({ // for reuse form defines mode if either edit or cre
     selectedPostDetails: {
         type: Object,
         required: false
-    }
+    },
+    mode: {
+        type: String,
+        required: false,
+    },
 });
 
 // Computed properties
@@ -193,8 +210,8 @@ watch(
 
 onMounted(async () => {
     selectedPostDetails.value = props.selectedPostDetails
-
     await getPetPostDetails()
+    console.log("What Mode:", props.mode) // for pov
 })
 
 const emit = defineEmits(['close']) // for closing the modal
@@ -261,11 +278,34 @@ const open = ref(true)
                                         <span>No images to preview</span>
                                     </div>
                                 </div>
-                                <div class="px-4 py-6 sm:px-6">
-                                    <h3 class="text-base font-semibold leading-7 text-gray-900">Shelter's Name
-                                    </h3>
-                                    <p class=" max-w-2xl text-sm leading-6 text-gray-500">
-                                        {{ post_details.owner }}</p>
+                                <div class="px-4 py-6 sm:px-6 flex justify-between">
+                                    <!-- ADD DROP DOWN EDIT -->
+                                    <div>
+                                        <h3 class="text-base font-semibold leading-7 text-gray-900">Shelter's Name
+                                        </h3>
+                                        <p class=" max-w-2xl text-sm leading-6 text-gray-500">
+                                            {{ post_details.owner }}</p>
+                                    </div>
+                                    <div v-show="!mode" class="relative inline-block">
+                                        <button @click="toggleDropdown" class="focus:outline-none">
+                                            <EllipsisHorizontalIcon class="h-6 w-6 text-gray-500" />
+                                        </button>
+
+                                        <div v-if="isOpen"
+                                            class="absolute right-0 w-[10rem] text-sm font-medium border rounded-lg shadow-lg bg-white z-10">
+                                            <div role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                                <button @click="openEditModal = true; currentModalMode = 'edit'"
+                                                    class="block w-full py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-t-lg"
+                                                    role="menuitem">Edit Post</button>
+
+                                                <CreatePostModal v-if="openEditModal" mode="edit"
+                                                    @close="openEditModal = false" />
+                                                <button @click="deletePost"
+                                                    class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-b-lg"
+                                                    role="menuitem">Delete Post</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="border rounded-xl border-gray-100 sm:mx-4 mb-8">
                                     <dl class="divide-y divide-gray-100">
@@ -277,7 +317,12 @@ const open = ref(true)
                                         <div class="px-4 py-4 sm:grid md:grid-cols-3 sm:gap-y-2 sm:px-6">
                                             <dt class="text-sm font-medium text-gray-900">Status</dt> <!-- HERE JO-->
                                             <dd v-if="post_details.status != ''"
-                                                class=" text-sm leading-6 text-gray-700">
+                                                class=" text-sm leading-6 text-gray-700 w-fit px-3 rounded-full" :class="{
+                                                    'bg-green-50 text-green-600 border-green-100': post_details.status === 'Available',
+                                                    'bg-gray-50 text-gray-600 border-gray-100': post_details.status === 'Adopted',
+                                                    'bg-teal-50 text-teal-600 border-teal-100': post_details.status === 'In Foster Care',
+                                                    'bg-amber-50 text-amber-600 border-amber-100': post_details.status === 'Own'
+                                                }">
                                                 {{ post_details.status }}</dd>
                                         </div>
                                         <div class="px-4 py-4 sm:grid md:grid-cols-3 sm:gap-y-2 sm:px-6">

@@ -43,6 +43,7 @@ socket.on('receive-message', (messageData) => {
         selectedConversation.value.messages.push(messageData);
         selectedConversation.value.lastMessageDate = new Date(messageData.date);
         scrollToBottom();
+        refreshonsend()
     }
     updateConversationsList(messageData);
 });
@@ -228,6 +229,7 @@ async function sendMessage(thisformData) {
             newMessage.value = ''; // Clear the input field
             files.value = [];
             scrollToBottom(); // Scroll after sending a new message
+            refreshonsend()
         } else {
             console.error("Failed to send message:", response.data.message);
         }
@@ -456,6 +458,9 @@ function closeNewMessage() {
     receiverName.value = null
     receiverId.value = null
 }
+async function refreshonsend() {
+    await fetchInbox()
+}
 
 // Watchers
 watch(sortedMessages, () => {
@@ -549,7 +554,8 @@ onMounted(async () => {
                         <!-- here jeneh - joey added -->
                         <div class="flex justify-between">
                             <div class="flex items-center gap-x-2">
-                                <img :src="conversation.profile_url || default_avatar" alt="profile" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                                <img :src="conversation.profile_url || default_avatar" alt="profile"
+                                    class="w-10 h-10 object-cover border bg-red-500 rounded-full">
                                 <!-- here jeneh put :scr="" sa <img> -->
                                 <span class="font-medium truncate">{{ conversation.other_participant_name }}</span>
                             </div>
@@ -586,7 +592,8 @@ onMounted(async () => {
             </div> -->
 
             <div class="flex items-center gap-x-2 p-4 border-b">
-                <img :src="selectedConversation?.profile || default_avatar" alt="profile image" class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                <img :src="selectedConversation?.profile || default_avatar" alt="profile image"
+                    class="w-10 h-10 object-cover border bg-red-500 rounded-full">
                 <!-- here jeneh put :scr="" sa <img> -->
                 <span class="text-lg font-semibold">{{ selectedConversation?.NameFrom }} </span>
 
@@ -608,7 +615,8 @@ onMounted(async () => {
                                         class="pointer-events-none h-60 w-60 object-cover rounded">
                                 </div>
                             </div>
-                            <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-l-2xl">
+                            <div v-else="message.message"
+                                class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-l-2xl">
                                 <p>{{ message.message }} </p>
                             </div>
                         </div>
@@ -630,7 +638,8 @@ onMounted(async () => {
                                         class="pointer-events-none h-60 w-60 object-cover rounded-lg">
                                 </div>
                             </div>
-                            <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-r-2xl">
+                            <div v-else="message.message"
+                                class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-r-2xl">
                                 <p>{{ message.message }} </p>
                             </div>
                         </div>

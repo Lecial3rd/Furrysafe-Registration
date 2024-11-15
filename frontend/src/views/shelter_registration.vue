@@ -17,15 +17,10 @@
             <main
                 class="mx-4 flex items-center justify-center min-h-screen px-8 sm:px-[2rem] lg:col-span-7 lg:px-8 xl:col-span-6">
                 <div class="w-full md:w-2/3 mx-auto">
-                    <div>
-                        <!-- <button @click="goBack"
-                            class="flex text-gray-600 hover:text-gray-800 text-sm mb-2 font-semibold items-center">
-                            <img width="24" height="24"
-                                src="https://img.icons8.com/material-rounded/24/4D4D4D/back--v1.png"
-                                alt="back--v1" />Back
-                        </button> -->
-
-                        <label class="text-gray-800 text-sm mb-2 block font-semibold"></label>
+                    <div class="flex gap-x-2 items-center">
+                        <RouterLink to="/">
+                            <HomeIcon class="h-6 w-6 text-gray-800 hover:text-gray-700" />
+                        </RouterLink>
                         <h1 class="text-2xl font-semibold text-gray-700">Sign up as a Shelter</h1>
                     </div>
                     <form action="#" class="mt-5 grid grid-cols-6 gap-6">
@@ -57,7 +52,8 @@
                             <p class="text-gray-600">Drag and Drop file here or
                                 <button class="text-blue-500 underline" @click="triggerFileInput">Choose file</button>
                             </p>
-                            <p class="text-gray-400 text-sm mt-2 text-center">Supported formats: DOC, DOCX, XLS, XLSX, PNG, JPG</p>
+                            <p class="text-gray-400 text-sm mt-2 text-center">Supported formats: DOC, DOCX, XLS, XLSX,
+                                PNG, JPG</p>
                             <p class="text-gray-400 text-sm">Maximum size: 25MB</p>
                             <input type="file" hidden accept=".doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" ref="fileInput"
                                 @change="handleFileChange" multiple>
@@ -112,10 +108,11 @@
 <script>
 import axios from 'axios'; // Ensure axios is imported
 import passwordunhide from "../components/passwordHide.vue"; // Import password unhide component
+import { HomeIcon } from '@heroicons/vue/20/solid'
 
 export default {
     name: 'LoginShelter',
-    components: { passwordunhide }, // Register the password unhide component
+    components: { passwordunhide, HomeIcon }, // Register the password unhide component
     data() {
         return {
             Sheltername: '',

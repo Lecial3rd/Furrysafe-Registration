@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import axios from "axios"
 import { Square2StackIcon } from '@heroicons/vue/20/solid'
+
 import popupNewpost from '@/components/Shelter/shelter_NewPostModal.vue'
 const showModalCreatePost = ref(false)
 import viewpostdetials from '@/components/Shelter/shelter_Myshelter_GridPostViewdetailsModal.vue';
@@ -9,7 +10,6 @@ import viewpostdetials from '@/components/Shelter/shelter_Myshelter_GridPostView
 // view detials on grid post images
 const selectedPostViewDetailsId = ref(null);
 let selectedPostDetails = ref([])
-
 const toggleModalViewPostDetails = (id) => {
     selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? null : id;
     const foundPost = posts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
@@ -26,15 +26,13 @@ let posts = ref([])
 async function retrieveReports() {
     try {
         const response = await axios.post("http://localhost:5000/getereports", {
-            _user_id
+            _user_id: _user_id
         });
 
         if (response.data && response.data.length > 0) {
             posts.value = response.data
         }
         console.log("post value", posts.value)
-        console.log("posts photos", posts.value[0].photos)
-
     }
     catch (err) {
         console.log("error in retrieve reports", err)

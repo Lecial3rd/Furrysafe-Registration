@@ -1,10 +1,18 @@
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import axios from "axios"
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { ChevronLeftIcon, ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/vue/20/solid";
 import CreateReportModal from '@/components/Buddy/buddy_CreateReportPost_Modal.vue' // for edit modal
+
+
+// to close press esc
+onMounted(() => {
+  const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+  window.addEventListener('keydown', closeModalOnEsc)
+  onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
 
 const openEditModal = ref(false) // for create report modal
 const selectedPost = ref()
@@ -19,6 +27,10 @@ const props = defineProps({
     selectedPostDetails: {
         type: Object,
         required: true,
+    },
+    mode: {
+        type: String,
+        required: false,
     },
 });
 
@@ -86,8 +98,8 @@ async function getUserDetailsOnHover() {
 onMounted (async () => {
     selectedPost.value = props.selectedPostDetails
     _user_id.value = selectedPost.value.user_id
-
     await getUserDetailsOnHover()
+    console.log("What Mode:", props.mode) // for pov
 })
 
 const emit = defineEmits(['close']) // for closing the modal
@@ -135,7 +147,7 @@ const open = ref(true)
                                         </div>
 
                                         <!-- dropdown buttons -->
-                                        <div class="relative inline-block text-left">
+                                        <div v-show="!mode" class="relative inline-block text-left">
                                             <button @click="toggleDropdown" class="focus:outline-none">
                                                 <EllipsisHorizontalIcon class="h-6 w-6 text-gray-500" />
                                             </button>
@@ -189,7 +201,7 @@ const open = ref(true)
                                             </div>
 
                                             <!-- dropdown buttons -->
-                                            <div class="relative inline-block text-left">
+                                            <div v-show="!mode" class="relative inline-block text-left">
                                                 <button @click="toggleDropdown" class="focus:outline-none">
                                                     <EllipsisHorizontalIcon class="h-6 w-6 text-gray-500" />
                                                 </button>

@@ -9,7 +9,7 @@ import viewbuddypostdetials from '@/components/Shelter/shelter_RescueOp_ReportVi
 
 import default_avatar from '@/assets/images/buddy_default.jpg'
 
-import viewpostdetials from '@/components/Buddy/buddy_Home_ViewdetailsModal.vue';
+// import viewpostdetials from '@/components/Buddy/buddy_Home_ViewdetailsModal.vue';
 import viewpostimagepreview from '@/components/Buddy/buddy_Home_ImagePreviewModal.vue';
 
 import previewhover from '@/components/Buddy/buddy_HoverName.vue';
@@ -74,7 +74,7 @@ onMounted(async () => {
                 <div @mouseenter="hoveredIndex = post.post_id" @mouseleave="hoveredIndex = null"
                     class="relative inline-block">
                     <span class="hover:underline cursor-pointer">{{ post.posted_by }}</span>
-                    <previewhover v-if="hoveredIndex === post.post_id" class="absolute z-10" />
+                    <previewhover v-if="hoveredIndex === post.post_id" :_user_id="post.user_id" class="absolute z-10" />
                 </div>
             </RouterLink>
             <!-- <span class="text-[11px] border py-1 px-3 font-medium rounded-full bg-gray-50">{{ post.post_type }}</span> -->

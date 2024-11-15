@@ -511,8 +511,6 @@ async function updatePetDetails(thisformdata) {
                 headers: { 'Content-Type': 'multipart/form-data' } // Correct header placement
             }
         ) 
-        console.log(response.data)
-        return
         if (response.data.success) {
             navigateTo({
                 path: `/view_animalprofileform/${petid}`,

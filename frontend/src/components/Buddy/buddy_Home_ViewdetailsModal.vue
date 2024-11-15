@@ -170,8 +170,12 @@ const open = ref(true)
                                         <div class="px-4 py-4 sm:grid md:grid-cols-3 sm:gap-y-2 sm:px-6">
                                             <dt class="text-sm font-medium text-gray-900">Status</dt> <!-- HERE JO-->
                                             <dd v-if="post_details.status != ''"
-                                                class=" text-sm leading-6 text-gray-700">
-                                                {{ post_details.status }}</dd>
+                                                class=" text-sm leading-6 text-gray-700 w-fit px-3 rounded-full" :class="{
+                                                    'bg-green-50 text-green-600 border-green-100': post_details.status === 'Available',
+                                                    'bg-gray-50 text-gray-600 border-gray-100': post_details.status === 'Adopted',
+                                                    'bg-teal-50 text-teal-600 border-teal-100': post_details.status === 'In Foster Care',
+                                                    'bg-amber-50 text-amber-600 border-amber-100': post_details.status === 'Own'
+                                                }">{{ post_details.status }}</dd>
                                         </div>
                                         <div class="px-4 py-4 sm:grid md:grid-cols-3 sm:gap-y-2 sm:px-6">
                                             <dt class="text-sm font-medium text-gray-900">Date Re-homed</dt>

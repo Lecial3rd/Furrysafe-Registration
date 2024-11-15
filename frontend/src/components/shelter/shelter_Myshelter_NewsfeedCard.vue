@@ -64,7 +64,7 @@ onMounted(async () => {
 
 <template>
     <div v-for="post in posts" :key="post.post_id"
-        class="sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[70%] h-fit mb-4 mx-auto bg-white py-2 px-4  rounded-xl">
+        class="md:container sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[70%] h-fit mb-4 mx-auto bg-white py-2 px-4  rounded-xl">
         <div class="px-[.5rem] py-[10px] flex gap-x-2 items-center">
             <div>
                 <img :src="post.profile || default_avatar" alt="profile"
@@ -111,8 +111,8 @@ onMounted(async () => {
                         <InformationCircleIcon class="sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-100 hover:text-white" />
                     </button>
                     <div v-if="post.post_type == 'Adoption'">
-                        <viewshelterpostdetials v-if="selectedPostViewDetailsId === post.post_id" :selectedPostDetails="selectedPostDetails"
-                            @close="toggleModalViewDetails(post.post_id)" /> 
+                        <viewshelterpostdetials v-if="selectedPostViewDetailsId === post.post_id"
+                            :selectedPostDetails="selectedPostDetails" @close="toggleModalViewDetails(post.post_id)" />
                     </div>
                     <div v-else>
                         <viewbuddypostdetials v-if="selectedPostViewDetailsId === post.post_id"
@@ -150,10 +150,10 @@ onMounted(async () => {
                         {{ post.report_address_location }}
                     </i>
                 </p>
-                <p class="sm:text-sm md:text-base font-medium text-gray-700">
+                <div class="sm:text-sm md:text-base font-medium text-gray-700">
                     <b class="pr-2">{{ post.posted_by }}</b>
                     {{ post.content }}
-                </p>
+                </div>
 
             </div>
         </div>

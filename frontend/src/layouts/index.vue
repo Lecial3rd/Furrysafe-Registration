@@ -31,7 +31,7 @@
                     <div class="hidden lg:ml-4 lg:flex lg:items-center gap-4">
                         <RouterLink to="login" class="hover:text-lightorange">
                             Login</RouterLink>
-                        <RouterLink to="buddy-registration"
+                        <RouterLink to="/Sign-Up"
                             class="bgteal text-white p-1.5 px-4 rounded-lg font-medium hover:bg-lightorange">
                             Sign-Up</RouterLink>
                     </div>
@@ -47,7 +47,7 @@
                 </div>
                 <div class="border-t border-gray-200 pb-3 pt-4 space-y-2 text-white">
                     <div class="mx-[1rem]">
-                        <RouterLink to="buddy-registration"
+                        <RouterLink to="/Sign-Up"
                             class="w-full bgteal rounded-lg py-2 flex justify-center hover:bg-bgteal hover:font-medium">
                             Sign-Up
                         </RouterLink>

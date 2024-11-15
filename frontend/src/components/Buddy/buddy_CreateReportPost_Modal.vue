@@ -129,6 +129,10 @@ async function getCategory() {
   }
   console.log(category.value)
 }
+
+const capitalizeWords = (str) => {
+  return str.replace(/\b\w/g, char => char.toUpperCase());
+};
 async function retrieveProfile() {
   try {
     const response = await axios.post("http://localhost:5000/profile", {
@@ -334,7 +338,7 @@ onMounted(async () => {
                       class="text-gray-700 bg-slate-50 block w-full p-2.5 border rounded-lg">
                       <option v-if="options.length == 0" value="null" selected>{{ defaultOptionText }}</option>
                       <option v-for="(item, index) in options" :key="index" :value="item.id">
-                        {{ item.nickname }}
+                        {{ item.name }}
                       </option>
                     </select>
                   </div>

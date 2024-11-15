@@ -141,13 +141,13 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div id="breed" class="lg:col-span-2 sm:col-span-full">
+                                                    <!-- <div id="breed" class="lg:col-span-2 sm:col-span-full">
                                                         <label for="animalbreed"
                                                             class="block text-sm font-medium leading-6 text-gray-900">
                                                             Breed / Mix</label>
-                                                        <div class="mt-2">
+                                                        <div class="mt-2"> -->
                                                             <!-- Display the dropdown when selectedAnimalTypeString is not 'Other' -->
-                                                            <select
+                                                            <!-- <select
                                                                 v-if="selectedAnimalTypeString && selectedBreedString !== 'Other'"
                                                                 id="animalbreed" name="animalbreed"
                                                                 v-model="selectedAnimalBreed"
@@ -159,10 +159,10 @@
                                                                     :key="index" :value="breed.id">{{
                                                                         breed.name }}</option>
                                                                 <option value="Other">Other</option>
-                                                            </select>
+                                                            </select> -->
 
                                                             <!-- Display the text input when selectedAnimalTypeString is 'Other' -->
-                                                            <div v-else class="flex gap-2 items-center">
+                                                            <!-- <div v-else class="flex gap-2 items-center">
                                                                 <input type="text" v-model="animalbreed"
                                                                     name="animalbreed" id="animalbreed"
                                                                     :placeholder="selectedBreedString === 'Other' ? 'Type of Furry Animal Breed/Mix' : `Type of ${selectedAnimalTypeString} Breed/Mix`"
@@ -180,7 +180,7 @@
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </div> -->
                                                     <div id="gender" class="lg:col-span-1 sm:col-span-full">
                                                         <label for="animalGender"
                                                             class="block text-sm font-medium leading-6 text-gray-900">Gender</label>
@@ -257,7 +257,7 @@
                                                             </select>
                                                         </div>
                                                     </div>
-                                                    <div class="col-span-full border-t border-gray-900/10">
+                                                    <!-- <div class="col-span-full border-t border-gray-900/10">
                                                         <div class="border-b border-gray-900/10 py-5">
                                                             <h2 class="text-base font-semibold leading-7 text-gray-900">
                                                                 Health and Medical</h2>
@@ -357,8 +357,8 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="col-span-full border-t border-gray-900/10">
+                                                    </div> -->
+                                                    <!-- <div class="col-span-full border-t border-gray-900/10">
                                                         <div class="border-b border-gray-900/10 py-5">
                                                             <h2 class="text-base font-semibold leading-7 text-gray-900">
                                                                 Other Information
@@ -373,7 +373,7 @@
                                                                 needs.
                                                             </p>
                                                         </div>
-                                                    </div>
+                                                    </div> -->
                                                     <div class="col-span-full">
                                                         <label for="aboutInfo"
                                                             class="block text-sm font-medium leading-6 text-gray-900">
@@ -777,11 +777,11 @@ async function retrieveData() {
         ['sizeweight', sizeweight.value],
         ['coat', coat.value],
         ['about', about.value],
-        ['special_needs', specialneed.value],
-        ['med_condition', medicalcondition.value],
-        ['other_vaccines', otherVaccines.value],
-        ['other_sterilization', `${selectedSterilization.value}`],
-        ['sterilization_id', `${getSelectedSterilization()}`]
+        ['special_needs', specialneed.value || null],
+        ['med_condition', medicalcondition.value || null],
+        ['other_vaccines', otherVaccines.value || null],
+        ['other_sterilization', selectedSterilization.value || null],
+        ['sterilization_id', getSelectedSterilization() || null]
     ];
 
     // Append vaccines
@@ -809,7 +809,7 @@ async function retrieveData() {
     const steril_ = formData.get('other_sterilization');
     const steril2_ = formData.get('sterilization_id');
 
-    if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_)) {
+ 
         try {
             // Save pet profile
             const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
@@ -835,8 +835,10 @@ async function retrieveData() {
                     console.log("Response from confirmRescue:", rescueResponse.data);
 
                     if (rescueResponse.data.success) {
+                        emit('close');
+                        
                         navigateTo({
-                            path: "/animalprofile",
+                            path: "/buddy_home",
                             query: { showToast: true, message: 'Pet Profile Saved and Rescued Successfully', from: 'create' }
                         });
 
@@ -853,11 +855,6 @@ async function retrieveData() {
         } catch (err) {
             console.error("Error occurred during the process:", err);
         }
-    } else {
-        console.log("Validation failed for inputs:", {
-            name_, gender_, status_, pet_, pet2_, steril_, steril2_
-        });
-    }
 }
 
 async function sendMessagetoUser(){

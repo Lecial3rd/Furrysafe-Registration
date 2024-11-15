@@ -6,16 +6,32 @@ import Linkfooter from '@/components/footerLink.vue'
 import viewpostdetials from '@/components/Buddy/buddy_Profile_GridReportViewdetailsModal.vue';
 import default_avatar from '@/assets/images/buddy_default.jpg'
 
+// Nov12
+import Toast from '@/components/toast.vue';  // Ensure correct case for the file name
+const toastRef = ref(null);  // Create a ref for the Toast component
+
 // joey added
 import CreateReportModal from '@/components/Buddy/buddy_CreateReportPost_Modal.vue'
 const openCreateModal = ref(false) // for create report modal
 
 import viewprofiledetials from '@/components/Buddy/buddy_Profile_GridProfileViewdetailsModal.vue'; // for view profile details
+
 // view detials on grid profile images
+let viewpostflag = ref(false)
+
+const selectedProfileViewDetails = ref(null);
 const selectedProfileViewDetailsId = ref(null);
 const toggleModalProfileViewDetails = (id) => {
-  selectedProfileViewDetailsId.value = selectedProfileViewDetailsId.value === id ? null : id;
-  console.log(id);
+  if (selectedProfileViewDetailsId.value === id) {
+    selectedProfileViewDetailsId.value = null;
+    viewpostflag.value = false;
+    console.log("Profile modal closed");
+  } else {
+    selectedProfileViewDetailsId.value = id;
+    const pet = petprofiles.value.find(pet => pet.id === selectedProfileViewDetailsId.value);
+    if (pet) selectedProfileViewDetails.value = pet;
+    viewpostflag.value = true;
+  }
 };
 // end
 
@@ -32,18 +48,20 @@ const user = ref({})
 onMounted(() => { //pag load sa page mag load ni =)
   getUserDetails()
   getBuddyPost()
+  getBuddyPets() // Nov12
 })
 
 const selectTab = (tab) => {
   selectedTab.value = tab; // Update the selected tab
 };
 const toggleModalViewDetails = (id) => {
-  selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? null : id;
-  const foundPost = buddyPosts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
-
-  if (foundPost) {
-    selectedPostDetails.value = foundPost
-    console.log(selectedPostDetails.value)
+  if (selectedPostViewDetailsId.value === id) {
+    selectedPostViewDetailsId.value = null;
+    console.log("Modal closed");
+  } else {
+    selectedPostViewDetailsId.value = id;
+    const foundPost = buddyPosts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+    if (foundPost) selectedPostDetails.value = foundPost;
   }
 };
 
@@ -84,53 +102,40 @@ async function getBuddyPost() {
   }
 }
 
+// Nov12
+const petprofiles = ref([])
+const id = localStorage.getItem('u_id');
+const petid = null;
+async function getBuddyPets() {
+  try {
+    const response = await axios.post("http://localhost:5000/profile", {
+      _userid: id,
+      _petid: petid
+    });
 
-const petprofiles = ref([ //predefined by joey
-  {
-    id: 1,
-    imageUrl: [
-      require('@/assets/images/eric.png'),
-      require('@/assets/images/eric.png'),
-      require('@/assets/images/eric.png')
-    ]
-  },
-  {
-    id: 2,
-    imageUrl: require('@/assets/images/charles.png')
-  },
-  {
-    id: 3,
-    imageUrl: [
-      require('@/assets/images/bals.png'),
-      require('@/assets/images/eric.png'),
-      require('@/assets/images/eric.png')
-    ]
-  },
-  {
-    id: 4,
-    imageUrl: [
-      require('@/assets/images/bals.png'),
-      require('@/assets/images/eric.png'),
-      require('@/assets/images/eric.png')
-    ]
-  },
-  {
-    id: 5,
-    imageUrl: [
-      require('@/assets/images/bals.png'),
-      require('@/assets/images/eric.png'),
-      require('@/assets/images/eric.png')
-    ]
-  },
-  {
-    id: 6,
-    imageUrl: [
-      require('@/assets/images/bals.png'),
-      require('@/assets/images/eric.png'),
-      require('@/assets/images/eric.png')
-    ]
+    if (response.data && response.data.length > 0) {
+      petprofiles.value = response.data
+
+      console.log("to display values", petprofiles.value)
+    }
   }
-]);
+  catch (err) {
+    console.log("error in retrieve reports in getBuddyPost", err)
+  }
+}
+
+function hasMultiplePhotos(photo_display_url) {
+  try {
+
+    // // Double parse to handle stringified JSON
+    // const photos = JSON.parse(JSON.parse(`"${photo_display_url}"`));
+    // return Array.isArray(photos) && photos.length > 1;
+    return Array.isArray(photo_display_url) && photo_display_url.length > 1
+  } catch (e) {
+    console.error("Error parsing photos:", e);
+    return false;
+  }
+}
 </script>
 <template>
   <div>
@@ -229,14 +234,15 @@ const petprofiles = ref([ //predefined by joey
                   <button @click="toggleModalProfileViewDetails(Profile.id)"
                     class="group block w-full overflow-hidden bg-white">
                     <!-- Display the first image in the array or the single image if it's not an array -->
-                    <img :src="Array.isArray(Profile.imageUrl) ? Profile.imageUrl[0] : Profile.imageUrl" alt=""
+                    <img :src="Array.isArray(Profile.profileurl) ? Profile.profileurl[0] : Profile.profileurl" alt=""
                       class="pointer-events-none aspect-square object-cover group-hover:opacity-75" />
 
                     <!-- Display the overlay icon if there are multiple images -->
-                    <Square2StackIcon v-if="Array.isArray(Profile.imageUrl) && Profile.imageUrl.length > 1"
+                    <Square2StackIcon v-if="((Profile.additionalphotos != 'No additional photos') || (Profile.post_photos != 'No post photos'))
+                      && Profile.profileurl != 1"
                       class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
                   </button>
-                  <viewprofiledetials v-if="selectedProfileViewDetailsId === Profile.id"
+                  <viewprofiledetials v-if="viewpostflag == true" :selectedProfileDetails="selectedProfileViewDetails"
                     @close="toggleModalProfileViewDetails(Profile.id)" />
                 </li>
               </ul>
@@ -256,7 +262,7 @@ const petprofiles = ref([ //predefined by joey
           </div>
         </div>
         <div v-if="selectedTab === 'Badge'" class="sm:mx-0 md:mx-8">
-          <!-- Content for Badge -->
+
         </div>
         <div v-if="selectedTab === 'achievements'">
           <!-- Content for Achievements -->

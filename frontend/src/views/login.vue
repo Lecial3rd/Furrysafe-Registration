@@ -1,8 +1,7 @@
 <template>
     <section class="bg-white">
         <div class="lg:grid min-h-screen lg:grid-cols-12">
-            <aside
-                class="bg-blue-50 w-full right-[6%] relative lg:order-last lg:col-span-5 lg:h-full hidden lg:block ">
+            <aside class="bg-blue-50 w-full right-[6%] relative lg:order-last lg:col-span-5 lg:h-full hidden lg:block ">
                 <!-- Check if this image is causing issues -->
                 <img alt="" :src="require('@/assets/images/home_animalshelter_slider_pic4.png')"
                     class="absolute inset-0 my-20 mx-16 h-[90%] w-[90%] object-contain " />
@@ -13,10 +12,9 @@
                 <div class=" text-left w-full md:w-2/3 pt-10 pb-10 md:pt-2 mx-auto">
                     <form @submit.prevent="isSignUp ? handleSignUpSubmit : handleLoginSubmit">
                         <div class="mb-6" v-if="!isSignUp">
-                            <h2 class="text-4xl font-semibold mb-4"> Welcome Back</h2>
-                            <p class="text-sm text-gray-500 mb-8 pt-2 pb-4">
-                                Today is a new day. It\'s your day. You shape it. Sign in to start managing your
-                                projects.
+                            <h2 class="text-4xl font-semibold mb-4 sm:text-center lg:text-left"> Welcome Back</h2>
+                            <p class="text-sm text-gray-500 mb-8 pt-2 pb-4 sm:text-center lg:text-left">
+                                We're glad to see you again! Ready to continue making a difference for animals today?
                             </p>
                             <label for="email" class="text-gray-800 text-sm mb-2 block font-semibold">Email</label>
                             <input type="text" id="email" v-model="loginEmail"
@@ -41,41 +39,36 @@
                             </div>
                         </div>
                         <button @click.prevent="handleLogin()" type="submit"
-                            class="font-semibold w-full text-white bg-gray-800 py-2 px-4 rounded-md hover:bg-darkblue focus:outline-none focus:ring-2"
+                            class="font-semibold w-full text-white bg-gray-800 hover:bg-gray-700 py-2 px-4 rounded-md hover:bg-darkblue focus:outline-none focus:ring-2"
                             v-if="!isSignUp">
                             Sign in
                         </button>
-                        <div v-if="isSignUp" class="my-20 ">
-                            <h3 class="text-2xl text-center font-semibold mb-4">How are you planning to blab bla?</h3>
-                            <p class="text-sm pb-10 text-center text-gray-600">dfshrjkysduwietchjdgfasyuetuiewui </p>
-                            <div class="flex justify-between mb-6 h-48">
+                        <div v-if="isSignUp">
+                            <h3 class="text-2xl text-center font-semibold mb-4">How are you planning to Register?</h3>
+                            <p class="text-sm pb-10 text-center text-gray-600 break-words">
+                                Register as a Buddy, helping animals, fostering, or reporting; or as a Shelter, managing
+                                adoptions and animal care.
+                            </p>
+                            <div class="flex justify-between sm:h-32 md:h-48">
                                 <button type="button"
-                                    class="border rounded-lg p-4 w-full mr-2 bg-gray-50 hover:bg-gray-100"
-                                    :class="{ 'border-2 border-gray-800': usageType === 'buddy' }"
-                                    @click="selectUsage('buddy')">
+                                    class="border rounded-lg p-4 w-full mr-2 bg-gray-50 hover:bg-lightteal hover:text-white"
+                                    @click="goToRegis">
                                     <div class="font-semibold">Buddy</div>
-                                    <p class="text-sm border-gray-800">unsa may ibutang nako </p>
                                 </button>
                                 <button type="button"
-                                    class="border rounded-lg p-4 w-full ml-2 bg-gray-50 hover:bg-gray-100"
-                                    :class="{ 'border-2 border-gray-800': usageType2 === 'shelter' }"
-                                    @click="selectUsage2('shelter')">
+                                    class="border rounded-lg p-4 w-full ml-2 bg-gray-50 hover:bg-lightorange hover:text-white"
+                                    @click="goToRegis2">
                                     <div class="font-semibold">Shelter</div>
-                                    <p class="text-sm text-gray-600">unsa may ibutang nako</p>
                                 </button>
                             </div>
-                            <button type="button"
-                                class="w-full mt-6 bg-gray-800 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
-                                @click="createWorkspace">
-                                Create
-                            </button>
                         </div>
                         <div class="mt-6 text-center">
+
                             <p class="text-sm text-gray-600">
-                                {{ isSignUp ? 'Alrxeady have an account?' : 'Don\'t have an account?' }}
-                                <button @click="toggleForm" class="font-medium text-indigo-600 hover:text-indigo-500">{{
+                                {{ isSignUp ? 'Already have an account?' : 'Don\'t have an account?' }}
+                                <button @click="toggleForm" class="font-medium text-teal-600 hover:text-teal-500">{{
                                     isSignUp ?
-                                    'Sign in' : 'Sign up' }}</button>
+                                        'Sign in' : 'Sign up' }}</button>
                             </p>
                         </div>
                     </form>
@@ -124,25 +117,25 @@ export default {
         goToRegis2() {
             this.$router.push({ name: "shelter_registration" }); // Navigate to Regis.vue
         },
-        createWorkspace() {
-            if (this.usageType || this.usageType2) { // Check if either usage type is selected
-                if (this.usageType) {
-                    this.$router.push({ name: "buddy_registration" }); // Navigate to Regis.vue
-                } else if (this.usageType2) {
-                    this.$router.push({ name: "shelter_registration" }); // Navigate to Regisshel.vue
-                }
-            } else {
-                alert('Please select a usage type before creating a workspace.'); // Alert if no selection
-            }
-        },
-        selectUsage(type) {
-            this.usageType = this.usageType === type ? '' : type; // Toggle selection for Buddy
-            this.usageType2 = ''; // Clear Shelter selection
-        },
-        selectUsage2(type2) {
-            this.usageType2 = this.usageType2 === type2 ? '' : type2; // Toggle selection for Shelter
-            this.usageType = ''; // Clear Buddy selection
-        },
+        // createWorkspace() {
+        //     if (this.usageType || this.usageType2) { // Check if either usage type is selected
+        //         if (this.usageType) {
+        //             this.$router.push({ name: "buddy_registration" }); // Navigate to Regis.vue
+        //         } else if (this.usageType2) {
+        //             this.$router.push({ name: "shelter_registration" }); // Navigate to Regisshel.vue
+        //         }
+        //     } else {
+        //         alert('Please select a usage type before creating a workspace.'); // Alert if no selection
+        //     }
+        // },
+        // selectUsage(type) {
+        //     this.usageType = this.usageType === type ? '' : type; // Toggle selection for Buddy
+        //     this.usageType2 = ''; // Clear Shelter selection
+        // },
+        // selectUsage2(type2) {
+        //     this.usageType2 = this.usageType2 === type2 ? '' : type2; // Toggle selection for Shelter
+        //     this.usageType = ''; // Clear Buddy selection
+        // },
         navigateTo(path) {
             this.$router.push(path); // Method to navigate to a different route
         },
@@ -197,7 +190,7 @@ export default {
 
             } catch (err) {
                 if (err.response) {
-                    console.log("Error Response Data:", err.response.data);
+                    console.log("Error Response Data??:", err.response.data);
                     console.log("Status Code:", err.response.status);
                 } else {
                     console.log("An ERROR occurred:", err.message);

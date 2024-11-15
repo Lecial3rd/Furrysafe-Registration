@@ -6,21 +6,24 @@ import { Square2StackIcon } from '@heroicons/vue/20/solid'
 import popupNewEvent from '@/components/Shelter/shelter_EventPostModal.vue'
 const showModalCreateEvent = ref(false)
 
-const EventImages = [
-    {
-        id: 1,
-        imageUrl: [require('@/assets/images/bals.png'), require('@/assets/images/eric.png'), require('@/assets/images/eric.png')]
-    },
-];
-
-
 import vieweventdetials from '@/components/Shelter/shelter_Myshelter_GridEventViewdetailsModal.vue';
 
 // view detials on grid images
 const selectedEventViewDetailsId = ref(null);
+const selectedEventViewDetails = ref(null); // Nov12
+
 const toggleModalViewDetails = (id) => {
+    // selectedEventViewDetailsId.value = selectedEventViewDetailsId.value === id ? null : id;
+    // console.log(id);
+
+    // Nov12
     selectedEventViewDetailsId.value = selectedEventViewDetailsId.value === id ? null : id;
-    console.log(id);
+    const foundevent = events.value.find(event => event.event_id === selectedEventViewDetailsId.value);
+
+    if (foundevent) {
+        selectedEventViewDetails.value = foundevent
+        console.log("found post in event shelter", selectedEventViewDetailsId.value)
+    }
 };
 
 //functions 
@@ -37,6 +40,8 @@ async function retrieveReports() {
         if (response.data && response.data.length > 0) {
             events.value = response.data
             photos.value = response.data.photo_urls
+
+            console.log("events", events.value) // Nov12
         }
     }
     catch (err) {
@@ -47,7 +52,7 @@ async function retrieveReports() {
 function getFirstPhoto(photo_display_url) {
     try {
         // Double parse to handle stringified JSON
-        console.log("photo_display_url", photo_display_url)
+        // console.log("photo_display_url", photo_display_url) // Nov12 comment
         // const photos = JSON.parse(JSON.parse(`"${photo_display_url}"`));
         return Array.isArray(photo_display_url) && photo_display_url.length > 0
             ? photo_display_url[0]
@@ -76,23 +81,6 @@ onMounted(async () => {
 
 </script>
 <template>
-    <!-- <div v-if="EventImages && EventImages.length > 0" class="xl:container mx-auto my-2">
-        <ul role="list" class="grid grid-cols-3 gap-x-2 gap-y-2 md:grid-cols-3 xl:grid-cols-4">
-            <li v-for="post in EventImages" :key="post.id" class="relative">
-                <button @click="toggleModalViewDetails(post.id)" class="group block w-full overflow-hidden bg-white">
-                     Display the first image in the array or the single image if it's not an array
-                    <img :src="Array.isArray(post.imageUrl) ? post.imageUrl[0] : post.imageUrl" alt=""
-                        class="pointer-events-none aspect-square object-cover group-hover:opacity-75" />
-
-                     Display the overlay icon if there are multiple images
-                    <Square2StackIcon v-if="Array.isArray(post.imageUrl) && post.imageUrl.length > 1"
-                        class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
-                </button>
-                <vieweventdetials v-if="selectedEventViewDetailsId === post.id"
-                    @close="toggleModalViewDetails(post.id)" />
-            </li>
-        </ul>
-    </div> -->
     <div v-if="events && events.length > 0" class="xl:container mx-auto my-2">
         <ul role="list" class="grid grid-cols-3 gap-x-2 gap-y-2 md:grid-cols-3 xl:grid-cols-4">
             <li v-for="event in events" :key="event.event_id" class="relative">
@@ -105,8 +93,9 @@ onMounted(async () => {
                     <img :src="getFirstPhoto(event.photo_urls)" alt="Event image"
                         class="pointer-events-none aspect-square object-cover group-hover:opacity-75" />
                 </button>
+                <!-- Nov12 added line :selectedPetDetails="selectedEventViewDetails" -->
                 <vieweventdetials v-if="selectedEventViewDetailsId === event.event_id"
-                    @close="toggleModalViewDetails(event.event_id)" />
+                    :selectedPetDetails="selectedEventViewDetails" @close="toggleModalViewDetails(event.event_id)" />
             </li>
         </ul>
     </div>

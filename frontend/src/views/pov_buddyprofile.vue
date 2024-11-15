@@ -27,7 +27,7 @@ const props = defineProps({
     }
 });
 const route = useRoute(); // Get the current route object
-const buddyId = route.query.buddyId; 
+const buddyId = route.query.buddyId;
 
 const _id = buddyId;
 
@@ -85,67 +85,19 @@ async function getBuddyPost() {
         )
         if (response.data.success) {
             buddyPosts.value = response.data.data;
-            console.log("buddyPosts data:", buddyPosts.value);  // Log the data here
+            console.log("buddyPosts data:??", buddyPosts.value);  // Log the data here
         }
     }
     catch (err) {
         console.log("error", err)
     }
 }
-
-
-const petprofiles = ref([ //predefined by joey
-    {
-        id: 1,
-        imageUrl: [
-            require('@/assets/images/eric.png'),
-            require('@/assets/images/eric.png'),
-            require('@/assets/images/eric.png')
-        ]
-    },
-    {
-        id: 2,
-        imageUrl: require('@/assets/images/charles.png')
-    },
-    {
-        id: 3,
-        imageUrl: [
-            require('@/assets/images/bals.png'),
-            require('@/assets/images/eric.png'),
-            require('@/assets/images/eric.png')
-        ]
-    },
-    {
-        id: 4,
-        imageUrl: [
-            require('@/assets/images/bals.png'),
-            require('@/assets/images/eric.png'),
-            require('@/assets/images/eric.png')
-        ]
-    },
-    {
-        id: 5,
-        imageUrl: [
-            require('@/assets/images/bals.png'),
-            require('@/assets/images/eric.png'),
-            require('@/assets/images/eric.png')
-        ]
-    },
-    {
-        id: 6,
-        imageUrl: [
-            require('@/assets/images/bals.png'),
-            require('@/assets/images/eric.png'),
-            require('@/assets/images/eric.png')
-        ]
-    }
-]);
 </script>
 <template>
-    <div>
-        <p>Shelter ID: {{ buddyId }}</p>
+    <div class="my-4">
+        <p>Buddy ID: {{ buddyId }}</p>
         <main class="flex-1">
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white p-6">
                 <div class="flex sm:flex-col md:flex-row justify-between gap-y-4 items-center mb-6 px-8">
                     <div class="flex sm:flex-col md:flex-row items-center gap-y-3 gap-x-3">
                         <img :src="user.user_profile_url || default_avatar" alt=""
@@ -196,7 +148,7 @@ const petprofiles = ref([ //predefined by joey
                                         class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
                                 </button>
                                 <viewpostdetials v-if="selectedPostViewDetailsId === post.post_id"
-                                    :selectedPostDetails="selectedPostDetails"
+                                    :selectedPostDetails="selectedPostDetails" :mode="'pov'"
                                     @close="toggleModalViewDetails(post.post_id)" />
                             </li>
                         </ul>
@@ -207,13 +159,10 @@ const petprofiles = ref([ //predefined by joey
                         <img width="100" height="100"
                             src="https://img.icons8.com/external-becris-lineal-becris/100/737373/external-pet-hotel-service-becris-lineal-becris.png"
                             alt="external-pet-hotel-service-becris-lineal-becris" />
-                        <h1 class="sm:text-xl lg:text-2xl font-extrabold">Your Pet Reports</h1>
-                        <p class="text-sm font-medium flex text-center">When you create a Reports about Strays or your
-                            Missing
-                            pets, they'll appear here.</p>
-                        <button @click="openCreateModal = true; currentModalMode = 'create'" type="button"
-                            class="underline underline-offset-4 hover:text-red-600">Create Report</button>
-                        <CreateReportModal v-if="openCreateModal" mode="create" @close="openCreateModal = false" />
+                        <h1 class="sm:text-xl lg:text-2xl font-extrabold">{{ user.firstname }} Pet Reports</h1>
+                        <p class="text-sm font-medium flex text-center">
+                            When {{ user.firstname }} create a Reports about Strays or their Missing pets, they'll
+                            appear here.</p>
                     </div>
                     <div>
                         <linkfooter />
@@ -223,16 +172,7 @@ const petprofiles = ref([ //predefined by joey
                 <div v-if="selectedTab === 'Profile'" class="sm:mx-0 md:mx-8">
                     <div v-if="petprofiles && petprofiles.length > 0">
                         <div class="flex justify-between items-center mb-4">
-                            <h1 class="font-semibold sm:text-base md:text-lg">My Pet Profile's</h1>
-
-                            <!-- reusing the profile_CreateNewProfile.vue -->
-                            <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'create' } }"
-                                class="flex items-center gap-x-2 bg-gray-700 py-2 sm:px-4 md:px-8 rounded-lg sm:text-sm lg:text-base text-white font-medium hover:bg-gray-600">
-                                <img width="25" height="25"
-                                    src="https://img.icons8.com/ios-glyphs/25/FFFFFF/pet-bowl.png" alt="pet-bowl" />
-                                <span>Create New Profile</span>
-                            </RouterLink>
-
+                            <h1 class="font-semibold sm:text-base md:text-lg">{{ user.firstname }} Pet Profile's</h1>
                         </div>
                         <!-- pet profile grid -->
                         <div class="xl:container sm:mx-0 2xl:mx-auto">
@@ -262,11 +202,10 @@ const petprofiles = ref([ //predefined by joey
                         <img width="100" height="100"
                             src="https://img.icons8.com/external-photo3ideastudio-lineal-photo3ideastudio/100/737373/external-pawprint-pet-shop-photo3ideastudio-lineal-photo3ideastudio.png"
                             alt="external-pawprint-pet-shop-photo3ideastudio-lineal-photo3ideastudio" />
-                        <h1 class="sm:text-xl lg:text-2xl font-extrabold">Your Pet's Profile</h1>
-                        <p class="text-sm font-medium flex text-center">When you create your pet's profile, they'll
+                        <h1 class="sm:text-xl lg:text-2xl font-extrabold">{{ user.firstname }} Pet's Profile</h1>
+                        <p class="text-sm font-medium flex text-center">When {{ user.firstname }} create a pet profiles,
+                            they'll
                             appear here.</p>
-                        <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'create' } }"
-                            class="underline underline-offset-4 hover:text-gray-900">Create Pet Profile</RouterLink>
                     </div>
                     <div>
                         <linkfooter />

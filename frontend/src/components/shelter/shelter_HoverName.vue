@@ -27,6 +27,7 @@ let _user_id = ref(null)
 
 let userdetails = ref([])
 const id = ref(null)
+const userType = ref(null)
 
 async function getUserDetailsOnHover() {
     console.log("on hover")
@@ -42,6 +43,9 @@ async function getUserDetailsOnHover() {
             // Extract and convert the userId to a number
             const userId = Number(userdetails.value[0].id);  // Convert the userId to a number
             id.value = userId;
+
+            const typeOfUser = userdetails.value[0].user_type;
+            userType.value = typeOfUser;
         }
     }
     catch (err) {
@@ -53,6 +57,7 @@ onMounted(async () => {
     _user_id.value = props._user_id
     console.log(_user_id.value)
     await getUserDetailsOnHover()
+    console.log("what user:", userType)
 })
 </script>
 <template>
@@ -77,21 +82,28 @@ onMounted(async () => {
             </div>
         </div>
         <div class="flex justify-evenly items-center text-sm font-semibold">
-            <!-- buddy profile -->
-            <RouterLink v-if="id" :to="{
+            <!-- shelter profile -->
+            <!-- <RouterLink v-if="id" :to="{
                 name: 'pov_viewshelterprofile_shelter',
                 query: { shelterId: id }
             }"
                 class="flex gap-x-2 border rounded-lg bg-gray-50 hover:bg-gray-200 group hover:animate-pulse sm:px-4 md:px-8 xl:px-20 py-2 items-center">
                 <EyeIcon class="h-6 w-6 text-gray-300 group-hover:text-gray-700" />
                 <span class="text-gray-500 group-hover:text-gray-700">View Profile</span>
-            </RouterLink>
+            </RouterLink> -->
 
             <!-- buddy profile -->
-            <RouterLink v-if="_user_id" :to="{
+            <!-- <RouterLink v-if="_user_id" :to="{
                 name: 'pov_viewbuddyprofile_shelter',
                 query: { buddyId: _user_id }
             }"
+                class="flex gap-x-2 border rounded-lg bg-gray-50 hover:bg-gray-200 group hover:animate-pulse sm:px-4 md:px-8 xl:px-20 py-2 items-center">
+                <EyeIcon class="h-6 w-6 text-gray-300 group-hover:text-gray-700" />
+                <span class="text-gray-500 group-hover:text-gray-700">View Profile</span>
+            </RouterLink> -->
+            <RouterLink :to="userType === 'shelter'
+                ? { name: 'pov_viewshelterprofile_shelter', query: { shelterId: id, shelterUserID: _user_id } }
+                : { name: 'pov_viewbuddyprofile_shelter', query: { buddyId: _user_id } }"
                 class="flex gap-x-2 border rounded-lg bg-gray-50 hover:bg-gray-200 group hover:animate-pulse sm:px-4 md:px-8 xl:px-20 py-2 items-center">
                 <EyeIcon class="h-6 w-6 text-gray-300 group-hover:text-gray-700" />
                 <span class="text-gray-500 group-hover:text-gray-700">View Profile</span>

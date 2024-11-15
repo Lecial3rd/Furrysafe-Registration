@@ -28,6 +28,8 @@ const handleSubmit = () => {
   } else {
     // Logic for creating
     console.log('Creating profile...');
+    retrieveData() // Nov12
+
   }
 };
 // jeneh's code from shelter create new profile geh reuse nlng nkong form...
@@ -379,8 +381,13 @@ async function retrieveData() {
     const steril_ = formData.get('other_sterilization');
     const steril2_ = formData.get('sterilization_id');
 
-    if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_)) {
+    // Nov12
+    if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_) &&  currentMode == 'create') {
+        console.log("=)")
         savePetProfile(formData)
+    }
+    if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_) &&  currentMode == 'edit') {
+
     }
     else {
         if (toastRef.value) {
@@ -389,6 +396,7 @@ async function retrieveData() {
         // console.log("empty isa heee", name_, gender_, status_, pet_, pet2_, steril_,steril2_)
     }
 }
+
 async function savePetProfile(formData) { //Save pet profile, pet profile photo, and additional images
     console.log("profile picture to save", profileToUpload.value)
     console.log("extra photos", files.value)
@@ -405,7 +413,7 @@ async function savePetProfile(formData) { //Save pet profile, pet profile photo,
         if (response.data.success) {
             // navigateTo("/myshelter", { query: { showToast: true, message: 'Saved Successfully', from: 'edit' } });
             navigateTo({
-                path: "/animalprofile",
+                path: "/buddy_profile",
                 query: { showToast: true, message: 'Pet Profile Saved Successfuly', from: 'create' }
             });
         } else {

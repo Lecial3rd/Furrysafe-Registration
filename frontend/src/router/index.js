@@ -48,18 +48,19 @@ import location from "@/components/location_prompt.vue";
 // import map from "../views/shelter/pin_Location.vue"
 import test from "@/components/pin_MapModal.vue";
 
-import sheltermessages from "@/components/Shelter/shelter_RescueOp_ChatBox.vue"
+import sheltermessages from "@/components/Shelter/shelter_RescueOp_ChatBox.vue";
 // buddy
-import buddyDashboard from "../layouts/Client/Buddy/dashboard.vue"
-import home from "../views/Buddy/home.vue"
-import buddymessages from "../views/Buddy/Message.vue"
-import buddyprofile from "../views/Buddy/Profile.vue"
-import buddyeditprofile from "@/components/Buddy/buddy_Profile_EditProfile.vue"
-import buddyshelterprofile from "@/components/Buddy/buddy_ViewShelterProfile.vue"
+import buddyDashboard from "../layouts/Client/Buddy/dashboard.vue";
+import home from "../views/Buddy/home.vue";
+import buddymessages from "../views/Buddy/Message.vue";
+import buddyprofile from "../views/Buddy/Profile.vue";
+import buddyeditprofile from "@/components/Buddy/buddy_Profile_EditProfile.vue";
+import buddyshelterprofile from "@/components/Buddy/buddy_ViewShelterProfile.vue";
 import buddycreateanimalprofile from "../views/Buddy/profile_CreateNewProfile.vue";
 
 import viewshelterprofile from "../views/pov_shelterProfile.vue";
-import viewbuddyprofile from "../views/pov_buddyprofile.vue"
+import viewbuddyprofile from "../views/pov_buddyprofile.vue";
+import SignUp from "../views/choose_Registration.vue";
 
 
 const routes = [
@@ -68,6 +69,11 @@ const routes = [
     path: "/login",
     name: "login",
     component: login,
+  },
+  {
+    path: "/Sign-Up",
+    name: "SignUp",
+    component: SignUp,
   },
   {
     path: "/buddy-registration",
@@ -235,16 +241,16 @@ const routes = [
         component: viewreportdetails,
       },
       {
-        path: 'viewshelterprofile', // Relative to /FurrySafe_shelter
-        name: 'pov_viewshelterprofile_shelter', // Unique name for this route
+        path: "viewshelterprofile", // Relative to /FurrySafe_shelter
+        name: "pov_viewshelterprofile_shelter", // Unique name for this route
         component: viewshelterprofile,
-        props: true
+        props: true,
       },
       {
-        path: 'viewbuddyprofile', // Relative to /FurrySafe_shelter
-        name: 'pov_viewbuddyprofile_shelter', // Unique name for this route
+        path: "viewbuddyprofile", // Relative to /FurrySafe_shelter
+        name: "pov_viewbuddyprofile_shelter", // Unique name for this route
         component: viewbuddyprofile,
-        props: true
+        props: true,
       },
       {
         // messages
@@ -296,6 +302,18 @@ const routes = [
         path: "/create_newanimalprofile",
         name: "create_newanimalprofile",
         component: buddycreateanimalprofile,
+      },
+      {
+        path: "viewshelterprofile", // Relative to /FurrySafe_shelter
+        name: "pov_viewshelterprofile_buddy",
+        component: viewshelterprofile,
+        props: true,
+      },
+      {
+        path: "viewbuddyprofile", // Relative to /FurrySafe_shelter
+        name: "pov_viewbuddyprofile_buddy", //
+        component: viewbuddyprofile,
+        props: true,
       },
     ],
   },

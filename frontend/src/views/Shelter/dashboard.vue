@@ -5,9 +5,7 @@ import linkfooter from '@/components/footerLink.vue'
 import updatescard from '@/components/Shelter/shelter_Dashboard_Activities.vue';
 import displaymap from '@/components/Map2.vue';
 import mapoverlay from '@/components/pin_MapModal.vue'
-
 import statsCard from '@/components/Shelter/shelter_Dashboard_statsCard.vue';
-
 import shelterfeed from '@/components/Shelter/shelter_Myshelter_NewsfeedCard.vue'; // joey added
 
 export default {

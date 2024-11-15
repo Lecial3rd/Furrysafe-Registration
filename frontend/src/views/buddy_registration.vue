@@ -17,14 +17,10 @@
             <main
                 class="flex items-center justify-center min-h-screen px-8 sm:px-[2rem] lg:col-span-7 lg:px-8 lg:py-12 xl:col-span-6">
                 <div class="w-full md:w-2/3 mx-auto">
-                    <div>
-                        <!-- <button @click="goBack"
-                            class="flex text-gray-600 hover:text-gray-800 text-sm mb-2 font-semibold items-center">
-                            <img width="24" height="24"
-                                src="https://img.icons8.com/material-rounded/24/4D4D4D/back--v1.png"
-                                alt="back--v1" />Back
-                        </button> -->
-                        <label class="text-gray-800 text-sm mb-2 block font-semibold"></label>
+                    <div class="flex gap-x-2 items-center">
+                        <RouterLink to="/">
+                            <HomeIcon class="h-6 w-6 text-gray-800 hover:text-gray-700" />
+                        </RouterLink>
                         <h1 class="text-2xl font-semibold text-gray-800 ">Sign up as Buddy</h1>
                     </div>
 
@@ -106,12 +102,14 @@
 import axios from "axios";
 import Dropdown from "../components/registration_dropdown.vue";
 import passwordunhide from "../components/passwordHide.vue";
+import { HomeIcon  } from '@heroicons/vue/20/solid'
 
 export default {
     name: 'LoginShelter',
     components: {
         Dropdown,
-        passwordunhide
+        passwordunhide,
+        HomeIcon
     },
     data() {
         return {
