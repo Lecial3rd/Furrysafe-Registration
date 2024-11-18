@@ -1,3 +1,662 @@
+<script setup>
+import { ref, onMounted, onBeforeUnmount, watch, computed, toRaw, defineProps } from 'vue'
+import axios from "axios"
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import { PhotoIcon } from '@heroicons/vue/24/solid'
+import { useRouter } from 'vue-router';
+
+
+const emit = defineEmits(['close', 'post-created']) // for closing the modal with close button - joey added
+const props = defineProps({
+    postId: {
+        type: Number, // specify type if needed
+        required: true // set required to true if postId is always needed
+    },
+    reportedUserId: {
+        type: Number,
+        required: false
+    },
+    reportDetails: {
+        type: Object,
+        required: false
+    }
+});
+const imagefromreportdetails = ref()
+const reportdetail = ref([])
+onMounted(async () => { //pag load sa page mag load ni =)
+    //data rendering :'D
+    reportdetail.value = props.reportDetails
+    imagefromreportdetails.value = props.reportDetails.photos[0]
+    cetegoryfromdetails.value = props.reportDetails.category
+    await loadPetCategory()
+    await loadPetStatus()
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // Formats date as yyyy-mm-dd
+    daterehomed.value = formattedDate;
+    findcategoryid()
+    receiverId.value = props.reportedUserId
+})
+
+const reportDetail = ref([])
+// to close press esc
+onMounted(() => {
+    reportDetail.value = props.reportDetails
+
+    const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+    window.addEventListener('keydown', closeModalOnEsc)
+    onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
+
+const toastRef = ref(null);
+
+// jeneh's code from shelter create new profile geh reuse nlng nkong form...
+const router = useRouter();
+function navigateTo(path) {
+    router.push(path);
+}
+
+//user details
+const userid = localStorage.getItem('u_id');
+
+// const formData = new FormData()
+const dataEntries = ref([]);
+//pet details
+const name = ref('');
+const nickname = ref('');
+const daterehomed = ref('');
+const genderchar = ref('');
+const age = ref('');
+const sizeweight = ref('');
+const energylevel = ref('');
+const coat = ref('');
+const about = ref('');
+const specialneed = ref('');
+const medicalcondition = ref('');
+const selectedGender = ref('');
+const selectedSterilization = ref('');
+
+const profileInput = ref(null); // Initialized with a value of null, but it will eventually hold a reference to the file input element. (profile photo)
+const selectedImage = ref(null); // Initialized with a value of null, but it will eventually hold the selected image data (e.g., a URL string or a blob)
+const profileToUpload = ref(null)
+const fileToUploadArray = ref(null) //holds the file in handlefilechanges event function
+//holds the file in handlefilechanges event function
+
+// multiple images
+const files = ref([])
+const otherPhotos = ref(null)
+
+function clearImage() {
+    imagefromreportdetails.value = null
+    selectedImage.value = null; // sets the selectedImage reference to null, effectively removing the image
+    if (profileInput.value) { // if the file input element exists, sets its value to an empty string, effectively clearing the file selection
+        profileInput.value.value = '';
+    }
+}
+
+// For select animal type and auto change the value option on animalbreed depending on what's the animal type selected.
+const animaltype = ref(''); //others option
+const animalbreed = ref('');
+const selectedAnimalType = ref(''); //selected from the options, retrieves the ID based on the database
+const selectedAnimalBreed = ref('');
+const selectedAnimalTypeString = ref('') //retrieves the string exactly from the option e.g.: dog, cat, horse, bird
+const selectedBreedString = ref('')
+
+//for dropbox/options
+const animalCategory = ref([])
+const breedCategory = ref([])
+const status = ref([])
+
+watch(selectedAnimalType, (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+        selectedAnimalBreed.value = ''; // reset selectedAnimalBreed when selectedAnimalType changes
+        Vaccines.value = []; // reset the selected vaccines when animal type changes
+        // otherVaccines.value = ''; // reset the other vaccines when animal type changes
+    }
+});
+
+const clearAnimalTypeInput = () => {
+    animaltype.value = '';
+    selectedAnimalType.value = ''; // reset the selected animal type
+};
+const clearAnimalTypeBreed = () => {
+    animalbreed.value = '';
+    selectedAnimalBreed.value = ''; // reset the selected animal breed
+};
+
+// For Vaccines options
+const vaccines = ref({});
+const other_vaccine = ({
+    "Other": [
+        "Rabies",
+        "Distemper",
+        "Influenza",
+        "Tetanus",
+        "Bovine viral diarrhea (BVD)"
+    ]
+})
+
+//VACCINES
+const displayVaccines = computed(() => {
+    // console.log(selectedAnimalType.value)
+    if (selectedAnimalType.value == 'Other') {
+        // return other_vaccine.Other; // Return the array directly
+    } else if (Vaccines.value && Array.isArray(Vaccines.value)) {
+        return Vaccines.value; // Ensure vaccines is an array
+    }
+    return [];
+});
+
+const selectedstatus = ref('')
+
+const Vaccines = ref([]);
+const selectedVaccines = ref([]) // initialize an empty array to store the selected vaccines
+const otherVaccines = ref(''); // initialize an empty string to store the other vaccines
+
+const allVaccines = computed(() => {
+    const selectedVaccineNames = selectedVaccines.value.map(vaccine => vaccine); // Extract the vaccine names
+    return [...selectedVaccineNames, ...otherVaccines.value.split(',').filter(Boolean)];
+});
+
+// spayed or neutered
+const sterilization = ref([])
+const nonSurgical = ref([]);
+const surgical = ref([]);
+const spayNeuterOptions = ref([ //"other" option value
+    {
+        id: 'intact',
+        name: 'Intact',
+        label: 'No - Intact',
+        description: 'This animal has not been spayed or neutered.'
+    },
+    {
+        id: 'NA',
+        name: 'Not Applicable',
+        label: 'Not Applicable',
+        description: 'This animal is too young or not eligible for spaying/neutering.'
+    },
+    {
+        id: 'unknown',
+        name: 'Unknown',
+        label: 'Unknown',
+        description: 'This animal\'s spay/neuter status is unknown.'
+    }
+])
+
+const selectedValue = ref('')
+const categories = ref({
+    "non-surgical": [],
+    "surgical": [],
+    "others": []
+})
+
+const categoriesRaw = computed(() => toRaw(categories.value));
+
+//image handling
+const handleMultipleFileChange = (event) => {
+    const filesArray = event.target.files
+    console.log("handle multiple file change", filesArray)
+
+    for (let i = 0; i < filesArray.length; i++) {
+        const file = filesArray[i]
+        const reader = new FileReader()
+        reader.onload = (event) => {
+            // files.value.push({ source: file.name, url: event.target.result })
+            files.value.push({ file: file, url: event.target.result });
+        }
+        reader.readAsDataURL(file)
+    }
+}
+function handleFileChange(event) {
+    const file = event.target.files[0]; // gets the first file selected by the user 
+    profileToUpload.value = file;
+
+    // console.log(file)
+    console.log(profileToUpload.value)
+
+    const reader = new FileReader(); // creates a new FileReader object, which is used to read the contents of the file
+    reader.onload = (event) => { // sets up an event listener for when the file reading is complete.
+        // When the file reading is complete, the onload event is triggered, and the callback function is executed:
+        selectedImage.value = event.target.result; // sets the selectedImage reference to the result of the file reading (the data URL string)
+    };
+    reader.readAsDataURL(file); // starts reading the file as a data URL (a string representation of the file contents)
+}
+let cetegoryfromdetails = ref(null)
+function findcategoryid() {
+    // props.postId = props.postId.value === id ? null : id;
+    const founditem = animalCategory.value.find(pet => pet.pet_category === cetegoryfromdetails.value);
+
+    if (founditem) {
+        selectedAnimalType.value = founditem.id
+        console.log("found post", cetegoryfromdetails.value)
+    } else { // Nov12 added else
+        console.log("couldn't find category")
+    }
+};
+async function loadPetCategory() { //type from db dog cats //pet type/category rendering
+    try {
+        const response = await axios.get("http://localhost:5000/load-category")
+        console.log(response)
+        if (response.data) {
+            animalCategory.value = response.data
+            console.log("animal type", animalCategory.value)
+        }
+    }
+    catch (err) {
+        console.log("error", err)
+    }
+}
+async function loadPetBreed() { //breed from db //load pet breed when pet type (animalCategory) is selected
+    try {
+        const response = await axios.post("http://localhost:5000/pet_breed",
+            {
+                _category_id: selectedAnimalType.value
+            }
+        )
+        if (response.data) {
+            breedCategory.value = response.data
+        }
+    }
+    catch (err) {
+        console.log("error", err)
+    }
+}
+//load vaccines when pet type (animalCategory) is selected
+async function loadVaccineOptions() { //ovi nmn ;-; load vaccine
+    try {
+        const response = await axios.post("http://localhost:5000/vaccine",
+            {
+                _category_id: selectedAnimalType.value
+            }
+        )
+        if (response) {
+            Vaccines.value = response.data
+        }
+    }
+    catch (err) {
+        console.log("error in loading vaccines", err)
+    }
+}
+//load sterilization base on gender selectedGender
+async function loadSterilization() { //kwaon tung sa db tas e load ;-; ovi
+    try {
+        console.log(selectedGender.value)
+        const response = await axios.post("http://localhost:5000/sterilization",
+            {
+                _gender: selectedGender.value
+            }
+        )
+        if (response) {
+            sterilization.value = response.data
+            categorizedSterilization() // Categorize after loading
+            //
+            categories.value = {
+                "non-surgical": [...categories.value["non-surgical"]],
+                "surgical": [...categories.value["surgical"]],
+                "others": [...categories.value["others"], ...spayNeuterOptions.value]
+            }
+        }
+    }
+    catch (err) {
+        console.log("error in loading sterilization", err)
+    }
+}
+function categorizedSterilization() { //categorize sterilization from load sterilization (e.g. surgical, non surgical)
+    try {
+        const keys = Object.keys(categories.value);
+
+        if (!Array.isArray(sterilization.value)) {
+            console.error("sterilization.value is not an array:", sterilization.value);
+            return;
+        }
+
+        sterilization.value.forEach(request => {
+            if (categories.value[request.type]) {
+                categories.value[request.type].push(request);
+            }
+            else {
+                console.warn(`Unknown type '${request.type}' encountered.`);
+                // If type doesn't match 'non-surgical' or 'surgical', add to 'others'
+                categories.value["others"].push({
+                    id: request.id || 'unknown',
+                    value: request.type || 'Unknown',
+                    label: request.label || 'Unknown',
+                    description: request.description || 'No description available'
+                });
+            }
+        });
+
+        // console.log("Categories", categories.value);
+        console.log("category", categories.value)
+
+        // Assign categorized data to separate refs
+        nonSurgical.value = categories.value["non-surgical"];
+        surgical.value = categories.value["surgical"];
+
+    }
+    catch (err) {
+        console.log("error in categorizing sterilization", err)
+    }
+}
+async function loadPetStatus() { // load pet status... tf do u want 
+    try {
+        const response = await axios.get("http://localhost:5000/pet_status")
+        if (response) {
+            status.value = response.data
+        }
+    }
+    catch (err) {
+        console.log("error in loading sterilization", err)
+    }
+}
+const currentUser_id = ref(localStorage.getItem('u_id'));
+const receiverId = ref(null)
+async function retrieveData() {
+    const formData = new FormData();
+    const vaccineArray = getSelectedVaccineIds();
+
+    // Populate dataEntries
+    const entries = [
+        ['id', localStorage.getItem('u_id')],
+        ['gender', `${genderchar.value}`],
+        ['pet_category_id', selectedAnimalType.value],
+        ['other_pet_category', animaltype.value],
+        ['breed_id', selectedAnimalBreed.value],
+        ['other_breed', animalbreed.value],
+        ['status', selectedstatus.value],
+        ['name', name.value],
+        ['nickname', nickname.value],
+        ['daterehomed', daterehomed.value],
+        ['energylevel', energylevel.value],
+        ['age', age.value],
+        ['sizeweight', sizeweight.value],
+        ['coat', coat.value],
+        ['about', about.value],
+        ['special_needs', specialneed.value],
+        ['med_condition', medicalcondition.value],
+        ['other_vaccines', otherVaccines.value],
+        ['other_sterilization', `${selectedSterilization.value}`],
+        ['sterilization_id', `${getSelectedSterilization()}`]
+    ];
+
+    // Append vaccines
+    vaccineArray.forEach((vaccineId) => {
+        formData.append(`vaccines`, vaccineId);
+    });
+
+    // Append profile image
+    formData.append('profile', profileToUpload.value || imagefromreportdetails.value || null);
+
+    // Append extra photos
+    files.value.forEach((fileobj) => {
+        formData.append(`extra_photo`, fileobj.file);
+    });
+
+    // Append data entries to FormData
+    entries.forEach(([key, value]) => formData.append(key, value));
+
+    // Validate required fields
+    const name_ = formData.get('name');
+    const gender_ = formData.get('gender');
+    const pet_ = formData.get('pet_category_id');
+    const pet2_ = formData.get('other_pet_category');
+    const status_ = formData.get('status');
+    const steril_ = formData.get('other_sterilization');
+    const steril2_ = formData.get('sterilization_id');
+
+    for (const [key, value] of formData.entries()) {
+        console.log(`Formdata: ${key}: ${value}`);
+    }
+
+    if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_)) {
+        try {
+            // Save pet profile
+            const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            if (response.data.success) {
+                const postId = props.postId; // Ensure this is correctly returned from the API
+                const shelterId = localStorage.getItem('c_id');
+
+                // Confirm rescue
+                const rescueResponse = await axios.post("http://localhost:5000/confirmRescue", {
+                    post_id: postId,
+                    shelter_id: shelterId
+                });
+
+                if (rescueResponse.data.success) {
+                    retrieveMessage()
+                    navigateTo({
+                        path: "/animalprofile",
+                        query: { showToast: true, message: 'Pet Profile Saved and Rescued Successfully', from: 'create' }
+                    });
+
+
+                } else {
+                    console.error('Failed to confirm rescue:', rescueResponse.data.message);
+                }
+
+            } else {
+                console.error('Failed to save profile:', response.data.message);
+            }
+        } catch (err) {
+            console.error("Error occurred during the process:", err);
+        }
+    } else {
+        console.log("Validation failed for inputs:", {
+            name_, gender_, status_, pet_, pet2_, steril_, steril2_
+        });
+    }
+}
+const userFullName = ref(null)
+const getUserFullName = async () => {
+    try {
+        const response = await axios.post("http://localhost:5000/getfullname", {
+            id: currentUser_id.value,
+        });
+
+        if (response.data) {
+            userFullName.value = response.data[0].full_name; // Adjust based on your API response structure
+        } else {
+            console.log("No data received for user full name.");
+        }
+    } catch (err) {
+        console.log("Error fetching user full name:", err);
+    }
+};
+async function retrieveMessage() {
+    await getUserFullName()
+    if (!selectedChat_id.value) {
+        await retrieveChatId(); // Await the creation of a new chat
+        // After creating a new chat, selectedChat_id should be set
+    }
+    const formData = new FormData();
+    // const tempurl = [null];
+
+    // files.value.forEach((fileobj) => { //append images
+    //     formData.append(`url`, fileobj.file);
+    // })
+
+    console.log("retrievemessagehere")
+    let messageData = [
+        ["chat_id", selectedChat_id.value],
+        ["user_id", null],
+        ["message", `The Stray Animal reported was rescued by ` + userFullName.value],
+        ["date", new Date().toISOString()],
+        ["post_id", props.postId]
+        //     ["sender_name", userFullName],
+        //     ["p1_name", userFullName],
+        //     ["p2_name", receiverName.value] // Ensure receiverName is set
+    ];
+
+    messageData.forEach(([key, value]) => formData.append(key, value));
+
+    // sendMessage(formData)
+    sendMessagetoUser(formData)
+}
+const selectedChat_id = ref(null)
+const retrieveChatId = async () => {
+    try {
+        const response = await axios.post("http://localhost:5000/newchat", {
+            senderid: currentUser_id.value,
+            receiverid: receiverId.value
+        });
+
+        if (response.data) {
+            selectedChat_id.value = response.data[0].chat_id;
+            console.log(selectedChat_id.value)
+
+
+        }
+    }
+    catch (err) {
+        console.log("Error creating new chat:", err);
+    }
+};
+async function sendMessagetoUser(thisformData) {
+    for (let pair of thisformData.entries()) {
+        console.log("send message to user", pair[0], pair[1]);
+    }
+
+    // return
+    try {
+        const response = await axios.post("http://localhost:5000/sendmessage", thisformData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        if (response.data.success) { // true
+            console.log("under response", response.data);
+        } else {
+            console.error("Failed to send message:", response.data.message);
+        }
+    } catch (error) {
+        console.error("Error sending message:", error);
+    }
+}
+
+// async function savePetProfile(formData) {
+//     console.log("Profile data being sent to server:", formData); // Log the FormData contents
+
+//     try {
+//         const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
+//             headers: { 'Content-Type': 'multipart/form-data' } // Ensure correct header
+//         });
+
+//         console.log("Response from server:", response.data); // Log the response from the server
+
+//         if (response.data.success) {
+//             navigateTo({
+//                 path: "/animalprofile",
+//                 query: { showToast: true, message: 'Pet Profile Saved Successfully', from: 'create' }
+//             });
+//         } else {
+//             console.error('Failed to save profile:', response.data.message);
+//             if (toastRef.value) {
+//                 toastRef.value.showToast('Error: ' + response.data.message); // Show error message
+//             }
+//         }
+//     } catch (err) {
+//         console.error("Error occurred while saving pet profile:", err);
+//         if (toastRef.value) {
+//             toastRef.value.showToast('An error occurred: ' + err.message); // Show error message
+//         }
+//     }
+// }
+
+
+//SMALL FUNCTIONS
+
+const removeImage = (index) => {
+    files.value.splice(index, 1)
+}
+
+function getSelectedOption(event) { //for energy level
+    const selectedOption = event.target.options[event.target.selectedIndex].text;
+    energylevel.value = selectedOption
+}
+function getSelectedVaccineIds() {
+    return selectedVaccines.value
+        .map(selectedName => {
+            const matchingVaccine = Vaccines.value.find(vaccine => vaccine.name === selectedName);
+            return matchingVaccine ? matchingVaccine.id : null; // Handle unmatched names
+        })
+        .filter(id => id !== null);
+}
+function getSelectedSterilization() {
+    console.log(sterilization.value)
+    const selectedSterilizationId = sterilization.value.find(sterilization => sterilization.name === selectedValue.value)?.id ?? null;
+    return selectedSterilizationId;
+}
+
+//watcher
+watch(selectedGender, (value) => {//watch for breed
+    if (value == 'male') {
+        genderchar.value = 'm'
+    }
+    else {
+        genderchar.value = 'f'
+    }
+});
+watch(selectedAnimalType, (newValue) => { //watch for breed
+    if (newValue === 'Other') {
+        selectedAnimalTypeString.value = newValue;
+        breedCategory.value = ''
+    }
+    else {
+        // Ensure animalCategory is an array and defined before using find
+        if (Array.isArray(animalCategory.value)) {
+            const selected = animalCategory.value.find(item => item.id === newValue);
+            selectedAnimalTypeString.value = selected ? selected.pet_category : '';
+            loadPetBreed()
+            loadVaccineOptions()
+            // console.log("string", selectedAnimalTypeString.value)
+        } else {
+            console.error("animalCategory is not an array or is undefined");
+            selectedAnimalTypeString.value = '';
+        }
+    }
+});
+watch(selectedAnimalBreed, (newValue) => { //watch for breed 
+    if (newValue === 'Other') {
+        selectedBreedString.value = newValue;
+    }
+    else {
+        // Ensure animalCategory is an array and defined before using find
+        if (Array.isArray(breedCategory.value)) {
+            const selected = breedCategory.value.find(
+                item => item.id === newValue
+            );
+            selectedBreedString.value = selected ? selected.name : '';
+        } else {
+            console.error("breedCategory is not an array or is undefined");
+            selectedBreedString.value = '';
+        }
+    }
+});
+watch(selectedGender, (newValue) => { //watch for sterilization
+    if (newValue) {
+        selectedGender.value = newValue;
+        categories.value = {
+            "non-surgical": [],
+            "surgical": [],
+            "others": []
+        };
+        loadSterilization();
+    }
+});
+const categoriesLoaded = ref(false);
+watch(() => categories.value, (newVal) => {//i forgot where dis used basta ayaw tanggala 
+    if (newVal && Object.keys(newVal).length > 0) {
+        categoriesLoaded.value = true;
+    }
+})
+
+
+// Reactive state
+const open = ref(true);
+</script>
+
 <template>
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @click.self="$emit('close')">
@@ -43,7 +702,8 @@
                                                             Profile photo</label>
                                                         <div :class="{ 'py-5': !selectedImage, 'py-2': selectedImage }"
                                                             class="mt-2 flex justify-center rounded-lg outline-2 outline-dashed outline-gray-300">
-                                                            <div class="text-center" v-if="!selectedImage">
+                                                            <div class="text-center"
+                                                                v-if="!selectedImage && !imagefromreportdetails">
                                                                 <PhotoIcon class="mx-auto h-12 w-12 text-gray-300"
                                                                     aria-hidden="true" />
                                                                 <div
@@ -62,7 +722,7 @@
                                                             </div>
                                                             <div v-else
                                                                 class="flex justify-center items-center h-full w-full relative">
-                                                                <img :src="selectedImage"
+                                                                <img :src="selectedImage || imagefromreportdetails"
                                                                     class="max-w-[15rem] max-h-[15rem] rounded-md" />
                                                                 <button @click="clearImage"
                                                                     class="absolute top-2 sm:right-[1rem] lg:right-[8.1rem] text-gray-600 hover:text-red-600">
@@ -450,546 +1110,3 @@
         </Dialog>
     </TransitionRoot>
 </template>
-<script setup>
-import { ref, onMounted, onBeforeUnmount, watch, computed, toRaw, defineProps } from 'vue'
-import axios from "axios"
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { PhotoIcon } from '@heroicons/vue/24/solid'
-import { useRouter } from 'vue-router';
-
-
-const emit = defineEmits(['close', 'post-created']) // for closing the modal with close button - joey added
-const props = defineProps(['postId']);
-console.log('Received postId:', props.postId); // Debug line
-
-// to close press esc
-onMounted(() => {
-    const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
-    window.addEventListener('keydown', closeModalOnEsc)
-    onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
-})
-
-const toastRef = ref(null);
-
-// jeneh's code from shelter create new profile geh reuse nlng nkong form...
-const router = useRouter();
-function navigateTo(path) {
-    router.push(path);
-}
-
-//user details
-const userid = localStorage.getItem('u_id');
-
-// const formData = new FormData()
-const dataEntries = ref([]);
-//pet details
-const name = ref('');
-const nickname = ref('');
-const daterehomed = ref('');
-const genderchar = ref('');
-const age = ref('');
-const sizeweight = ref('');
-const energylevel = ref('');
-const coat = ref('');
-const about = ref('');
-const specialneed = ref('');
-const medicalcondition = ref('');
-const selectedGender = ref('');
-const selectedSterilization = ref('');
-
-const profileInput = ref(null); // Initialized with a value of null, but it will eventually hold a reference to the file input element. (profile photo)
-const selectedImage = ref(null); // Initialized with a value of null, but it will eventually hold the selected image data (e.g., a URL string or a blob)
-const profileToUpload = ref(null)
-const fileToUploadArray = ref(null) //holds the file in handlefilechanges event function
-//holds the file in handlefilechanges event function
-
-// multiple images
-const files = ref([])
-const otherPhotos = ref(null)
-
-function clearImage() {
-    selectedImage.value = null; // sets the selectedImage reference to null, effectively removing the image
-    if (profileInput.value) { // if the file input element exists, sets its value to an empty string, effectively clearing the file selection
-        profileInput.value.value = '';
-    }
-}
-
-// For select animal type and auto change the value option on animalbreed depending on what's the animal type selected.
-const animaltype = ref(''); //others option
-const animalbreed = ref('');
-const selectedAnimalType = ref(''); //selected from the options, retrieves the ID based on the database
-const selectedAnimalBreed = ref('');
-const selectedAnimalTypeString = ref('') //retrieves the string exactly from the option e.g.: dog, cat, horse, bird
-const selectedBreedString = ref('')
-
-//for dropbox/options
-const animalCategory = ref([])
-const breedCategory = ref([])
-const status = ref([])
-
-watch(selectedAnimalType, (newVal, oldVal) => {
-    if (newVal !== oldVal) {
-        selectedAnimalBreed.value = ''; // reset selectedAnimalBreed when selectedAnimalType changes
-        Vaccines.value = []; // reset the selected vaccines when animal type changes
-        // otherVaccines.value = ''; // reset the other vaccines when animal type changes
-    }
-});
-
-const clearAnimalTypeInput = () => {
-    animaltype.value = '';
-    selectedAnimalType.value = ''; // reset the selected animal type
-};
-const clearAnimalTypeBreed = () => {
-    animalbreed.value = '';
-    selectedAnimalBreed.value = ''; // reset the selected animal breed
-};
-
-// For Vaccines options
-const vaccines = ref({});
-const other_vaccine = ({
-    "Other": [
-        "Rabies",
-        "Distemper",
-        "Influenza",
-        "Tetanus",
-        "Bovine viral diarrhea (BVD)"
-    ]
-})
-
-//VACCINES
-const displayVaccines = computed(() => {
-    // console.log(selectedAnimalType.value)
-    if (selectedAnimalType.value == 'Other') {
-        // return other_vaccine.Other; // Return the array directly
-    } else if (Vaccines.value && Array.isArray(Vaccines.value)) {
-        return Vaccines.value; // Ensure vaccines is an array
-    }
-    return [];
-});
-
-const selectedstatus = ref('')
-
-const Vaccines = ref([]);
-const selectedVaccines = ref([]) // initialize an empty array to store the selected vaccines
-const otherVaccines = ref(''); // initialize an empty string to store the other vaccines
-
-const allVaccines = computed(() => {
-    const selectedVaccineNames = selectedVaccines.value.map(vaccine => vaccine); // Extract the vaccine names
-    return [...selectedVaccineNames, ...otherVaccines.value.split(',').filter(Boolean)];
-});
-
-// spayed or neutered
-const sterilization = ref([])
-const nonSurgical = ref([]);
-const surgical = ref([]);
-const spayNeuterOptions = ref([ //"other" option value
-    {
-        id: 'intact',
-        name: 'Intact',
-        label: 'No - Intact',
-        description: 'This animal has not been spayed or neutered.'
-    },
-    {
-        id: 'NA',
-        name: 'Not Applicable',
-        label: 'Not Applicable',
-        description: 'This animal is too young or not eligible for spaying/neutering.'
-    },
-    {
-        id: 'unknown',
-        name: 'Unknown',
-        label: 'Unknown',
-        description: 'This animal\'s spay/neuter status is unknown.'
-    }
-])
-
-const selectedValue = ref('')
-const categories = ref({
-    "non-surgical": [],
-    "surgical": [],
-    "others": []
-})
-
-const categoriesRaw = computed(() => toRaw(categories.value));
-
-//image handling
-const handleMultipleFileChange = (event) => {
-    const filesArray = event.target.files
-    console.log("handle multiple file change", filesArray)
-
-    for (let i = 0; i < filesArray.length; i++) {
-        const file = filesArray[i]
-        const reader = new FileReader()
-        reader.onload = (event) => {
-            // files.value.push({ source: file.name, url: event.target.result })
-            files.value.push({ file: file, url: event.target.result });
-        }
-        reader.readAsDataURL(file)
-    }
-}
-function handleFileChange(event) {
-    const file = event.target.files[0]; // gets the first file selected by the user 
-    profileToUpload.value = file;
-
-    // console.log(file)
-    console.log(profileToUpload.value)
-
-    const reader = new FileReader(); // creates a new FileReader object, which is used to read the contents of the file
-    reader.onload = (event) => { // sets up an event listener for when the file reading is complete.
-        // When the file reading is complete, the onload event is triggered, and the callback function is executed:
-        selectedImage.value = event.target.result; // sets the selectedImage reference to the result of the file reading (the data URL string)
-    };
-    reader.readAsDataURL(file); // starts reading the file as a data URL (a string representation of the file contents)
-}
-async function loadPetCategory() { //type from db dog cats //pet type/category rendering
-    try {
-        const response = await axios.get("http://localhost:5000/load-category")
-        console.log(response)
-        if (response.data) {
-            animalCategory.value = response.data
-        }
-    }
-    catch (err) {
-        console.log("error", err)
-    }
-}
-async function loadPetBreed() { //breed from db //load pet breed when pet type (animalCategory) is selected
-    try {
-        const response = await axios.post("http://localhost:5000/pet_breed",
-            {
-                _category_id: selectedAnimalType.value
-            }
-        )
-        if (response.data) {
-            breedCategory.value = response.data
-        }
-    }
-    catch (err) {
-        console.log("error", err)
-    }
-}
-//load vaccines when pet type (animalCategory) is selected
-async function loadVaccineOptions() { //ovi nmn ;-; load vaccine
-    try {
-        const response = await axios.post("http://localhost:5000/vaccine",
-            {
-                _category_id: selectedAnimalType.value
-            }
-        )
-        if (response) {
-            Vaccines.value = response.data
-        }
-    }
-    catch (err) {
-        console.log("error in loading vaccines", err)
-    }
-}
-//load sterilization base on gender selectedGender
-async function loadSterilization() { //kwaon tung sa db tas e load ;-; ovi
-    try {
-        console.log(selectedGender.value)
-        const response = await axios.post("http://localhost:5000/sterilization",
-            {
-                _gender: selectedGender.value
-            }
-        )
-        if (response) {
-            sterilization.value = response.data
-            categorizedSterilization() // Categorize after loading
-            //
-            categories.value = {
-                "non-surgical": [...categories.value["non-surgical"]],
-                "surgical": [...categories.value["surgical"]],
-                "others": [...categories.value["others"], ...spayNeuterOptions.value]
-            }
-        }
-    }
-    catch (err) {
-        console.log("error in loading sterilization", err)
-    }
-}
-function categorizedSterilization() { //categorize sterilization from load sterilization (e.g. surgical, non surgical)
-    try {
-        const keys = Object.keys(categories.value);
-
-        if (!Array.isArray(sterilization.value)) {
-            console.error("sterilization.value is not an array:", sterilization.value);
-            return;
-        }
-
-        sterilization.value.forEach(request => {
-            if (categories.value[request.type]) {
-                categories.value[request.type].push(request);
-            }
-            else {
-                console.warn(`Unknown type '${request.type}' encountered.`);
-                // If type doesn't match 'non-surgical' or 'surgical', add to 'others'
-                categories.value["others"].push({
-                    id: request.id || 'unknown',
-                    value: request.type || 'Unknown',
-                    label: request.label || 'Unknown',
-                    description: request.description || 'No description available'
-                });
-            }
-        });
-
-        // console.log("Categories", categories.value);
-        console.log("category", categories.value)
-
-        // Assign categorized data to separate refs
-        nonSurgical.value = categories.value["non-surgical"];
-        surgical.value = categories.value["surgical"];
-
-    }
-    catch (err) {
-        console.log("error in categorizing sterilization", err)
-    }
-}
-async function loadPetStatus() { // load pet status... tf do u want 
-    try {
-        const response = await axios.get("http://localhost:5000/pet_status")
-        if (response) {
-            status.value = response.data
-        }
-    }
-    catch (err) {
-        console.log("error in loading sterilization", err)
-    }
-}
-async function retrieveData() {
-    const formData = new FormData();
-    const vaccineArray = getSelectedVaccineIds();
-
-    // Populate dataEntries
-    const entries = [
-        ['id', localStorage.getItem('u_id')],
-        ['gender', `${genderchar.value}`],
-        ['pet_category_id', selectedAnimalType.value],
-        ['other_pet_category', animaltype.value],
-        ['breed_id', selectedAnimalBreed.value],
-        ['other_breed', animalbreed.value],
-        ['status', selectedstatus.value],
-        ['name', name.value],
-        ['nickname', nickname.value],
-        ['daterehomed', daterehomed.value],
-        ['energylevel', energylevel.value],
-        ['age', age.value],
-        ['sizeweight', sizeweight.value],
-        ['coat', coat.value],
-        ['about', about.value],
-        ['special_needs', specialneed.value],
-        ['med_condition', medicalcondition.value],
-        ['other_vaccines', otherVaccines.value],
-        ['other_sterilization', `${selectedSterilization.value}`],
-        ['sterilization_id', `${getSelectedSterilization()}`]
-    ];
-
-    // Append vaccines
-    vaccineArray.forEach((vaccineId) => {
-        formData.append(`vaccines`, vaccineId);
-    });
-
-    // Append profile image
-    formData.append('profile', profileToUpload.value || null);
-
-    // Append extra photos
-    files.value.forEach((fileobj) => {
-        formData.append(`extra_photo`, fileobj.file);
-    });
-
-    // Append data entries to FormData
-    entries.forEach(([key, value]) => formData.append(key, value));
-
-    // Validate required fields
-    const name_ = formData.get('name');
-    const gender_ = formData.get('gender');
-    const pet_ = formData.get('pet_category_id');
-    const pet2_ = formData.get('other_pet_category');
-    const status_ = formData.get('status');
-    const steril_ = formData.get('other_sterilization');
-    const steril2_ = formData.get('sterilization_id');
-
-    if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_)) {
-        try {
-            // Save pet profile
-            const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-
-            console.log("Response from save_pet_profile:", response.data);
-
-            if (response.data.success) {
-                const postId = props.postId; // Ensure this is correctly returned from the API
-                const shelterId = localStorage.getItem('c_id');
-
-                console.log("Post ID:", postId);
-                console.log("Shelter ID:", shelterId);
-
-                if (postId && shelterId) {
-                    // Confirm rescue
-                    const rescueResponse = await axios.post("http://localhost:5000/confirmRescue", {
-                        post_id: postId,
-                        shelter_id: shelterId
-                    });
-
-                    console.log("Response from confirmRescue:", rescueResponse.data);
-
-                    if (rescueResponse.data.success) {
-                        navigateTo({
-                            path: "/animalprofile",
-                            query: { showToast: true, message: 'Pet Profile Saved and Rescued Successfully', from: 'create' }
-                        });
-
-
-                    } else {
-                        console.error('Failed to confirm rescue:', rescueResponse.data.message);
-                    }
-                } else {
-                    console.error('Post ID or Shelter ID is undefined');
-                }
-            } else {
-                console.error('Failed to save profile:', response.data.message);
-            }
-        } catch (err) {
-            console.error("Error occurred during the process:", err);
-        }
-    } else {
-        console.log("Validation failed for inputs:", {
-            name_, gender_, status_, pet_, pet2_, steril_, steril2_
-        });
-    }
-}
-
-async function sendMessagetoUser(){
-    
-}
-
-// async function savePetProfile(formData) {
-//     console.log("Profile data being sent to server:", formData); // Log the FormData contents
-
-//     try {
-//         const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
-//             headers: { 'Content-Type': 'multipart/form-data' } // Ensure correct header
-//         });
-
-//         console.log("Response from server:", response.data); // Log the response from the server
-
-//         if (response.data.success) {
-//             navigateTo({
-//                 path: "/animalprofile",
-//                 query: { showToast: true, message: 'Pet Profile Saved Successfully', from: 'create' }
-//             });
-//         } else {
-//             console.error('Failed to save profile:', response.data.message);
-//             if (toastRef.value) {
-//                 toastRef.value.showToast('Error: ' + response.data.message); // Show error message
-//             }
-//         }
-//     } catch (err) {
-//         console.error("Error occurred while saving pet profile:", err);
-//         if (toastRef.value) {
-//             toastRef.value.showToast('An error occurred: ' + err.message); // Show error message
-//         }
-//     }
-// }
-
-
-//SMALL FUNCTIONS
-
-const removeImage = (index) => {
-    files.value.splice(index, 1)
-}
-
-function getSelectedOption(event) { //for energy level
-    const selectedOption = event.target.options[event.target.selectedIndex].text;
-    energylevel.value = selectedOption
-}
-function getSelectedVaccineIds() {
-    return selectedVaccines.value
-        .map(selectedName => {
-            const matchingVaccine = Vaccines.value.find(vaccine => vaccine.name === selectedName);
-            return matchingVaccine ? matchingVaccine.id : null; // Handle unmatched names
-        })
-        .filter(id => id !== null);
-}
-function getSelectedSterilization() {
-    console.log(sterilization.value)
-    const selectedSterilizationId = sterilization.value.find(sterilization => sterilization.name === selectedValue.value)?.id ?? null;
-    return selectedSterilizationId;
-}
-
-//watcher
-watch(selectedGender, (value) => {//watch for breed
-    if (value == 'male') {
-        genderchar.value = 'm'
-    }
-    else {
-        genderchar.value = 'f'
-    }
-});
-watch(selectedAnimalType, (newValue) => { //watch for breed
-    if (newValue === 'Other') {
-        selectedAnimalTypeString.value = newValue;
-        breedCategory.value = ''
-    }
-    else {
-        // Ensure animalCategory is an array and defined before using find
-        if (Array.isArray(animalCategory.value)) {
-            const selected = animalCategory.value.find(item => item.id === newValue);
-            selectedAnimalTypeString.value = selected ? selected.pet_category : '';
-            loadPetBreed()
-            loadVaccineOptions()
-            // console.log("string", selectedAnimalTypeString.value)
-        } else {
-            console.error("animalCategory is not an array or is undefined");
-            selectedAnimalTypeString.value = '';
-        }
-    }
-});
-watch(selectedAnimalBreed, (newValue) => { //watch for breed 
-    if (newValue === 'Other') {
-        selectedBreedString.value = newValue;
-    }
-    else {
-        // Ensure animalCategory is an array and defined before using find
-        if (Array.isArray(breedCategory.value)) {
-            const selected = breedCategory.value.find(
-                item => item.id === newValue
-            );
-            selectedBreedString.value = selected ? selected.name : '';
-        } else {
-            console.error("breedCategory is not an array or is undefined");
-            selectedBreedString.value = '';
-        }
-    }
-});
-watch(selectedGender, (newValue) => { //watch for sterilization
-    if (newValue) {
-        selectedGender.value = newValue;
-        categories.value = {
-            "non-surgical": [],
-            "surgical": [],
-            "others": []
-        };
-        loadSterilization();
-    }
-});
-const categoriesLoaded = ref(false);
-watch(() => categories.value, (newVal) => {//i forgot where dis used basta ayaw tanggala 
-    if (newVal && Object.keys(newVal).length > 0) {
-        categoriesLoaded.value = true;
-    }
-})
-
-onMounted(() => { //pag load sa page mag load ni =)
-    //data rendering :'D
-    loadPetCategory()
-    loadPetStatus()
-
-    //This is for current date for date of rehomed
-    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    daterehomed.value = today;
-})
-// Reactive state
-const open = ref(true);
-</script>

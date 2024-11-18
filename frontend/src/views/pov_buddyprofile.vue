@@ -95,7 +95,7 @@ async function getBuddyPost() {
 </script>
 <template>
     <div class="my-4">
-        <p>Buddy ID: {{ buddyId }}</p>
+        <!-- <p>Buddy ID: {{ buddyId }}</p> -->
         <main class="flex-1">
             <div class="bg-white p-6">
                 <div class="flex sm:flex-col md:flex-row justify-between gap-y-4 items-center mb-6 px-8">

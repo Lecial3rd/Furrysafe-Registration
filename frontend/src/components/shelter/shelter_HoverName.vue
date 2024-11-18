@@ -109,7 +109,8 @@ onMounted(async () => {
                 <span class="text-gray-500 group-hover:text-gray-700">View Profile</span>
             </RouterLink>
 
-            <RouterLink to="/messages"
+            <!-- Changes Salpocial -->
+            <RouterLink :to="{ name: 'sheltermessages', query: { shelterId: id, shelterUserID: _user_id } }"
                 class="flex gap-x-3 border rounded-lg bgteal hover:animate-pulse sm:px-4 md:px-8 xl:px-20 py-2 items-center">
                 <ChatBubbleLeftEllipsisIcon class="h-6 w-6 text-white" />
                 <span class="text-white">Message</span>

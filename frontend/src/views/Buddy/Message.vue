@@ -1,68 +1,3 @@
-<!-- <script setup>
-import { ref, onMounted, computed, watch, nextTick , reactive} from 'vue';
-import { MagnifyingGlassIcon, PaperAirplaneIcon, PaperClipIcon } from "@heroicons/vue/20/solid";
-import axios from 'axios';
-import { io } from 'socket.io-client';
-
-import default_avatar from '@/assets/images/buddy_default.jpg'
-
-const showNewMessage = ref(false);
-const newMessage = ref('');
-const uploadedFile = ref(null);
-const searchTerm = ref('');
-const isModalVisible = ref(false);
-const selectedUser = ref('');
-const users = ['June Cyril Dolendo', 'afdsafsdafsda', 'afsdafas', 'afsdafsa', 'CAPSTONE : UI | FURSAFE', 'afdsafsad', 'weqrewqrewq', 'zvxczvzvz'];
-const filteredUsers = ref([]);
-const messages = reactive([]);
-
-function toggleModal() {
-  isModalVisible.value = !isModalVisible.value;
-}
-
-function toggleNewMessage() {
-  showNewMessage.value = !showNewMessage.value;
-}
-
-function sendMessage() {
-  if (newMessage.value.trim() || uploadedFile.value) {
-    const message = {
-      text: newMessage.value.trim(),
-      photo: uploadedFile.value ? URL.createObjectURL(uploadedFile.value) : null,
-      isSent: true,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    messages.push(message);
-    newMessage.value = '';
-    uploadedFile.value = null;
-  }
-}
-
-function handleFileUpload(event) {
-  uploadedFile.value = event.target.files[0];
-}
-
-function triggerFileInput() {
-  document.getElementById('fileInput').click();
-}
-
-function filterUsers() {
-  filteredUsers.value = users.filter(user => user.toLowerCase().includes(searchTerm.value.toLowerCase()));
-}
-
-function selectUser(user) {
-  searchTerm.value = user;
-  filteredUsers.value = [];
-}
-
-function startChat() {
-  if (selectedUser.value) {
-    console.log(`Starting chat with ${selectedUser.value}`);
-    toggleModal();
-  }
-}
-</script> -->
-
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { MagnifyingGlassIcon, PaperAirplaneIcon, PaperClipIcon } from "@heroicons/vue/20/solid";
@@ -70,6 +5,12 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 
 import default_avatar from '@/assets/images/buddy_default.jpg'
+import viewpostimagepreview from '@/components/Buddy/buddy_Home_ImagePreviewModal.vue';
+
+//Added By Salpocial
+import { useRoute } from 'vue-router';
+const route = useRoute();
+
 
 // Reactive user ID
 const user_id = ref(localStorage.getItem('u_id'));
@@ -187,7 +128,8 @@ const updateConversationsList = (messageData) => {
 // Select a conversation
 const selectConversation = async (conversation) => {
   receiverName.value = conversation.other_participant_name || conversation.p2_name
-  receiverId.value = null; // Corrected spelling
+  // receiverId.value = null; // Corrected spelling
+  receiverId.value = conversation.user_id || conversation.p2_id; // Set the receiver ID from the conversation - Edited By Salpocial
 
   if (!conversation || !conversation.chat_id) {
     return;
@@ -233,6 +175,7 @@ const selectConversation = async (conversation) => {
     console.log("Error fetching messages:", err);
   }
 };
+
 //check here
 async function sendMessage(thisformData) {
   try {
@@ -354,6 +297,8 @@ const getUserFullName = async () => {
     console.log("Error fetching user full name:", err);
   }
 };
+
+
 
 //------------------------------------ this image
 const fileInput = ref(null);
@@ -514,8 +459,27 @@ watch(searchValue, (newValue) => {
 //     getUserFullName();
 // });
 onMounted(async () => {
-  await getUserFullName();
-  await fetchInbox();
+    await getUserFullName();
+    await fetchInbox();
+
+    // Added By Salpocial
+    const buddyIdFromQuery = route.query.buddyId; // Get the buddyId from the route query
+    if (buddyIdFromQuery) {
+        receiverId.value = buddyIdFromQuery; // Set the receiverId
+        console.log("Receiver ID set to:", receiverId.value);
+
+        // Automatically select the conversation based on the receiverId
+        const existingChat = conversations.value.find(chat => {
+            return chat.participant_1_id === Number(receiverId.value) || chat.participant_2_id === Number(receiverId.value);
+        });
+
+        if (existingChat) {
+            selectConversation(existingChat); // Automatically select the conversation
+            console.log("Automatically selected conversation:", existingChat);
+        } else {
+            console.log("No existing chat found for buddyId:", buddyIdFromQuery);
+        }
+    }
 });
 </script>
 
@@ -592,6 +556,10 @@ onMounted(async () => {
               <div v-if="conversation.user_id == user_id">
                 <p class="text-sm truncate">You: {{ conversation.message }}</p>
               </div>
+              <div v-else-if="conversation.user_id == null">
+                <p class="text-sm truncate">{{
+                  conversation.message }}</p>
+              </div>
               <div v-else>
                 <p class="text-sm truncate">{{ conversation.other_participant_name }}: {{
                   conversation.message }}</p>
@@ -630,6 +598,14 @@ onMounted(async () => {
             </div>
           </div>
 
+          <!-- Incomming message sent by the system -->
+          <div v-else-if="message.user_id == null" class="flex justify-center mb-2">
+            <div class="text-sm text-gray-600 p-3">
+              <div class="">
+                <p>{{ message.message }} </p>
+              </div>
+            </div>
+          </div>
 
           <div v-else class="flex justify-start mb-2">
             <div class="text-sm text-gray-600 p-3">

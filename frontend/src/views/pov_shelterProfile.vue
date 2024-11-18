@@ -96,6 +96,7 @@ const bio = ref([])
 const sociallink = ref([])
 const details = ref([])
 
+
 async function loadProfileDetails() {
     //const id = localStorage.getItem('c_id');
 
@@ -143,6 +144,7 @@ async function loadProfileDetails() {
         // Optionally, you can set default or error messages in your reactive variables here
     }
 }
+
 
 // gridpost
 let _user_id = userId;
@@ -221,6 +223,7 @@ function eventhasMultiplePhotos(photo_display_url) {
 
 onMounted(async () => {
     loadProfileCard();
+    console.log("shelter",id)
     loadProfileDetails();
     await retrieveReports()
     await retrieveEvents()

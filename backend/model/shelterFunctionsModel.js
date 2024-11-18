@@ -69,7 +69,7 @@ export const retrieveProfile = async (req, res) => {
         message: "Shelter details saved successfully",
       });
     }
-  } catch (err) {}
+  } catch (err) { }
 };
 //save modified shelter details and links
 export const saveShelter_and_Link = async (req, res) => {
@@ -319,25 +319,26 @@ export const savepetprofie = async (req, res) => {
     // const vaccine_ids = vaccines.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
 
     const files = req.files;
+    let profileUrl = null;
 
     // Upload Profile Photo
     const profileFile = files.find((file) => file.fieldname === "profile");
     const extraPhotos = files.filter(
       (file) => file.fieldname === "extra_photo"
     );
-    console.log("extra photos", extraPhotos);
+    if (!profileFile) {
+      profileUrl = req.body.profile
+    }
 
     if (breed_id == "Other") {
       breed_id = null;
     }
 
-    let profileUrl = null;
     const extraPhotoUrls = [];
 
     if (profileFile) {
-      const profileFilePath = `pets_profiles/${Date.now()}_${
-        profileFile.originalname
-      }`;
+      const profileFilePath = `pets_profiles/${Date.now()}_${profileFile.originalname
+        }`;
       const { data: profileUploadData, error: profileUploadError } =
         await supabase.storage
           .from("pets_images") // Ensure this is your correct bucket name
@@ -485,9 +486,8 @@ export const updatepetprofile = async (req, res) => {
 
     if (profileFile) {
       //if true then save new profile to cloud and delete prev photo
-      const profileFilePath = `pets_profiles/${Date.now()}_${
-        profileFile.originalname
-      }`;
+      const profileFilePath = `pets_profiles/${Date.now()}_${profileFile.originalname
+        }`;
       const { data: profileUploadData, error: profileUploadError } =
         await supabase.storage
           .from("pets_images") // Ensure this is your correct bucket name
@@ -650,7 +650,6 @@ export const searchUser = async (req, res) => {
 export const loadInbox = async (req, res) => {
   let { id, chat_id } = req.body;
   id = id.toString();
-  console.log("chat", chat_id);
 
   if (!chat_id) {
     chat_id = null;
@@ -662,9 +661,9 @@ export const loadInbox = async (req, res) => {
     _chat_id: chat_id,
   });
   if (error) {
-    console.error("Error deleting file 1:", error);
+    console.error("Something went wrong getting chat_function", error);
   } else {
-    console.log("loading...");
+    console.log("get chat functon data: ", data);
     res.status(200).send(data);
   }
 };
@@ -677,9 +676,13 @@ export const sendMessage = async (req, res) => {
   let extraPhotoUrls = [];
 
   let url = null;
-  let { chat_id, user_id, message } = req.body;
+  let { chat_id, user_id, message, post_id } = req.body;
+  post_id = post_id == 'null' || post_id == '' ? null : post_id;
+  chat_id = chat_id == 'null' || chat_id == '' ? null : chat_id;
+  user_id = user_id == 'null' || user_id == '' ? null : user_id;
 
-  console.log(req.body);
+  console.log("user_id", user_id);
+
   try {
     for (const photo of sentimage) {
       const photoPath = `pets_photos/${Date.now()}_${photo.originalname}`;
@@ -717,12 +720,14 @@ export const sendMessage = async (req, res) => {
       _chat_id: chat_id,
       _message: message,
       _photourl: extraPhotoUrls,
+      _post_id: post_id,
     });
 
     if (error) {
       console.error("Error sending message 1:", error);
       res.status(500).send({ success: false, error: error.message });
     } else {
+      console.log("success?")
       res.status(200).send({ success: true, url: extraPhotoUrls });
     }
   } catch (err) {
@@ -991,9 +996,8 @@ export const acceptRescueReport = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Report ${
-        status === "Rescued" ? "Accepted" : "Cancelled"
-      } successfully`,
+      message: `Report ${status === "Rescued" ? "Accepted" : "Cancelled"
+        } successfully`,
     });
   } catch (err) {
     console.error("Error in acceptRescueReport:", err);
@@ -1199,5 +1203,28 @@ export const getOngoingOperations = async (req, res) => {
         message: "An Error Occured",
       });
     }
-  } catch (err) {}
+  } catch (err) {
+    console.log("error in backend: getongoingoperations", err)
+  }
 };
+export const getRescuedHistory = async (req, res) => {
+  try {
+    const { _report_status, _handled_by } = req.body;
+
+    const { data, error } = await supabase.rpc("get_rescued_reports", {
+      _report_status: _report_status,
+      _handled_by: _handled_by,
+    });
+    if (!error) {
+      res.status(200).send(data);
+    } else {
+      res.status(500).send({
+        success: false,
+        error: error.message,
+        message: "An Error Occured",
+      });
+    }
+  } catch (err) {
+    console.log("error in backend: getongoingoperations", err)
+  }
+}

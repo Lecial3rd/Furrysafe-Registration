@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import statusbuttons from '@/components/Shelter/shelter_RescueOp_ReportCard_ReportStatusButtons.vue';
+import statusbuttons from '@/components/Shelter/shelter_Missingreports_Button.vue';
 import previewhover from '@/components/Shelter/shelter_HoverName.vue';
 import axios from "axios";
 
@@ -21,41 +21,34 @@ const toggleModalViewDetails = (id) => {
         console.log("found post", selectedPostDetails.value)
     }
 };
+const handleStatusUpdate = () => {
+    // Refresh the reports list
+    retrieveReports();
+}
 
 //functions 
 let selectedPost = ref(null)
 let posts = ref([])
 let selectedPostDetails = ref([])
-async function retrieveReports() { //display
+let _shelter_id = localStorage.getItem('c_id')
+async function retrieveReports() {
     try {
         console.log("retrieveReports")
-        const response = await axios.post("http://localhost:5000/getereports", {
-            _post_id: selectedPost.value,
-            _post_type: -1,
-            _report_status: 'Pending' // Nov12 'In progress'  change to 'Pending'
+        const response = await axios.post("", {
+            _shelter_id: _shelter_id,
+            _status: 'Pending'
         });
 
-        console.log(response.data)
         if (response.data && response.data.length > 0) {
-            // Filter out reports that are already rescued
-            posts.value = response.data.filter(report => report.report_status !== 'Rescued' && report.report_status !== 'In progress'); // Nov12 added ( && report.report_status !== 'In progress' )
-        } ``
-        console.log(posts.value)
-        // Nov5 end of salpocial's new code
+            posts.value = response.data
+        }
+        console.log("post value", posts.value)
     }
     catch (err) {
-        console.log("error in retrieve reports", err)
+        console.log("error in retrieve operations", err)
     }
 }
 
-// Nov5 start of salpocial's new code
-// Add a function to handle status updates
-const handleStatusUpdate = () => {
-    // Refresh the reports list
-
-    retrieveReports();
-}
-// Nov5 end of salpocial's new code
 onMounted(async () => {
     retrieveReports()
 })
@@ -105,9 +98,52 @@ onMounted(async () => {
                 </span>
 
             </div>
-            <div> <!-- Nov5 added :postId="report.post_id" @statusUpdated="handleStatusUpdate"-->
-                <statusbuttons :postId="report.post_id" :reportedUserId="report.user_id"  @statusUpdated="handleStatusUpdate" />
+            <div>
+                <statusbuttons :postId="report.post_id" @statusUpdated="handleStatusUpdate"/>
             </div>
         </div>
     </div>
+    
 </template>
+
+<!-- 
+<template>
+    <div>
+        <div v-for="(report, index) in posts" :key="index" class="bg-white shadow-md rounded-lg mb-4">
+            <div class="h-[2rem] bg-white border-b-2 rounded-t-lg" />
+            <div class="w-full bg-gray-50 border-b-2 relative group">
+                <img class="mx-auto flex-shrink-0 w-[20rem] group-hover:filter group-hover:blur-sm"
+                    :src="report.photos[0]" alt="image post" />
+                <RouterLink to="/viewreportdetails"
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden group-hover:block">
+                    <span class="font-semibold text-sm text-white">View Details </span>
+                </RouterLink>
+            </div>
+            <div class="my-[1rem] px-[2rem] py-3 text-gray-700 grid gap-y-1">
+                <span class="flex gap-5 text-sm items-center">
+                    Reported by:
+                    <RouterLink to="" class="font-bold text-base">
+                        <div @mouseenter="hoveredIndex = index" @mouseleave="hoveredIndex = null"
+                            class="relative inline-block">
+                            <span class="hover:underline cursor-pointer">{{ report.posted_by }}</span>
+                            <previewhover v-if="hoveredIndex === index" class="absolute z-10" />
+                        </div>
+                    </RouterLink>
+                </span>
+                <span class="flex gap-5 text-sm">Report Type:
+                    <h1 class="font-bold text-sm flex gap-3">{{ report.post_type }}</h1>
+                </span>
+                <span class="flex text-sm gap-3">Animal Status:
+                    <span class="font-semibold text-[15px]">{{ report.pet_condition }}</span>
+                </span>
+                <span class="flex gap-10 text-sm">Location:
+                    <p class="font-semibold text-sm">{{ report.report_address_location }}</p>
+                </span>
+
+            </div>
+            <div>
+                <statusbuttons />
+            </div>
+        </div>
+    </div>
+</template> -->

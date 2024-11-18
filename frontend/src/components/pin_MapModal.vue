@@ -96,6 +96,7 @@ const closeModal = (event) => {
 
 async function savePinnedAddress() {
     try {
+        console.log(address.value, "address")
         const response = await axios.post("http://localhost:5000/update-shelter-details", {
             address: address.value,
             latitude: lat.value,
@@ -115,8 +116,6 @@ async function savePinnedAddress() {
 
 
 function handleLocationChange(location) {
-    console.log(location)
-
     address.value = location.address;
     lat.value = location.lat;
     lng.value = location.lng;

@@ -11,6 +11,9 @@ import mapoverlay from '@/components/buddy_PinModal.vue'
 const showMapModal = ref(false)
 const options = ref([])
 
+import PetList from '@/components/Shelter/shelter_NewpostModal_SearchPetProfile.vue' // Import PetList
+
+
 //flags
 const photoflag = ref(true);
 const locationflag = ref(true);
@@ -149,6 +152,7 @@ async function retrieveProfile() {
             name: capitalizeWords(name.trim()),
             nickname: capitalizeWords(nickname.trim()),
             petBreed: profile.breed,
+            petCategory: profile.pet_category,
             rehomed: profile.date_rehomed,
             profile: profile.profileurl
           }
@@ -226,6 +230,59 @@ watch(petidvalue, (newValue) => {
     selectedCategory.value = newValue;
   }
 });
+
+// New Added Code - Salpocial
+const isOpen = ref(false);
+
+const selectPet = (item) => {
+  selectedPetId.value = item.id; // Set the selected pet ID
+  isOpen.value = false; // Close the dropdown
+};
+
+async function fetchPetCategory(petId) {
+  try {
+    const response = await axios.post("http://localhost:5000/profile", {
+      _userid: id,
+      _pet_id: petId,
+      _post_id: null,
+    });
+
+    console.log('API Response:', response.data); // Log the entire response
+
+    // Find the specific pet data based on the petId
+    const petData = response.data.find(pet => pet.id === petId);
+
+    if (petData) {
+      console.log('Pet Category Data:', petData); // Log the specific pet data
+
+      // Check if pet_category_id exists in the response
+      if (petData.pet_category_id) {
+        selectedCategory.value = petData.pet_category_id; // Set to the ID of the pet category
+        console.log('Fetched Pet Category ID:', petData.pet_category_id); // Log the ID
+      } else {
+        console.error('pet_category_id is missing in the response data');
+      }
+    } else {
+      console.log('No data found for the selected pet.');
+    }
+  } catch (error) {
+    console.error('Error fetching pet category:', error);
+  }
+}
+
+watch(selectedCategory, (newValue) => {
+  console.log('Selected Category Updated:', newValue);
+});
+
+watch(selectedPetId, (newValue) => {
+  console.log('selectedPetId:', newValue);
+  if (newValue) {
+    fetchPetCategory(newValue); // Call the function with the selected pet ID
+  } else {
+    selectedCategory.value = '';
+  }
+});
+// End of the Added Code - Salpocial
 
 async function loadPostDetails() { //used in edit for retrieval of post details
   stringselectedreportCategory.value = selectedPostDetailsValue.value.post_type
@@ -332,16 +389,11 @@ onMounted(async () => {
                 </div>
                 <div class="text-sm">
                   <!-- HERE JO  -->
+                  <!-- Starting Changes -->
                   <div v-if="selectedreportCategory == 2" class="py-2 flex flex-col gap-y-2">
-                    <label for="petcategory" class="font-medium">Pet</label>
-                    <select v-model="selectedPetId" id="petcategory"
-                      class="text-gray-700 bg-slate-50 block w-full p-2.5 border rounded-lg">
-                      <option v-if="options.length == 0" value="null" selected>{{ defaultOptionText }}</option>
-                      <option v-for="(item, index) in options" :key="index" :value="item.id">
-                        {{ item.name }}
-                      </option>
-                    </select>
-                  </div>
+                    <PetList @petSelected="selectPet" />
+                    </div>
+                  <!-- End Changes -->
                   <!-- /* HERE JO */ -->
                   <div class="py-2 flex flex-col gap-y-2 mt-2">
                     <label for="petcategory" class="font-medium">Pet Category</label>

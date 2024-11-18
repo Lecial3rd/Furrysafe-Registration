@@ -26,21 +26,21 @@ const toggleModalViewDetails = (id) => {
 let selectedPost = ref(null)
 let posts = ref([])
 let selectedPostDetails = ref([])
+let id = localStorage.getItem('c_id')
 async function retrieveReports() { //display
     try {
         console.log("retrieveReports")
-        const response = await axios.post("http://localhost:5000/getereports", {
-            _post_id: selectedPost.value,
-            _post_type: -1,
-            _report_status: 'Pending' // Nov12 'In progress'  change to 'Pending'
+        const response = await axios.post("http://localhost:5000/getrescuedhistory", {
+            _report_status: 'Rescued',
+            _handled_by: id // Nov12 'In progress'  change to 'Pending'
         });
-
-        console.log(response.data)
-        if (response.data && response.data.length > 0) {
-            // Filter out reports that are already rescued
-            posts.value = response.data.filter(report => report.report_status !== 'Rescued' && report.report_status !== 'In progress'); // Nov12 added ( && report.report_status !== 'In progress' )
-        } ``
-        console.log(posts.value)
+        posts.value = response.data
+        console.log("response", response.data)
+        // if (response.data && response.data.length > 0) {
+        //     // Filter out reports that are already rescued
+        //     posts.value = response.data.filter(report => report.report_status !== 'Rescued' && report.report_status !== 'In progress'); // Nov12 added ( && report.report_status !== 'In progress' )
+        // } ``
+        console.log("post value", posts.value)
         // Nov5 end of salpocial's new code
     }
     catch (err) {
@@ -105,9 +105,9 @@ onMounted(async () => {
                 </span>
 
             </div>
-            <div> <!-- Nov5 added :postId="report.post_id" @statusUpdated="handleStatusUpdate"-->
+            <!-- <div> 
                 <statusbuttons :postId="report.post_id" :reportedUserId="report.user_id"  @statusUpdated="handleStatusUpdate" />
-            </div>
+            </div> -->
         </div>
     </div>
 </template>

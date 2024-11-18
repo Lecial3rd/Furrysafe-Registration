@@ -1,10 +1,18 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue';
-import { MagnifyingGlassIcon, PaperAirplaneIcon, PaperClipIcon } from "@heroicons/vue/20/solid";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/vue/20/solid";
+import { PencilSquareIcon, PhotoIcon, PaperAirplaneIcon } from "@heroicons/vue/24/outline"
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
 import default_avatar from '@/assets/images/buddy_default.jpg'
+import viewpostdetials from '@/components/Shelter/shelter_RescueOp_ReportViewdetailsModal.vue';
+
+//New One - Salpocial
+import { useRoute } from 'vue-router';
+const route = useRoute();
+// End one
+
 
 // Reactive user ID
 const user_id = ref(localStorage.getItem('u_id'));
@@ -114,8 +122,9 @@ const updateConversationsList = (messageData) => {
 };
 // Select a conversation
 const selectConversation = async (conversation) => {
-    receiverName.value = conversation.other_participant_name || conversation.p2_name
-    receiverId.value = null; // Corrected spelling
+    receiverName.value = conversation.other_participant_name || conversation.p2_name;
+    // receiverId.value = null; // Corrected spelling
+    receiverId.value = conversation.user_id || conversation.p2_id; // Set the receiver ID from the conversation - Edited By Salpocial
 
     if (!conversation || !conversation.chat_id) {
         return;
@@ -142,7 +151,7 @@ const selectConversation = async (conversation) => {
                 profile: response.data[0].profile_url
             };
 
-            console.log("selected convo", response.data[0].profile_url)
+            console.log("Selected conversation messages:", selectedConversation.value.messages);
 
             await nextTick(); // Ensure DOM is updated
             scrollToBottom(); // Scroll after messages are loaded
@@ -286,21 +295,6 @@ const scrollToBottom = async () => {
     //     lastMessage.value.scrollIntoView({ behavior: 'smooth' });
     // }
 }
-// const getUserFullName = async () => {
-//     try {
-//         const response = await axios.post("http://localhost:5000/getfullname", {
-//             id: user_id.value,
-//         });
-
-//         if (response.data) {
-//             userFullName = response.data;
-//         } else {
-//             console.log("No data received.");
-//         }
-//     } catch (err) {
-//         console.log("Error fetching inbox:", err);
-//     }
-// }
 
 const getUserFullName = async () => {
     try {
@@ -319,7 +313,69 @@ const getUserFullName = async () => {
     }
 };
 
-//------------------------------------ this image
+let selectedPost = ref(null)
+let posts = ref([])
+let _shelter_id = localStorage.getItem('c_id')
+async function retrieveInPorgressReports() {
+    try {
+        const response = await axios.post("http://localhost:5000/getongoingoperations", {
+            _shelter_id: _shelter_id,
+            _status: 'In progress'
+        });
+
+        if (response.data && response.data.length > 0) {
+            posts.value = response.data
+        }
+        console.log("post value", posts.value)
+    }
+    catch (err) {
+        console.log("error in retrieve operations", err)
+    }
+}
+let rescuedposts = ref([])
+async function retrieveRescuedReports() {
+    try {
+        const response = await axios.post("http://localhost:5000/getongoingoperations", {
+            _shelter_id: _shelter_id,
+            _status: 'Rescued'
+        });
+
+        if (response.data && response.data.length > 0) {
+            rescuedposts.value = response.data
+        }
+    }
+    catch (err) {
+        console.log("error in retrieve operations", err)
+    }
+}
+let selectedPostDetails = ref([])
+const selectedPostViewDetailsId = ref(null);
+let visible = ref(false)
+const toggleModalViewDetails = (id, flag) => {
+    // selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? null : id;
+    // const foundPost = posts.value.find(post => post.post_id === id);
+    selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? visible.value = false : id;
+    let foundPost = null
+
+    console.log(id, flag)
+    if (flag) {
+        console.log("Rescued?")
+        foundPost = rescuedposts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+    }
+    else {
+        console.log("Handled?")
+        foundPost = posts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+    }
+
+    if (foundPost) {
+        selectedPostDetails.value = foundPost
+        console.log("found post", selectedPostDetails.value)
+        visible.value = true
+    } else { // Nov12 added else
+        console.error("Post not found for ID:", id);
+    }
+};
+
 const fileInput = ref(null);
 const files = ref([])
 const handleMultipleFileChange = (event) => {
@@ -343,7 +399,6 @@ const triggerFileInput = () => {
 const removeImage = (index) => {
     files.value.splice(index, 1)
 }
-// --------------------------------- this image functions 
 async function retrieveMessage() {
     const formData = new FormData();
     const tempurl = [null];
@@ -394,23 +449,6 @@ const handleInput = (value) => { //if user types, send a request to the backend 
         fetchData(value);
     }, 500); // 500ms debounce
 };
-// const handleItemClick = (itemId, name) => { // Handle item selection from search
-//     searchValue.value = '';
-//     receiverId.value = itemId;
-//     receiverName.value = name;
-//     selectedChat_id.value = null
-
-//     conversations.value.forEach(chat => {
-//         if (receiverName.value == chat.other_participant_name) {
-//             selectConversation({ chat_id: chat.chat_id })
-//             createConversation.value = false
-//         }
-//         else {
-//             console.log("else")
-//         }
-//     });
-// };
-
 const handleItemClick = (itemId, name) => {
     searchValue.value = '';
     receiverId.value = itemId;
@@ -432,8 +470,14 @@ const sortedMessages = computed(() => {
     if (!selectedConversation.value || !selectedConversation.value.messages) {
         return [];
     }
+    console.log("sorts", selectedConversation.value)
     return [...selectedConversation.value.messages].sort((a, b) => new Date(a.date) - new Date(b.date));
 });
+function containsReportedOrHandled(message) {
+    let messagevalue = message.toLowerCase().includes('rescued') ? true : false
+    // return message.toLowerCase().includes('reported') || message.toLowerCase().includes('handled');
+    return messagevalue
+}
 
 // Function to format time
 function formatTime(dateString) {
@@ -474,63 +518,88 @@ watch(searchValue, (newValue) => {
 //     fetchInbox();
 //     getUserFullName();
 // });
+
 onMounted(async () => {
     await getUserFullName();
     await fetchInbox();
+    await retrieveInPorgressReports();
+    await retrieveRescuedReports();
+
+    // Added By Salpocial
+    const userIdFromQuery = route.query.shelterUserID; // Get the userId from the route query
+    if (userIdFromQuery) {
+        receiverId.value = userIdFromQuery; // Set the receiverId
+        console.log("Receiver ID set to:", receiverId.value);
+
+        // Automatically select the conversation based on the receiverId
+        const existingChat = conversations.value.find(chat => {
+            // Check if either participant matches the receiverId
+            return chat.participant_1_id === Number(receiverId.value) || chat.participant_2_id === Number(receiverId.value);
+        });
+
+        if (existingChat) {
+            selectConversation(existingChat); // Automatically select the conversation
+            console.log("Automatically selected conversation:", existingChat);
+        } else {
+            console.log("No existing chat found for userId:", userIdFromQuery);
+        }
+    }
 });
 </script>
 
 
 <template>
     <!-- Gi change nko height kay samok T-T -->
-    <div class="flex sm:h-[52rem] lg:h-screen  overflow-y-hidden">
+    <div class="flex sm:h-[calc(100vh-67px)] lg:md:h-[calc(100vh-0px)] ">
         <!-- Conversations Sidebar -->
-        <div class="w-[30%] border-r-2 text-gray-600 pr-6 flex-1">
-            <div class="py-4">
-                <span class="text-xl font-bold">Chats</span>
+        <!-- responsive text by color sm:bg-red-400 md:bg-blue-400 lg:bg-orange-400 xl:bg-green-400 -->
+        <div class="sm:w-[30rem] xl:w-[30rem] border-r-2 text-gray-600 md:pr-6 flex-1">
+            <div class="py-4 mt-4 md:ml-6 flex items-center sm:gap-x-2 sm:justify-center md:justify-between">
+                <span class="sm:text-base md:text-xl font-bold sm:hidden md:block">Chats</span>
+                <button @click="createConversation = true">
+                    <PencilSquareIcon class="h-8 w-8 text-gray-500 sm:w-[7rem] md:w-fit hover:text-gray-900" />
+                </button>
             </div>
-            <div class="relative">
+            <!-- <div class="relative">
                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
-                <input id="search" name="search" v-model="searchValue"
+                <input id="search" name="search" @input="handleInput(searchValue)" v-model="searchValue"
                     class="block w-full rounded-lg bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6"
                     placeholder="Search" type="search" />
-                <!-- Search Results Dropdown -->
-                <!-- <ul v-if="searchResults.length > 0"  @input="handleInput(searchValue)"
+                 Search Results Dropdown
+                <ul v-if="searchResults.length > 0"  @input="handleInput(searchValue)"
                     class="absolute bg-white border mt-1 w-full max-h-60 overflow-y-auto">
                     <li v-for="item in searchResults" :key="item.id" class="px-4 py-2 hover:bg-gray-100">
                         <button @click="handleItemClick(item.id, item.name)" class="w-full text-left">
                             {{ item.name }}
                         </button>
                     </li>
-                </ul> -->
-            </div>
-            <div class="py-4">
-                <div class="mb-2 flex justify-between items-center">
+                </ul>
+            </div> -->
+            <div class="py-4 overflow-y-auto">
+                <!-- <div class="mb-2 flex justify-between items-center">
                     <span class="text-md font-semibold">Inbox</span>
-                    <button> <img width="20" height="20"
-                            src="https://img.icons8.com/fluency-systems-filled/50/create-new.png" alt="create-new"
-                            @click="createConversation = true" /></button>
-                    <!-- <button @click="createConversation = true" class="text-teal-600 hover:underline">New</button> -->
-                </div>
+                    <button @click="createConversation = true">
+                        <PencilSquareIcon class="h-6 w-6 text-gray-500" />
+                    </button>
+                </div> -->
 
-                <div class="overflow-y-auto h-[calc(100vh-200px)]">
+                <div class="overflow-hidden ">
                     <!-- Create New Conversation Section -->
                     <div v-if="createConversation">
                         <div
-                            class="bgorange border-t p-3 mt-1 mb-2 rounded px-4 cursor-pointer hover:bg-lightorange group">
-                            <div class="flex justify-between items-center">
-                                <span v-if="!receiverId" class="font-medium truncate text-white">New Message</span>
-                                <span v-else class="font-medium truncate">New Message to {{ receiverName }}</span>
+                            class="bgorange border-t p-4 mt-1 mb-2 rounded px-4 cursor-pointer hover:bg-lightorange group">
+                            <div class="flex justify-between items-center font-medium text-sm truncate text-white">
+                                <span v-if="!receiverId">New Message</span>
+                                <span v-else class="">New Message to {{ receiverName }}</span>
                                 <!-- <img width="25" height="20" src="https://img.icons8.com/pastel-glyph/128/cancel--v1.png"
                                     alt="cancel--v1" @click="closeNewMessage(); createConversation = false"
                                     class="hidden group-hover:block" /> -->
-                                <img width="25" height="25"
-                                    src="https://img.icons8.com/external-creatype-outline-colourcreatype/64/FFFFFF/external-circle-essential-ui-v1-creatype-outline-colourcreatype-4.png"
-                                    alt="external-circle-essential-ui-v1-creatype-outline-colourcreatype-4"
-                                    @click="closeNewMessage(); createConversation = false"
-                                    class="hidden group-hover:block" />
+                                <button @click="closeNewMessage(); createConversation = false" type="button">
+                                    <XMarkIcon class="h-6 w-6 text-white hidden group-hover:block" />
+                                </button>
+
                             </div>
                         </div>
                     </div>
@@ -547,19 +616,20 @@ onMounted(async () => {
                         </div>
                         <p class="text-sm truncate">{{ conversation.message }}</p>
                     </div> -->
+
+                    <!-- Nov15 -joey styling list large screen-->
                     <div v-for="(conversation, index) in conversations" :key="conversation.chat_id"
                         @click="createConversation = false; selectConversation(conversation)"
-                        class="border-t p-2 px-4 cursor-pointer hover:bg-gray-50"
+                        class="border-t p-2 px-4 cursor-pointer hover:bg-gray-50 sm:hidden xl:block"
                         :class="{ 'bg-gray-100': conversation.chat_id === selectedChat_id }">
                         <!-- here jeneh - joey added -->
                         <div class="flex justify-between">
                             <div class="flex items-center gap-x-2">
                                 <img :src="conversation.profile_url || default_avatar" alt="profile"
-                                    class="w-10 h-10 object-cover border bg-red-500 rounded-full">
-                                <!-- here jeneh put :scr="" sa <img> -->
+                                    class="w-10 h-10 object-cover border bg-gray-50 rounded-full">
                                 <span class="font-medium truncate">{{ conversation.other_participant_name }}</span>
                             </div>
-                            <span class="text-[12px] sm:hidden xl:flex">{{ formatTime(conversation.date) }}</span>
+                            <span class="text-[12px] sm:hidden lg:flex">{{ formatTime(conversation.date) }}</span>
                         </div>
                         <div v-if="conversation.message?.includes('https')">
                             <div v-if="conversation.user_id == user_id">
@@ -570,8 +640,15 @@ onMounted(async () => {
                             </div>
                         </div>
                         <div v-else>
-                            <div v-if="conversation.user_id == user_id">
+                            <div v-if="conversation.user_id == user_id" class="flex justify-between">
                                 <p class="text-sm truncate">You: {{ conversation.message }}</p>
+                                <span class="text-[12px] sm:hidden lg:flex">{{ formatTime(conversation.date) }}</span>
+                            </div>
+                            <div v-else-if="conversation.user_id == null" class="flex justify-between items-center">
+                                <p class="text-sm truncate">{{
+                                    conversation.message }}</p>
+                                <!-- <span class="text-[12px] sm:hidden lg:flex text-right">{{ formatTime(conversation.date)
+                                    }}</span> -->
                             </div>
                             <div v-else>
                                 <p class="text-sm truncate">{{ conversation.other_participant_name }}: {{
@@ -579,12 +656,26 @@ onMounted(async () => {
                             </div>
                         </div>
                     </div>
+                    <!-- List on small screen profile only -->
+                    <div v-for="(conversation, index) in conversations" :key="conversation.chat_id"
+                        @click="createConversation = false; selectConversation(conversation)"
+                        class="border-t p-4 cursor-pointer hover:bg-gray-50 sm:block xl:hidden"
+                        :class="{ 'bg-gray-100': conversation.chat_id === selectedChat_id }">
+                        <div class="flex justify-center">
+                            <div class="flex items-center gap-x-2">
+                                <img :src="conversation.profile_url || default_avatar" alt="profile"
+                                    class="w-14 h-14 object-cover border bg-gray-50 rounded-full">
+
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Chat Area -->
-        <div v-if="!createConversation" class="w-[70%] flex flex-col border-r-2">
+        <div v-if="!createConversation" class="w-[100%] flex flex-col border-r-2">
             <!-- Chat Header -->
             <!-- <div class="text-gray-600 bg-white p-4 flex gap-x-2 items-center">
                 <span class="text-md font-semibold">{{ selectedConversation?.NameFrom }}</span>
@@ -593,7 +684,7 @@ onMounted(async () => {
 
             <div class="flex items-center gap-x-2 p-4 border-b">
                 <img :src="selectedConversation?.profile || default_avatar" alt="profile image"
-                    class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                    class="w-10 h-10 object-cover border bg-gray-50 rounded-full">
                 <!-- here jeneh put :scr="" sa <img> -->
                 <span class="text-lg font-semibold">{{ selectedConversation?.NameFrom }} </span>
 
@@ -604,45 +695,71 @@ onMounted(async () => {
                 <div v-for="(message, messageIndex) in sortedMessages" :key="messageIndex" class="message">
                     <!-- Outgoing Messages (Sent by Current User) -->
                     <div v-if="message.user_id == user_id" class="flex text-sm text-gray-600 p-3 justify-end">
-                        <div class="text-sm text-gray-600 p-3">
-                            <div class="text-right">
+                        <div class="text-sm text-gray-600">
+                            <!-- <div class="text-right">
                                 <span class="font-medium">You</span>
                                 <span class="text-[10px] ml-2">{{ formatTime(message.date) }}</span>
-                            </div>
+                            </div> -->
                             <div v-if="message.message?.includes('https')">
-                                <div class="pt-2">
+                                <div>
                                     <img :src="message.message" alt=""
-                                        class="pointer-events-none h-60 w-60 object-cover rounded">
+                                        class="pointer-events-none sm:w-60 md:w-80 object-contain border rounded-lg">
                                 </div>
                             </div>
                             <div v-else="message.message"
-                                class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-l-2xl">
+                                class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-l-2xl ">
                                 <p>{{ message.message }} </p>
                             </div>
+                            <span class="text-[10px] flex justify-end">{{ formatTime(message.date) }}</span>
                         </div>
                     </div>
 
+                    <!-- Incomming message sent by the system -->
+                    <div v-else-if="message.user_id == null" class="flex justify-center mb-2 border-y">
+                        <div class="text-sm text-gray-600 p-3">
+                            <p>
+                                <!-- Check if message contains "rescued" or "handled" -->
+                                <span v-if="containsReportedOrHandled(message.message) === true"
+                                    @click="toggleModalViewDetails(message.this_post_id, true)" class="cursor-pointer text-green-600">
+                                    {{ message.message }} </span>
+                                <span v-else-if="containsReportedOrHandled(message.message) === false"
+                                    @click="toggleModalViewDetails(message.this_post_id, false)" class="text-teal-500">
+                                    {{ message.message }} </span>
+                                <span v-else class="cursor-pointer">
+                                    {{ message.message }}
+                                </span>
+                            </p>
 
+                            <viewpostdetials v-if="visible" :selectedPostDetails="selectedPostDetails"
+                                @close="toggleModalViewDetails(message.this_post_id)" />
+                        </div>
+                    </div>
 
                     <!-- Incoming Messages (Sent by Other Participant) -->
-
-                    <div v-else class="flex justify-start mb-2">
-                        <div class="text-sm text-gray-600 p-3">
-                            <div class="text-left">
+                    <div v-else class="flex flex-col justify-start m-4 mb-2 gap-y-1">
+                        <div class="text-sm text-gray-600 flex gap-x-2">
+                            <!-- <div class="text-left flex items-center gapx">
                                 <span class="font-medium">{{ selectedConversation?.NameFrom }}</span>
                                 <span class="text-[10px] ml-2">{{ formatTime(message.date) }}</span>
+                            </div> -->
+                            <div class="flex items-end">
+                                <img :src="selectedConversation?.profile || default_avatar" alt="profile image"
+                                    class="w-8 h-8 object-cover border bg-gray-50 rounded-full">
                             </div>
-                            <div v-if="message.message?.includes('https')">
-                                <div class="pt-2">
-                                    <img :src="message.message" alt=""
-                                        class="pointer-events-none h-60 w-60 object-cover rounded-lg">
+                            <div>
+                                <div v-if="message.message?.includes('https')">
+                                    <div>
+                                        <img :src="message.message" alt=""
+                                            class="pointer-events-none sm:w-60 md:w-80 object-contain border rounded-lg">
+                                    </div>
+                                </div>
+                                <div v-else="message.message"
+                                    class="mt-1 bg-gray-200 px-4 py-2 rounded-t-2xl rounded-r-2xl text-gray-900">
+                                    <p>{{ message.message }} </p>
                                 </div>
                             </div>
-                            <div v-else="message.message"
-                                class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-r-2xl">
-                                <p>{{ message.message }} </p>
-                            </div>
                         </div>
+                        <span class="text-[10px] ml-11">{{ formatTime(message.date) }}</span>
                     </div>
 
                     <!-- Optional: Add a ref to the last message for alternative scrolling -->
@@ -652,6 +769,25 @@ onMounted(async () => {
 
             <!-- Message Input Form -->
             <form @submit.prevent="retrieveMessage">
+                <!-- Nov15 -->
+                <div class="px-4 my-2 mx-2 sm:col-span-2 sm:px-0">
+                    <ul role="list" class="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-6 sm:gap-x-4 lg:grid-cols-8">
+                        <li v-for="(file, index) in files" :key="file.source" class="relative">
+                            <div
+                                class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-md bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                                <img :src="file.url" alt=""
+                                    class="pointer-events-none w-full sm:h-40 lg:h-40 object-cover" />
+                                <button @click.prevent="removeImage(index)"
+                                    class="absolute top-0 right-0 p-1 text-gray-500 hover:text-red-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" class="w-7 h-7">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
                 <div class="mt-auto flex border items-center">
                     <div class="flex justify-start w-full">
                         <!-- @click="messagesent=false"  -->
@@ -662,13 +798,15 @@ onMounted(async () => {
                         <div>
                             <input type="file" ref="fileInput" multiple class="hidden"
                                 @change="handleMultipleFileChange" />
-                            <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" />
+                            <!-- <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" /> -->
+                            <PhotoIcon class="h-7 w-7 text-gray-700 hover:text-gray-900" aria-hidden="true"
+                                @click="triggerFileInput" />
                         </div>
-                        <PaperAirplaneIcon @click.prevent="retrieveMessage" class="h-7 w-7 text-gray-400"
-                            aria-hidden="true" />
+                        <PaperAirplaneIcon @click.prevent="retrieveMessage"
+                            class="h-7 w-7 text-gray-700 hover:text-gray-900" aria-hidden="true" />
                     </div>
                 </div>
-                <div class="px-4 sm:col-span-2 sm:px-0">
+                <!-- <div class="px-4 sm:col-span-2 sm:px-0">
                     <ul role="list"
                         class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
                         <li v-for="(file, index) in files" :key="file.source" class="relative">
@@ -685,7 +823,7 @@ onMounted(async () => {
                             </div>
                         </li>
                     </ul>
-                </div>
+                </div> -->
             </form>
         </div>
 
@@ -730,15 +868,19 @@ onMounted(async () => {
                         <!-- @click="messagesent=false"  -->
                         <textarea v-model="newMessage" placeholder="Write a message..." @keydown="handleKeyDown"
                             class="w-full px-6 py-6 outline-none resize-none" />
+
                     </div>
                     <div class="flex px-6 gap-x-3 justify-end">
                         <div>
                             <input type="file" ref="fileInput" multiple class="hidden"
                                 @change="handleMultipleFileChange" />
-                            <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" />
+                            <!-- <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" /> -->
+
+                            <PhotoIcon class="h-7 w-7 text-gray-700 hover:text-gray-900" aria-hidden="true"
+                                @click="triggerFileInput" />
                         </div>
-                        <PaperAirplaneIcon @click.prevent="createNewMessage" class="h-7 w-7 text-gray-400"
-                            aria-hidden="true" />
+                        <PaperAirplaneIcon @click.prevent="createNewMessage"
+                            class="h-7 w-7 text-gray-700 hover:text-gray-900" aria-hidden="true" />
                     </div>
                 </div>
                 <div class="px-4 sm:col-span-2 sm:px-0">

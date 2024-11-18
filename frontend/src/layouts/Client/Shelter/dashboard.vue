@@ -164,8 +164,8 @@
                     <h1 class="pl-3 font-extrabold text-2xl text-white">FurrySafe</h1>
                 </div>
             </div>
-            <main class="py-10 lg:pl-72">
-                <div class="px-4 sm:px-6 lg:px-8">
+            <main class="lg:pl-72">
+                <div class="px-4 sm:px-0 lg:px-8">
                     <RouterView /> <!-- main content page -->
                     <popupNewpost v-if="showModalCreatePost" @close="toggleModal({ name: 'New Post' })" />
                     <popupNewEvent v-if="showModalCreateEvent" @close="toggleModal({ name: 'New Event' })" />

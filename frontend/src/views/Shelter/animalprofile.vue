@@ -1,5 +1,5 @@
 <template>
-    <div class="h-screen flex flex-col">
+    <div class="h-screen flex flex-col my-8 mx-4">
         <header class="flex justify-between items-center">
             <div class="graycolor">
                 <textvalue msg="Animal Profile" />

@@ -112,6 +112,7 @@ async function loadProfileDetails() {
 
 onMounted(() => {
     loadProfileDetails();
+    console.log(id)
 });
 
 import gridPostImages from '@/components/Shelter/shelter_Myshelter_GridPosts.vue'
@@ -135,7 +136,7 @@ const updateCurrentTab = (tabName) => {
 </script>
 
 <template>
-    <div class="aspect-auto">
+    <div class="aspect-auto mx-8">
         <Toast ref="toastRef" @closed="refreshRoute($router)" /> <!-- prompt message -->
         <!-- user profile details -->
         <main class="h-screen">

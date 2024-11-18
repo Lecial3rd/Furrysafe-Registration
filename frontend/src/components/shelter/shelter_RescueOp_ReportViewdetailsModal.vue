@@ -257,7 +257,9 @@ const open = ref(true)
                                                         </div>
                                                         <div v-if="selectedReportDetails.report_status === 'Pending'">
                                                             <button class="w-full">
-                                                                <statusbuttons :postId="selectedReportDetails.post_id" />
+                                                                <!-- Nov15 added :postId="selectedReportDetails.post_id" salpocial's integration-->
+                                                                <statusbuttons
+                                                                    :postId="selectedReportDetails.post_id" />
                                                             </button>
                                                         </div>
                                                     </dl>

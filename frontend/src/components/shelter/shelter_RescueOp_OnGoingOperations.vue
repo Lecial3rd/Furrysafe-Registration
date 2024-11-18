@@ -101,7 +101,7 @@ onMounted(async () => {
 
             </div>
             <div>
-                <statusbuttons :postId="report.post_id" @statusUpdated="handleStatusUpdate" />
+                <statusbuttons :reportedUserId="report.user_id" :postId="report.post_id" @statusUpdated="handleStatusUpdate" />
             </div>
         </div>
     </div>

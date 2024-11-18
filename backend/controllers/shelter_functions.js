@@ -22,6 +22,7 @@ import {
   acceptRescueReport,
   addShelterEvent,
   getOngoingOperations,
+  getRescuedHistory,
   confirmRescue,
   cancelOperation
 } from "../model/shelterFunctionsModel.js";
@@ -102,7 +103,10 @@ export const getEvents = (req, res) => {
   retrieveEvents(req, res);
 };
 export const getongoingoperation = (req, res) => {
-  getOngoingOperations(req, res);
+  getOngoingOperations(req, res); 
+};
+export const getrescuedhistory = (req, res) => {
+  getRescuedHistory(req, res); 
 };
 export const setConfirmRescued = (req, res) => {
   confirmRescue(req, res);
