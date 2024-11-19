@@ -530,6 +530,7 @@ watch(searchValue, (newValue) => {
 //     getUserFullName();
 // });
 
+// New Salpocial
 const retrieveUserChat = async () => {
     const userIdFromQuery = route.query.buddyId; 
     console.log("User  ID from Query:", userIdFromQuery);
@@ -584,6 +585,7 @@ onMounted(async () => {
   await retrieveInPorgressReports();
   await retrievePendingReports();
 
+  // New Salpocial
   await retrieveUserChat();
 });
 </script>
