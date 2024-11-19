@@ -519,32 +519,63 @@ watch(searchValue, (newValue) => {
 //     getUserFullName();
 // });
 
+// New From Salpocial
+const retrieveUserChat = async () => {
+    const userIdFromQuery = route.query.shelterUserID; 
+    console.log("User  ID from Query:", userIdFromQuery);
+
+    if (!userIdFromQuery) return; // Exit early if userId is not present
+
+    try {
+        const response = await axios.post("http://localhost:5000/getfullname", {
+            id: userIdFromQuery,
+        });
+
+        console.log("API Response:", response.data);
+
+        if (Array.isArray(response.data) && response.data.length > 0) {
+            const [userData] = response.data;
+
+            // Update receiver details
+            receiverId.value = userIdFromQuery;
+            receiverName.value = userData.full_name;
+
+            console.log("Receiver ID set to:", receiverId.value);
+            console.log("Receiver Name set to:", receiverName.value);
+
+            // Find an existing conversation with the receiver
+            const existingChat = conversations.value.find(chat => 
+                chat.participant_1_id === Number(receiverId.value) || 
+                chat.participant_2_id === Number(receiverId.value)
+            );
+
+            if (existingChat) {
+                console.log("Existing chat found:", existingChat);
+                selectConversation(existingChat);
+                createConversation.value = false;
+            } else {
+                console.log("No existing chat found. Preparing new conversation.");
+                createConversation.value = true; // Show the new conversation UI
+                selectedChat_id.value = null;  // Ensure no chat ID is set for new chat
+            }
+        } else {
+            console.error("Failed to fetch receiver name. Response:", response.data);
+        }
+    } catch (error) {
+        console.error("Error fetching user data:", error);
+    }
+};
+
 onMounted(async () => {
     await getUserFullName();
     await fetchInbox();
     await retrieveInPorgressReports();
     await retrieveRescuedReports();
 
-    // Added By Salpocial
-    const userIdFromQuery = route.query.shelterUserID; // Get the userId from the route query
-    if (userIdFromQuery) {
-        receiverId.value = userIdFromQuery; // Set the receiverId
-        console.log("Receiver ID set to:", receiverId.value);
-
-        // Automatically select the conversation based on the receiverId
-        const existingChat = conversations.value.find(chat => {
-            // Check if either participant matches the receiverId
-            return chat.participant_1_id === Number(receiverId.value) || chat.participant_2_id === Number(receiverId.value);
-        });
-
-        if (existingChat) {
-            selectConversation(existingChat); // Automatically select the conversation
-            console.log("Automatically selected conversation:", existingChat);
-        } else {
-            console.log("No existing chat found for userId:", userIdFromQuery);
-        }
-    }
+    // New Call - Salpocial
+    await retrieveUserChat();
 });
+ 
 </script>
 
 

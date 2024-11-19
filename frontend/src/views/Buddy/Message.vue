@@ -1,16 +1,17 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue';
-import { MagnifyingGlassIcon, PaperAirplaneIcon, PaperClipIcon } from "@heroicons/vue/20/solid";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/vue/20/solid";
+import { PencilSquareIcon, PhotoIcon, PaperAirplaneIcon } from "@heroicons/vue/24/outline"
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
 import default_avatar from '@/assets/images/buddy_default.jpg'
-import viewpostimagepreview from '@/components/Buddy/buddy_Home_ImagePreviewModal.vue';
+import viewbuddypostdetials from '@/components/Shelter/shelter_RescueOp_ReportViewdetailsModal.vue';
 
-//Added By Salpocial
+//New One - Salpocial
 import { useRoute } from 'vue-router';
 const route = useRoute();
-
+// End one
 
 // Reactive user ID
 const user_id = ref(localStorage.getItem('u_id'));
@@ -128,8 +129,7 @@ const updateConversationsList = (messageData) => {
 // Select a conversation
 const selectConversation = async (conversation) => {
   receiverName.value = conversation.other_participant_name || conversation.p2_name
-  // receiverId.value = null; // Corrected spelling
-  receiverId.value = conversation.user_id || conversation.p2_id; // Set the receiver ID from the conversation - Edited By Salpocial
+  receiverId.value = null; // Corrected spelling
 
   if (!conversation || !conversation.chat_id) {
     return;
@@ -175,7 +175,6 @@ const selectConversation = async (conversation) => {
     console.log("Error fetching messages:", err);
   }
 };
-
 //check here
 async function sendMessage(thisformData) {
   try {
@@ -265,22 +264,6 @@ const scrollToBottom = async () => {
   //     lastMessage.value.scrollIntoView({ behavior: 'smooth' });
   // }
 }
-// const getUserFullName = async () => {
-//     try {
-//         const response = await axios.post("http://localhost:5000/getfullname", {
-//             id: user_id.value,
-//         });
-
-//         if (response.data) {
-//             userFullName = response.data;
-//         } else {
-//             console.log("No data received.");
-//         }
-//     } catch (err) {
-//         console.log("Error fetching inbox:", err);
-//     }
-// }
-
 const getUserFullName = async () => {
   try {
     const response = await axios.post("http://localhost:5000/getfullname", {
@@ -297,8 +280,6 @@ const getUserFullName = async () => {
     console.log("Error fetching user full name:", err);
   }
 };
-
-
 
 //------------------------------------ this image
 const fileInput = ref(null);
@@ -420,6 +401,96 @@ const sortedMessages = computed(() => {
   return [...selectedConversation.value.messages].sort((a, b) => new Date(a.date) - new Date(b.date));
 });
 
+//basta kani diri =) 
+function containsReportedOrHandled(message) {
+  const keywords = ['handled', 'rescued', 'withdrawn'];
+  const lowerMessage = message.toLowerCase();
+  return keywords.find(keyword => lowerMessage.includes(keyword)) || null;
+}
+let selectedPostDetails = ref([])
+const selectedPostViewDetailsId = ref(null);
+let visible = ref(false)
+const toggleModalViewDetails = (id, flag) => {
+  // selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? null : id;
+  // const foundPost = posts.value.find(post => post.post_id === id);
+  selectedPostViewDetailsId.value = selectedPostViewDetailsId.value === id ? visible.value = false : id;
+  let foundPost = null
+
+  console.log("view details", id, flag)
+  if (flag == 'rescued') {
+    console.log("Rescued?", rescuedposts.value)
+    foundPost = rescuedposts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+  }
+  else if (flag == 'handled') {
+    console.log("Handled?")
+    foundPost = posts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+  }
+  else {
+    console.log("cancelled")
+    foundPost = pendingposts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+  }
+
+  if (foundPost) {
+    selectedPostDetails.value = foundPost
+    console.log("found post", selectedPostDetails.value)
+    visible.value = true
+  } else { // Nov12 added else
+    console.error("Post not found for ID:", id);
+  }
+};
+let _user_id = localStorage.getItem('u_id')
+let rescuedposts = ref([])
+async function retrieveRescuedReports() {
+  try {
+    const response = await axios.post("http://localhost:5000/getereports", {
+      _user_id: _user_id,
+      _status: 'Rescued'
+    });
+
+    if (response.data && response.data.length > 0) {
+      rescuedposts.value = response.data
+    }
+  }
+  catch (err) {
+    console.log("error in retrieve operations", err)
+  }
+}
+let posts = ref([])
+async function retrieveInPorgressReports() {
+  try {
+    const response = await axios.post("http://localhost:5000/getereports", {
+      _user_id: _user_id,
+      _status: 'In progress'
+    });
+
+    if (response.data && response.data.length > 0) {
+      posts.value = response.data
+    }
+    console.log("post value", posts.value)
+  }
+  catch (err) {
+    console.log("error in retrieve operations", err)
+  }
+}
+let pendingposts = ref([])
+async function retrievePendingReports() {
+  try {
+    const response = await axios.post("http://localhost:5000/getereports", {
+      _post_type: -1,
+      _report_status: 'Pending' // Nov12 'In progress'  change to 'Pending'
+    });
+
+    if (response.data && response.data.length > 0) {
+      pendingposts.value = response.data
+    }
+    console.log("pendingposts value", pendingposts.value)
+
+  }
+  catch (err) {
+    console.log("error in retrieve operations", err)
+  }
+}
+
 // Function to format time
 function formatTime(dateString) {
   const date = new Date(dateString);
@@ -458,91 +529,104 @@ watch(searchValue, (newValue) => {
 //     fetchInbox();
 //     getUserFullName();
 // });
-onMounted(async () => {
-    await getUserFullName();
-    await fetchInbox();
 
-    // Added By Salpocial
-    const buddyIdFromQuery = route.query.buddyId; // Get the buddyId from the route query
-    if (buddyIdFromQuery) {
-        receiverId.value = buddyIdFromQuery; // Set the receiverId
-        console.log("Receiver ID set to:", receiverId.value);
+const retrieveUserChat = async () => {
+    const userIdFromQuery = route.query.buddyId; 
+    console.log("User  ID from Query:", userIdFromQuery);
 
-        // Automatically select the conversation based on the receiverId
-        const existingChat = conversations.value.find(chat => {
-            return chat.participant_1_id === Number(receiverId.value) || chat.participant_2_id === Number(receiverId.value);
+    if (!userIdFromQuery) return; // Exit early if userId is not present
+
+    try {
+        const response = await axios.post("http://localhost:5000/getfullname", {
+            id: userIdFromQuery,
         });
 
-        if (existingChat) {
-            selectConversation(existingChat); // Automatically select the conversation
-            console.log("Automatically selected conversation:", existingChat);
+        console.log("API Response:", response.data);
+
+        if (Array.isArray(response.data) && response.data.length > 0) {
+            const [userData] = response.data;
+
+            // Update receiver details
+            receiverId.value = userIdFromQuery;
+            receiverName.value = userData.full_name;
+
+            console.log("Receiver ID set to:", receiverId.value);
+            console.log("Receiver Name set to:", receiverName.value);
+
+            // Find an existing conversation with the receiver
+            const existingChat = conversations.value.find(chat => 
+                chat.participant_1_id === Number(receiverId.value) || 
+                chat.participant_2_id === Number(receiverId.value)
+            );
+
+            if (existingChat) {
+                console.log("Existing chat found:", existingChat);
+                selectConversation(existingChat);
+                createConversation.value = false;
+            } else {
+                console.log("No existing chat found. Preparing new conversation.");
+                createConversation.value = true; // Show the new conversation UI
+                selectedChat_id.value = null;  // Ensure no chat ID is set for new chat
+            }
         } else {
-            console.log("No existing chat found for buddyId:", buddyIdFromQuery);
+            console.error("Failed to fetch receiver name. Response:", response.data);
         }
+    } catch (error) {
+        console.error("Error fetching user data:", error);
     }
+};
+
+
+onMounted(async () => {
+  await getUserFullName();
+  await fetchInbox();
+  await retrieveRescuedReports();
+  await retrieveInPorgressReports();
+  await retrievePendingReports();
+
+  await retrieveUserChat();
 });
 </script>
-
 <template>
-  <div class="flex sm:h-[52rem] lg:h-screen  overflow-y-hidden">
-    <div class="w-[30%] border-r-2 text-gray-600 pr-6 flex-1">
+  <!-- Gi change nko height kay samok T-T -->
+  <div class="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
+    <!-- Conversations Sidebar -->
+    <!-- responsive text by color sm:bg-red-400 md:bg-blue-400 lg:bg-orange-400 xl:bg-green-400 -->
+    <div class="sm:w-[20%] xl:w-[30%] border-r-2 text-gray-600 flex-1">
+      <div class="py-4 mt-4 md:mx-6 flex items-center sm:gap-x-2 sm:justify-center md:justify-between">
+        <span class="sm:text-base md:text-xl font-bold sm:hidden md:block">CHAT</span>
+        <button @click="createConversation = true">
+          <PencilSquareIcon class="h-8 w-8 text-gray-500 sm:w-[7rem] md:w-fit hover:text-gray-900" />
+        </button>
+      </div>
 
-      <div class="py-4">
-        <div class="p-4">
-          <div class="flex justify-between items-center mb-4">
-            <h1 class="text-xl font-bold">CHAT</h1>
-            <button class="opacity-50" @click="toggleModal">
-              <svg @click="createConversation = true" fill="none" height="28" viewBox="0 0 24 24" width="28"
-                xmlns="http://www.w3.org/2000/svg">
-                <g stroke="#141b34" stroke-width="1.5">
-                  <path d="m12 8v8m4-4h-8" stroke-linecap="round" stroke-linejoin="round" />
-                  <path
-                    d="m2.5 12c0-4.47834 0-6.71751 1.39124-8.10876 1.39125-1.39124 3.63042-1.39124 8.10876-1.39124 4.4783 0 6.7175 0 8.1088 1.39124 1.3912 1.39125 1.3912 3.63042 1.3912 8.10876 0 4.4783 0 6.7175-1.3912 8.1088-1.3913 1.3912-3.6305 1.3912-8.1088 1.3912-4.47834 0-6.71751 0-8.10876-1.3912-1.39124-1.3913-1.39124-3.6305-1.39124-8.1088z" />
-                </g>
-              </svg>
-            </button>
-          </div>
-          <div class="relative">
-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" height="20"
-              viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
-              <!-- Icon for search (example) -->
-              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
-              <line x1="16" y1="16" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              </line>
-            </svg>
-            <input type="text" placeholder="Search Names"
-              class="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-        </div>
-
-
-        <div class="overflow-y-auto h-[calc(100vh-200px)]">
+      <div class="py-4 overflow-y-auto">
+        <div class="overflow-hidden ">
+          <!-- Create New Conversation Section -->
           <div v-if="createConversation">
-            <div class="bg-gray-200 border-t p-3 mt-1 mb-2 rounded px-4 cursor-pointer hover:bg-gray-300 group">
-              <div class="flex justify-between items-center">
-                <span v-if="!receiverId" class="font-medium truncate text-gray-800">New Message</span>
-                <span v-else class="font-medium truncate text-gray-800">New Message to {{ receiverName }}</span>
-
-                <img width="25" height="25"
-                  src="https://img.icons8.com/external-creatype-outline-colourcreatype/64/FFFFFF/external-circle-essential-ui-v1-creatype-outline-colourcreatype-4.png"
-                  alt="external-circle-essential-ui-v1-creatype-outline-colourcreatype-4"
-                  @click="closeNewMessage(); createConversation = false" class="hidden group-hover:block" />
+            <div class=" bg-gray-300 border-t p-4 m-2 rounded px-4 cursor-pointer hover:bg-gray-200 group">
+              <div class="flex justify-between items-center font-medium text-sm truncate text-gray-800">
+                <span v-if="!receiverId" class="truncate">New Message</span>
+                <span v-else class="truncate">New Message to {{ receiverName }}</span>
+                <button @click="closeNewMessage(); createConversation = false" type="button">
+                  <XMarkIcon class="h-6 w-6 text-gray-800 hidden group-hover:block" />
+                </button>
               </div>
             </div>
-
           </div>
 
+          <!-- Nov15 -joey styling list large screen-->
           <div v-for="(conversation, index) in conversations" :key="conversation.chat_id"
             @click="createConversation = false; selectConversation(conversation)"
-            class="border-t p-2 px-4 cursor-pointer hover:bg-gray-50"
+            class="border-t py-3 px-4 cursor-pointer hover:bg-gray-50 sm:hidden xl:block xl:px-8"
             :class="{ 'bg-gray-100': conversation.chat_id === selectedChat_id }">
             <div class="flex justify-between">
-              <div class="flex items-center gap-x-2">
+              <div class="grid grid-cols-[40px_1fr] items-center gap-x-2">
                 <img :src="conversation.profile_url || default_avatar" alt="profile"
-                  class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+                  class="w-10 h-10 object-cover border bg-gray-50 rounded-full">
                 <span class="font-medium truncate">{{ conversation.other_participant_name }}</span>
               </div>
-              <span class="text-[12px] sm:hidden xl:flex">{{ formatTime(conversation.date) }}</span>
+              <span class="text-[12px] sm:hidden lg:flex">{{ formatTime(conversation.date) }}</span>
             </div>
             <div v-if="conversation.message?.includes('https')">
               <div v-if="conversation.user_id == user_id">
@@ -553,12 +637,15 @@ onMounted(async () => {
               </div>
             </div>
             <div v-else>
-              <div v-if="conversation.user_id == user_id">
+              <div v-if="conversation.user_id == user_id" class="flex justify-between">
                 <p class="text-sm truncate">You: {{ conversation.message }}</p>
+                <!-- <span class="text-[12px] sm:hidden lg:flex">{{ formatTime(conversation.date) }}</span> -->
               </div>
-              <div v-else-if="conversation.user_id == null">
+              <div v-else-if="conversation.user_id == null" class="flex justify-between items-center">
                 <p class="text-sm truncate">{{
                   conversation.message }}</p>
+                <!-- <span class="text-[12px] sm:hidden lg:flex text-right">{{ formatTime(conversation.date)
+                                  }}</span> -->
               </div>
               <div v-else>
                 <p class="text-sm truncate">{{ conversation.other_participant_name }}: {{
@@ -566,103 +653,125 @@ onMounted(async () => {
               </div>
             </div>
           </div>
+          <!-- List on small screen profile only -->
+          <div v-for="(conversation, index) in conversations" :key="conversation.chat_id"
+            @click="createConversation = false; selectConversation(conversation)"
+            class="border-t p-4 cursor-pointer hover:bg-gray-50 sm:block xl:hidden"
+            :class="{ 'bg-gray-100': conversation.chat_id === selectedChat_id }">
+            <div class="flex justify-center">
+              <div class="flex items-center gap-x-2">
+                <img :src="conversation.profile_url || default_avatar" alt="profile"
+                  class="w-14 h-14 object-cover border bg-gray-50 rounded-full">
+
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
 
-    <div v-if="!createConversation" class="w-[70%] flex flex-col border-r-2">
-
+    <!-- Chat Area -->
+    <div v-if="!createConversation" class="sm:w-[80%] xl:w-[70%] flex flex-col border-r-2">
+      <!-- Chat Header -->
       <div class="flex items-center gap-x-2 p-4 border-b">
         <img :src="selectedConversation?.profile || default_avatar" alt="profile image"
-          class="w-10 h-10 object-cover border bg-red-500 rounded-full">
+          class="w-10 h-10 object-cover border bg-gray-50 rounded-full">
+        <!-- here jeneh put :scr="" sa <img> -->
         <span class="text-lg font-semibold">{{ selectedConversation?.NameFrom }} </span>
 
       </div>
 
+      <!-- Messages Display -->
       <div ref="messagesContainer" class="messages-container flex-1 overflow-y-auto px-4 bg-gray-50">
         <div v-for="(message, messageIndex) in sortedMessages" :key="messageIndex" class="message">
+          <!-- Outgoing Messages (Sent by Current User) -->
           <div v-if="message.user_id == user_id" class="flex text-sm text-gray-600 p-3 justify-end">
-            <div class="text-sm text-gray-600 p-3">
-              <div class="text-right">
-                <span class="font-medium">You</span>
-                <span class="text-[10px] ml-2">{{ formatTime(message.date) }}</span>
-              </div>
+            <div class="text-sm text-gray-600">
+
               <div v-if="message.message?.includes('https')">
-                <div class="pt-2">
-                  <img :src="message.message" alt="" class="pointer-events-none h-60 w-60 object-cover rounded">
+                <div>
+                  <img :src="message.message" alt=""
+                    class="pointer-events-none sm:w-60 md:w-80 object-contain border rounded-lg">
                 </div>
               </div>
-              <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-l-2xl">
+              <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-l-2xl ">
                 <p>{{ message.message }} </p>
               </div>
+              <span class="text-[10px] flex justify-end">{{ formatTime(message.date) }}</span>
             </div>
           </div>
 
           <!-- Incomming message sent by the system -->
-          <div v-else-if="message.user_id == null" class="flex justify-center mb-2">
+          <div v-else-if="message.user_id == null" class="flex justify-center mb-2 border-y">
             <div class="text-sm text-gray-600 p-3">
-              <div class="">
-                <p>{{ message.message }} </p>
-              </div>
+              <p>
+                <!-- Check if message contains "rescued" or "handled" -->
+                <span v-if="containsReportedOrHandled(message.message) === 'rescued'"
+                  @click="toggleModalViewDetails(message.this_post_id, 'rescued')"
+                  class="cursor-pointer text-green-600">
+                  {{ message.message }} </span>
+                <span v-else-if="containsReportedOrHandled(message.message) === 'handled'"
+                  @click="toggleModalViewDetails(message.this_post_id, 'handled')" class="text-teal-500">
+                  {{ message.message }} </span>
+                <span v-else class="cursor-pointer text-red-500"
+                  @click="toggleModalViewDetails(message.this_post_id, 'withdrawn')">
+                  {{ message.message }}
+                </span>
+              </p>
+
+              <viewbuddypostdetials v-if="visible" :selectedPostDetails="selectedPostDetails"
+                @close="toggleModalViewDetails(message.this_post_id)" />
             </div>
           </div>
 
-          <div v-else class="flex justify-start mb-2">
-            <div class="text-sm text-gray-600 p-3">
-              <div class="text-left">
-                <span class="font-medium">{{ selectedConversation?.NameFrom }}</span>
-                <span class="text-[10px] ml-2">{{ formatTime(message.date) }}</span>
+          <!-- Incoming Messages (Sent by Other Participant) -->
+          <div v-else class="flex flex-col justify-start m-4 mb-2 gap-y-1">
+            <div class="text-sm text-gray-600 flex gap-x-2">
+              <!-- <div class="text-left flex items-center gapx">
+                              <span class="font-medium">{{ selectedConversation?.NameFrom }}</span>
+                              <span class="text-[10px] ml-2">{{ formatTime(message.date) }}</span>
+                          </div> -->
+              <div class="flex items-end">
+                <img :src="selectedConversation?.profile || default_avatar" alt="profile image"
+                  class="w-8 h-8 object-cover border bg-gray-50 rounded-full">
               </div>
-              <div v-if="message.message?.includes('https')">
-                <div class="pt-2">
-                  <img :src="message.message" alt="" class="pointer-events-none h-60 w-60 object-cover rounded-lg">
+              <div>
+                <div v-if="message.message?.includes('https')">
+                  <div>
+                    <img :src="message.message" alt=""
+                      class="pointer-events-none sm:w-60 md:w-80 object-contain border rounded-lg">
+                  </div>
+                </div>
+                <div v-else="message.message"
+                  class="mt-1 bg-gray-200 px-4 py-2 rounded-t-2xl rounded-r-2xl text-gray-900">
+                  <p>{{ message.message }} </p>
                 </div>
               </div>
-              <div v-else="message.message" class="mt-1 bg-teal-200 px-4 py-2 rounded-t-2xl rounded-r-2xl">
-                <p>{{ message.message }} </p>
-              </div>
             </div>
+            <span class="text-[10px] ml-11">{{ formatTime(message.date) }}</span>
           </div>
 
+          <!-- Optional: Add a ref to the last message for alternative scrolling -->
           <div v-if="messageIndex === sortedMessages.length - 1" ref="lastMessage"></div>
         </div>
       </div>
 
+      <!-- Message Input Form -->
       <form @submit.prevent="retrieveMessage">
-        <div class="mt-auto flex border items-center p-6">
-          <!-- <div class="flex justify-start w-full">
-            <textarea v-model="newMessage" placeholder="Write a message..." @keydown="handleKeyDown"
-              class="w-full px-6 py-6 outline-none resize-none" />
-          </div> -->
-          <div>
-            <input type="file" accept="image/*" ref="fileInput" multiple class="hidden"
-              @change="handleMultipleFileChange" />
-            <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" />
-          </div>
-          <input type="text" v-model="newMessage" placeholder="Type your message..."
-            class="flex-1 px-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <!-- <button @click="sendMessage" class="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button> -->
-          <div class="flex px-6 gap-x-3 justify-end">
-            <button class="p-3 rounded-full bg-blue-500 text-white hover:bg-blue-600 flex items-center justify-center">
-              <PaperAirplaneIcon @click.prevent="retrieveMessage" class="h-5 w-5 text-white" aria-hidden="true" />
-            </button>
-          </div>
-
-        </div>
-        <div class="px-4 sm:col-span-2 sm:px-0">
-          <ul role="list" class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
+        <!-- Nov15 -->
+        <div v-if="files.length > 0" class="px-4 my-2 mx-2 sm:col-span-2 sm:px-0">
+          <ul role="list"
+            class="grid grid-cols-2 gap-x-2 gap-y-4 sm:gap-x-4 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-8">
             <li v-for="(file, index) in files" :key="file.source" class="relative">
               <div
-                class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
-                <img :src="file.url" alt="" class="pointer-events-none h-20 w-20 object-cover" />
-                <button @click="removeImage(index)" class="absolute top-0 right-0 p-1 text-gray-600 hover:text-red-600">
+                class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-md bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                <img :src="file.url" alt=""
+                  class="pointer-events-none sm:w-full sm:h-24 lg:w-32 lg:h-32 object-cover" />
+                <button @click.prevent="removeImage(index)"
+                  class="absolute top-0 right-0 p-1 text-gray-500 hover:text-red-700">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" class="w-4 h-4">
+                    stroke-width="2" class="w-7 h-7">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -670,60 +779,101 @@ onMounted(async () => {
             </li>
           </ul>
         </div>
+        <div class="mt-auto flex border items-center">
+          <div class="flex justify-start w-full">
+            <!-- @click="messagesent=false"  -->
+            <textarea v-model="newMessage" placeholder="Write a message..." @keydown="handleKeyDown"
+              class="w-full px-6 py-6 outline-none resize-none" />
+          </div>
+          <div class="flex px-6 gap-x-3 justify-end">
+            <div>
+              <input type="file" ref="fileInput" multiple class="hidden" @change="handleMultipleFileChange" />
+              <!-- <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" /> -->
+              <PhotoIcon class="h-7 w-7 text-gray-700 hover:text-gray-900" aria-hidden="true"
+                @click="triggerFileInput" />
+            </div>
+            <PaperAirplaneIcon @click.prevent="retrieveMessage" class="h-7 w-7 text-gray-700 hover:text-gray-900"
+              aria-hidden="true" />
+          </div>
+        </div>
       </form>
     </div>
 
+    <!-- New Conversation Area -->
     <div v-if="createConversation" class="w-[70%] flex flex-col border-r-2">
-      <div class="text-gray-600 bg-white p-4 gap-x-2 items-center flex-col">
-        <span class="text-md font-semibold">
-          <span>To: </span>
-          <div v-if="!receiverId" class="relative">
-            <div class=" pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-            </div>
-            <input id="search" name="search" @input="handleInput(searchValue)" v-model="searchValue"
-              class="block w-full rounded-lg bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6"
-              placeholder="Search" type="search" />
-
-            <ul v-if="searchResults.length > 0" class="absolute bg-white border mt-1 w-full max-h-60 overflow-y-auto">
-              <li v-for="item in searchResults" :key="item.id" class="px-4 py-2 hover:bg-gray-100">
-                <button @click="handleItemClick(item.id, item.name)" class="w-full text-left">
-                  {{ item.name }}
-                </button>
-              </li>
-            </ul>
-          </div>
-          <div v-else class="relative">
-            <span>To: {{ receiverName }}</span>
-          </div>
-        </span>
+      <!-- New Conversation Header -->
+      <div v-if="!receiverId" class="flex flex-row w-full gap-x-3 items-center p-8">
+        <span class="text-base font-semibold">To: </span>
+        <div class="relative w-full">
+          <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 absolute inset-y-2 left-3" aria-hidden="true" />
+          <input id="search" name="search" @input="handleInput(searchValue)" v-model="searchValue"
+            class="block w-full rounded-lg bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6"
+            placeholder="Search" type="search" />
+          <!-- Search Results Dropdown -->
+          <ul v-if="searchResults.length > 0" class="absolute bg-white border mt-1 w-full max-h-60 overflow-y-auto">
+            <li v-for="item in searchResults" :key="item.id" class="px-4 py-2 hover:bg-gray-100">
+              <button @click="handleItemClick(item.id, item.name)" class="w-full text-left">
+                {{ item.name }}
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
+      <div v-else class="relative p-8">
+        <span class="text-base font-semibold flex gap-x-1">To: {{ receiverName }}</span>
+      </div>
+      <!-- Nov16 Comment - Joey changes New Conversation Header
+          <div class="text-gray-600 bg-white p-4 gap-x-2 items-center flex">
+              <span class="text-md font-semibold">
+                  <span>To: </span>
+                  <div v-if="!receiverId" class="relative bg-red-400 w-full">
+                      <span>To: </span>
+                      <div class=" pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                      </div>
+                      <input id="search" name="search" @input="handleInput(searchValue)" v-model="searchValue"
+                          class="block w-full rounded-lg bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6"
+                          placeholder="Search" type="search" />
+                      Search Results Dropdown
+                      <ul v-if="searchResults.length > 0"
+                          class="absolute bg-white border mt-1 w-full max-h-60 overflow-y-auto">
+                          <li v-for="item in searchResults" :key="item.id" class="px-4 py-2 hover:bg-gray-100">
+                              <button @click="handleItemClick(item.id, item.name)" class="w-full text-left">
+                                  {{ item.name }}
+                              </button>
+                          </li>
+                      </ul>
+                  </div>
+                  <div v-else class="relative">
+                      <span>To: {{ receiverName }}</span>
+                  </div>
+              </span>
+          </div> -->
 
+      <!-- New Conversation Messages (if any) -->
       <div class="flex-1 overflow-y-auto px-4 bg-gray-50">
+        <!-- Implement if needed -->
       </div>
 
+      <!-- New Conversation Message Input Form -->
       <form @submit.prevent="createNewMessage">
-        <div class="mt-auto flex border items-center p-6">
-          <!-- <div class="flex justify-start w-full">
+        <div class="mt-auto flex border items-center">
+          <div class="flex justify-start w-full">
+            <!-- @click="messagesent=false"  -->
             <textarea v-model="newMessage" placeholder="Write a message..." @keydown="handleKeyDown"
               class="w-full px-6 py-6 outline-none resize-none" />
-          </div> -->
-          <div>
-            <input type="file" ref="fileInput" multiple class="hidden" @change="handleMultipleFileChange" />
-            <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" />
+
           </div>
-          <input type="text" v-model="newMessage" placeholder="Type your message..."
-            class="flex-1 px-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <!-- <button @click="sendMessage" class="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button> -->
           <div class="flex px-6 gap-x-3 justify-end">
-            <button class="p-3 rounded-full bg-blue-500 text-white hover:bg-blue-600 flex items-center justify-center">
-              <PaperAirplaneIcon @click.prevent="retrieveMessage" class="h-5 w-5 text-white" aria-hidden="true" />
-            </button>
+            <div>
+              <input type="file" ref="fileInput" multiple class="hidden" @change="handleMultipleFileChange" />
+              <!-- <PaperClipIcon class="h-7 w-7 text-gray-400" aria-hidden="true" @click="triggerFileInput" /> -->
+
+              <PhotoIcon class="h-7 w-7 text-gray-700 hover:text-gray-900" aria-hidden="true"
+                @click="triggerFileInput" />
+            </div>
+            <PaperAirplaneIcon @click.prevent="createNewMessage" class="h-7 w-7 text-gray-700 hover:text-gray-900"
+              aria-hidden="true" />
           </div>
         </div>
         <div class="px-4 sm:col-span-2 sm:px-0">
@@ -746,208 +896,3 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-
-<!--<template>
-  <div class="flex h-screen bg-white">
-    <div class="w-64 border-r">
-      <div class="p-4">
-        <div class="flex space-x-[60%]">
-          <h1 class="text-xl font-bold mb-4">CHAT</h1>
-          <button class="pb-6 opacity-50" @click="toggleModal">
-            <svg fill="none" height="28" viewBox="0 0 24 24" width="28" xmlns="http://www.w3.org/2000/svg">
-              <g stroke="#141b34" stroke-width="1.5">
-                <path d="m12 8v8m4-4h-8" stroke-linecap="round" stroke-linejoin="round" />
-                <path
-                  d="m2.5 12c0-4.47834 0-6.71751 1.39124-8.10876 1.39125-1.39124 3.63042-1.39124 8.10876-1.39124 4.4783 0 6.7175 0 8.1088 1.39124 1.3912 1.39125 1.3912 3.63042 1.3912 8.10876 0 4.4783 0 6.7175-1.3912 8.1088-1.3913 1.3912-3.6305 1.3912-8.1088 1.3912-4.47834 0-6.71751 0-8.10876-1.3912-1.39124-1.3913-1.39124-3.6305-1.39124-8.1088z" />
-              </g>
-            </svg>
-          </button>
-        </div>
-        <div class="relative">
-          <input type="text" placeholder="Search Names"
-            class="w-full pl-8 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-      </div>
-      <div v-if="showNewMessage" class="border-b p-4 bg-gray-200 mx-2">
-        <div class="flex space-x-8">
-          <p class="text-sm mx-5 font-semibold">New message</p>
-          <button @click="sendMessage" class="p-2 rounded-full text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="overflow-y-auto h-[calc(100vh-100px)]">
-        <div class="p-4 space-y-4">
-          <div v-for="name in ['June cyril dolenso',]" :key="name" class="flex items-center space-x-4">
-            <div
-              class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold">
-              {{ name.split(' ').map(n => n[0]).join('') }}
-            </div>
-            <div>
-              <p class="text-sm font-medium">{{ name }}</p>
-              <p class="text-xs text-gray-500">Last message...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="flex-1 flex flex-col">
-      <div v-if="showNewMessage" class="border-b p-4">
-        <input type="text" v-model="newMessage" placeholder="Type your message..."
-          class="flex-1 px-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button @click="sendMessage" class="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <div class="border-b p-4 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-          <div>
-            <img :src="require('/src/assets/images/bals.png')" alt="Profile" class="w-9 h-8 rounded-full mr-2">
-          </div>
-          <h2 class="text-lg font-semibold">Dolens</h2>
-        </div>
-        <div class="flex space-x-2">
-          <button class="p-2 rounded-full hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-          </button>
-          <button class="p-2 rounded-full hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
-        <div v-for="(message, index) in messages" :key="index" class="flex items-start space-x-2"
-          :class="{ 'justify-end': message.isSent }">
-          <div class="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0">
-            <img v-if="message.isSent" :src="require('/src/assets/images/bals.png')" alt="Profile"
-              class="w-8 h-8 rounded-full" />
-            <img v-else src="path/to/placeholder-image.jpg" alt="Placeholder" class="w-8 h-8 rounded-full" />
-          </div>
-          <div>
-            <p :class="{ 'bg-blue-100': message.isSent, 'bg-gray-100': !message.isSent }"
-              class="rounded-lg p-2 max-w-md">
-              {{ message.text }}</p>
-            <img v-if="message.photo" :src="message.photo" alt="Uploaded photo" class="rounded-lg mt-1 max-w-md" />
-            <p class="text-xs text-gray-500 mt-1">{{ message.time }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="border-t p-4">
-        <div class="flex items-center space-x-2">
-          <input type="file" @change="handleFileUpload" accept="image/*" class="hidden" ref="fileInput" />
-          <button @click="triggerFileInput" class="p-2 rounded-full hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-            </svg>
-          </button>
-          <input type="text" v-model="newMessage" placeholder="Type a message here..."
-            class="flex-1 px-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <button @click="sendMessage" class="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template> -->
-
-
-
-<style scoped>
-.modal {
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
-  width: 600px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  height: 500px;
-  position: relative;
-}
-
-.user-list {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 20px;
-  scrollbar-width: none;
-}
-
-.user-list::-webkit-scrollbar {
-  display: none;
-}
-
-.user-list div {
-  text-align: left;
-}
-
-.close {
-  cursor: pointer;
-  float: right;
-  font-size: 20px;
-}
-
-.chat-button {
-  width: 150px;
-  padding: 10px;
-  position: absolute;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-/* Close button styling */
-.close {
-  cursor: pointer;
-  position: absolute;
-  top: 10px;
-  /* Adjust as needed */
-  right: 20px;
-  /* Adjust as needed */
-  font-size: 24px;
-  /* Size of the close button */
-  color: #141b34;
-  /* Color of the close button */
-}
-
-/* Remove glowing effect from input */
-input:focus {
-  outline: none;
-  /* Remove default outline */
-  box-shadow: none;
-  /* Remove any box shadow */
-}
-</style>

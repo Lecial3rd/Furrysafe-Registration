@@ -123,12 +123,14 @@ onMounted(async () => {
 
         <div class="p-2 px-3">
             <div class="flex items-center gap-x-4">
-                <RouterLink to="" title="Chat with Us" class="flex items-center gap-x-2 relative group">
-                    <ChatBubbleLeftRightIcon class="sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-900" />
-                    <span class="font-bold text-sm hidden group-hover:flex">
-                        Message
-                    </span>
-                </RouterLink>
+                <!-- Changes - Salpocial -->
+                <RouterLink :to="{ name: 'buddy_messages', query: { buddyId: post.user_id } }" 
+                title="Chat with Us" class="flex items-center gap-x-2 relative group" >
+                <ChatBubbleLeftRightIcon class="sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-900" />
+                <span class="font-bold text-sm hidden group-hover:flex">
+                    Message
+                </span>
+            </RouterLink>
 
                 <div v-if="post.post_type == 'Adoption'">
                     <RouterLink to="" title="Pet Profile" class="flex items-center gap-x-2 relative group">
