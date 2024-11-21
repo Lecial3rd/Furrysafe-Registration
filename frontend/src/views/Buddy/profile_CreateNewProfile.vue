@@ -25,6 +25,7 @@ const handleSubmit = () => {
   if (currentMode === 'edit') {
     // Logic for editing
     console.log('Editing profile...');
+    retrieveData();
   } else {
     // Logic for creating
     console.log('Creating profile...');
@@ -52,8 +53,20 @@ function handleYesClick() {
     console.log('Yes button clicked!')
     // Perform actions when the Save button is clicked
 }
+
+//for edit 
+const petprofile = ref('')
+let extraphotos = ref([])
+
+const oldPhotoUrls = ref([])
+const listoldPhotoUrls = ref([])
+const oldProfileUrl = ref('')
+
+const info = ref([])
+
 //user details
 const userid = localStorage.getItem('u_id')
+const petid = route.query.petid; // Get pet ID from route parameters
 
 // const formData = new FormData()
 const dataEntries = ref([])
@@ -97,6 +110,8 @@ const selectedAnimalBreed = ref('');
 const selectedAnimalTypeString = ref('') //retrieves the string exactly from the option e.g.: dog, cat, horse, bird
 const selectedBreedString = ref('')
 
+let petbreed_id = ref('')
+
 //for dropbox/options
 const animalCategory = ref([])
 const breedCategory = ref([])
@@ -104,9 +119,10 @@ const status = ref([])
 
 watch(selectedAnimalType, (newVal, oldVal) => {
     if (newVal !== oldVal) {
-        selectedAnimalBreed.value = ''; // reset selectedAnimalBreed when selectedAnimalType changes
-        Vaccines.value = []; // reset the selected vaccines when animal type changes
-        // otherVaccines.value = ''; // reset the other vaccines when animal type changes
+        selectedAnimalBreed.value = ''; // Reset selectedAnimalBreed when selectedAnimalType changes
+        Vaccines.value = [];     // Reset the selected vaccines
+        selectedVaccines.value = [];    // Reset selectedVaccines (the array of checked checkboxes)
+        otherVaccines.value = '';       // Reset the other vaccines
     }
 });
 
@@ -222,7 +238,7 @@ async function loadPetCategory() { //type from db dog cats //pet type/category r
         console.log(response)
         if (response.data) {
             animalCategory.value = response.data
-        }
+        }        
     }
     catch (err) {
         console.log("error", err)
@@ -238,6 +254,11 @@ async function loadPetBreed() { //breed from db //load pet breed when pet type (
         if (response.data) {
             breedCategory.value = response.data
         }
+
+        if (petbreed_id) {
+            selectedAnimalBreed.value = petbreed_id.value
+        }
+        
     }
     catch (err) {
         console.log("error", err)
@@ -262,27 +283,36 @@ async function loadVaccineOptions() { //ovi nmn ;-; load vaccine
 //load sterilization base on gender selectedGender
 async function loadSterilization() { //kwaon tung sa db tas e load ;-; ovi
     try {
-        console.log(selectedGender.value)
         const response = await axios.post("http://localhost:5000/sterilization",
             {
                 _gender: selectedGender.value
             }
         )
-        if (response) {
-            sterilization.value = response.data
-            categorizedSterilization() // Categorize after loading
-            //
+
+        console.log("Sterilization response:", response.data); // Log the response data
+
+        if (response && response.data) {
+            categories.value = {
+                "non-surgical": [],
+                "surgical": [],
+                "others": []
+            };
+
+            sterilization.value = response.data;
+            categorizedSterilization(); // Categorize after loading
+
             categories.value = {
                 "non-surgical": [...categories.value["non-surgical"]],
                 "surgical": [...categories.value["surgical"]],
                 "others": [...categories.value["others"], ...spayNeuterOptions.value]
-            }
+            };
         }
     }
     catch (err) {
         console.log("error in loading sterilization", err)
     }
 }
+
 function categorizedSterilization() { //categorize sterilization from load sterilization (e.g. surgical, non surgical)
     try {
         const keys = Object.keys(categories.value);
@@ -333,9 +363,16 @@ async function loadPetStatus() { // load pet status... tf do u want
 }
 async function retrieveData() {
     const formData = new FormData();
+
+    const newPhotoUrls = extraphotos.value.map(fileObj => fileObj.source);
+    const photosToUpload = newPhotoUrls.filter(url => !oldPhotoUrls.value.includes(url));
+    console.log("Photos to upload:", oldPhotoUrls.value);
+
+
     dataEntries.value = [];
     const vaccineArray = getSelectedVaccineIds();
     dataEntries.value = [ //details eg: name, nickname
+        ['pet_id', petid],
         ['id', localStorage.getItem('u_id')],
         ['gender', `${genderchar.value}`],
         ['pet_category_id', selectedAnimalType.value],
@@ -372,6 +409,25 @@ async function retrieveData() {
         formData.append(`extra_photo`, fileobj.file);
     })
 
+    // Append profile image if available
+    if (oldProfileUrl.value) {
+        formData.append('old_profile', oldProfileUrl.value);
+    }
+
+    if (selectedImage.value) {
+        formData.append('new_profile', profileToUpload.value);
+    }
+
+    files.value.forEach((file) => {
+        formData.append('files', file); // Append the actual File object
+    });
+    oldPhotoUrls.value.forEach((file) => {
+        formData.append('old_files', file.source)
+    })
+    listoldPhotoUrls.value.forEach((file) => {
+        formData.append('list_of_old_files', file.source)
+    })
+
     dataEntries.value.forEach(([key, value]) => formData.append(key, value));
     const name_ = formData.get('name');
     const gender_ = formData.get('gender');
@@ -387,13 +443,133 @@ async function retrieveData() {
         savePetProfile(formData)
     }
     if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_) &&  currentMode == 'edit') {
-
+        console.log("=)")
+        updatePetDetails(formData)
     }
     else {
         if (toastRef.value) {
             toastRef.value.showToast('Error: Missing inputs');
         }
         // console.log("empty isa heee", name_, gender_, status_, pet_, pet2_, steril_,steril2_)
+    }
+}
+
+//Reuse Salpocial
+async function loadPetDetails() {
+    try {
+        // Load the pet profile
+        const response = await axios.post("http://localhost:5000/profile", {
+            _userid: userid,
+            _petid: petid
+        });
+
+        console.log("api response", response.data)
+        if (response.data && response.data.length > 0) {
+            const profile = response.data[0];  // Assuming response has only one profile for simplicity
+
+            // Load the vaccine options first
+
+            const _name_nickname = profile.name_nickname;
+            const [nameonly, nicknameonly] = _name_nickname.split('/');
+
+            if (profile.additionalphotos && profile.additionalphotos != "No additional photos") {
+                extraphotos.value = profile.additionalphotos.split(',').map(url => ({
+                    source: url.trim()
+                }));
+                oldPhotoUrls.value = profile.additionalphotos.split(',').map(url => ({
+                    source: url.trim()
+                }));
+                listoldPhotoUrls.value = profile.additionalphotos.split(',').map(url => ({
+                    source: url.trim()
+                }));
+            }
+
+            //     qrphoto: profile.qr,
+            //     extraphotos: extraphotos,
+            //     imageUrl: profile.profileurl
+            name.value = nameonly
+            nickname.value = nicknameonly
+            daterehomed.value = profile.date_rehomed
+            energylevel.value = profile.energylevel || "";
+            coat.value = profile.coat
+            sizeweight.value = profile.size
+            age.value = profile.age
+            about.value = profile.about
+            specialneed.value = profile.need
+            medicalcondition.value = profile.condition
+            selectedImage.value = profile.profileurl
+            oldProfileUrl.value = profile.profileurl
+            // Set form values
+            petprofile.value = profile.profileurl;
+            selectedAnimalType.value = profile.pet_category_id;
+            selectedAnimalBreed.value = profile.breed_id
+            petbreed_id.value = profile.breed_id;
+            selectedstatus.value = profile.status_id;
+            selectedGender.value = profile.gender.toLowerCase() === 'f' ? 'female' : 'male';
+            specialneed.value = profile.need
+
+            await loadVaccineOptions();
+
+            // Process vaccine data (after vaccine options are loaded)
+            const petVaccines = profile.vaccinename.split(',').map(vaccine => vaccine.trim());
+            const otherVaccinesArray = [];
+            petVaccines.forEach(vaccine => {
+                console.log(Vaccines.value)
+                const matchingOption = Vaccines.value.find(option => option.name.toLowerCase() === vaccine.toLowerCase());
+                if (matchingOption) {
+                    selectedVaccines.value.push(matchingOption.name);
+                } else {
+                    otherVaccinesArray.push(vaccine);
+                }
+            });
+            otherVaccines.value = otherVaccinesArray.join(', ');
+
+            await loadSterilization();
+
+            // Pre-select sterilization option
+            const profileSterilizedValue = profile.sterilization ? profile.sterilization.toLowerCase() : ''; // Ensure it's defined
+            const matchingSterilizationOption = sterilization.value.find(option => option.name.toLowerCase() === profileSterilizedValue);
+
+            if (matchingSterilizationOption) {
+                selectedSterilization.value = matchingSterilizationOption.name; // Found in sterilization options
+            } else {
+                const matchingSpayNeuterOption = spayNeuterOptions.value.find(option => option.name.toLowerCase() === profileSterilizedValue);
+                if (matchingSpayNeuterOption) {
+                    selectedSterilization.value = matchingSpayNeuterOption.name; // Found in spay/neuter options
+                }
+            }
+        }
+
+    } catch (err) {
+        if (toastRef.value) {
+            toastRef.value.showToast(err);
+        }
+    }
+}
+
+//Reuse code - Salpocial
+async function updatePetDetails(thisformdata) {
+    try {
+        const response = await axios.post("http://localhost:5000/update_pet_profile",
+            thisformdata,
+            {
+                headers: { 'Content-Type': 'multipart/form-data' } // Correct header placement
+            }
+        ) 
+        if (response.data.success) {
+            navigateTo({
+                path: `/buddy_profile`,
+                query: { showToast: true, message: 'Pet Profile Saved Successfuly', from: 'edit' }
+            });
+        }
+        else {
+            if (toastRef.value) {
+                toastRef.value.showToast(response.data.message);
+            }
+        }
+    }
+    catch (err) {
+        console.log("error occured when updating", err)
     }
 }
 
@@ -478,6 +654,16 @@ watch(selectedAnimalType, (newValue) => { //watch for breed
         }
     }
 });
+watch(selectedAnimalType, (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+        selectedAnimalBreed.value = ''; // reset selectedAnimalBreed when selectedAnimalType changes
+        Vaccines.value = []; // reset the selected vaccines when animal type changes
+        // otherVaccines.value = ''; // reset the other vaccines when animal type changes
+        loadPetBreed();
+    }
+}, { immediate: true });
+
+
 watch(selectedAnimalBreed, (newValue) => { //watch for breed 
     if (newValue === 'Other') {
         selectedBreedString.value = newValue;
@@ -517,6 +703,10 @@ onMounted(() => { //pag load sa page mag load ni =)
     //data rendering :'D
     loadPetCategory()
     loadPetStatus()
+    
+    if (currentMode === 'edit') {
+        loadPetDetails(); // Load pet details if in edit mode
+    }
 })
 </script>
 
@@ -696,7 +886,8 @@ onMounted(() => { //pag load sa page mag load ni =)
                             <label for="energyLvl" class="block text-sm font-medium leading-6 text-gray-900">Energy
                                 Level</label>
                             <div class="mt-2">
-                                <select id="energyLvl" name="energyLvl" @change="getSelectedOption($event)"
+                                <select id="energyLvl" name="energyLvl" v-model="energylevel"
+                                    @change="getSelectedOption($event)"
                                     class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
                                     <option value="" selected disabled hidden>Select Energy Level Status</option>
                                     <option>Low</option>

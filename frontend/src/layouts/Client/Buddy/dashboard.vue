@@ -11,7 +11,7 @@ const openCreateModal = ref(false) // for create report modal
 const navigation = [
     { name: 'Home', to: { name: 'buddy_home' }, icon: HomeIcon, current: false },
     { name: 'Message', to: { name: 'buddy_messages' }, icon: ChatBubbleOvalLeftEllipsisIcon, current: false },
-    { name: 'Explore', to: { name: '' }, icon: CursorArrowRaysIcon, current: false },
+    { name: 'Explore', to: { name: 'buddy_explore' }, icon: CursorArrowRaysIcon, current: false },
     { name: 'Create', to: null, icon: PlusIcon, current: false, },
     { name: 'Profile', to: { name: 'buddy_profile' }, icon: UserIcon, current: false },
 ]
@@ -30,7 +30,7 @@ const currentNavigatedItem = computed(() => {
 
 
 const userNavigation = [
-    { name: 'Your profile', to: { name: 'profile' }, },
+    { name: 'Your Profile', to: { name: 'buddy_profile' }, },
 ]
 
 const avatar = {
@@ -250,14 +250,12 @@ const sidebarOpen = ref(false)
                         <Menu as="div" class="relative">
                             <MenuButton class="-m-1.5 flex items-center p-1.5">
                                 <span class="sr-only">Open user menu</span>
-                                <img class="h-8 w-8 rounded-full bg-gray-50" :src="user_avatar.user_profile_url || default_avatar"
-                                    alt="buddy_default.png" />
+                                <img class="h-8 w-8 rounded-full bg-gray-50"
+                                    :src="user_avatar.user_profile_url || default_avatar" alt="buddy_default.png" />
                                 <span class="hidden lg:flex lg:items-center">
                                     <span class="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">
                                         {{ user_avatar.user_name }}
                                     </span>
-                                    <!-- <component :is="avatar.icon" class="ml-2 h-5 w-5 text-gray-400"
-                                        aria-hidden="true" /> -->
                                 </span>
                             </MenuButton>
                             <transition enter-active-class="transition ease-out duration-100"
@@ -283,8 +281,8 @@ const sidebarOpen = ref(false)
                 </div>
             </div>
 
-            <main class="py-10 bg-gray-50 h-screen">
-                <div class="px-4 sm:px-6 lg:px-8">
+            <main class="bg-gray-50">
+                <div class="">
                     <RouterView /> <!-- diri mang display ang mga child sa dashboard -->
                     <CreateReportModal v-if="openCreateModal" mode="create" @close="openCreateModal = false" />
                 </div>

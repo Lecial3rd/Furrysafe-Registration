@@ -9,6 +9,7 @@ export const validateUser = async (req, res) => {
     try{
         const { email, password } = req.body
 
+        console.log("backend recieved creds", email, password)
         const { data, error } = await supabase 
             .from('tbl_user')
             .select('user_id, user_email, user_password')

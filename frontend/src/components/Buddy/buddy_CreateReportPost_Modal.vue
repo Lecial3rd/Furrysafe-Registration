@@ -1,8 +1,7 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import axios from "axios"
-import { onMounted } from 'vue';
 
 import Toast from '@/components/toast.vue';  // Ensure correct case for the file name
 const toastRef = ref(null);  // Create a ref for the Toast component
@@ -11,8 +10,7 @@ import mapoverlay from '@/components/buddy_PinModal.vue'
 const showMapModal = ref(false)
 const options = ref([])
 
-import PetList from '@/components/Shelter/shelter_NewpostModal_SearchPetProfile.vue' // Import PetList
-
+import PetList from '@/components/Shelter/shelter_NewpostModal_SearchPetProfile.vue' // Nov17 Import PetList
 
 //flags
 const photoflag = ref(true);
@@ -152,7 +150,7 @@ async function retrieveProfile() {
             name: capitalizeWords(name.trim()),
             nickname: capitalizeWords(nickname.trim()),
             petBreed: profile.breed,
-            petCategory: profile.pet_category,
+            petCategory: profile.pet_category, // Nov17 Salpocials changes
             rehomed: profile.date_rehomed,
             profile: profile.profileurl
           }
@@ -231,7 +229,7 @@ watch(petidvalue, (newValue) => {
   }
 });
 
-// New Added Code - Salpocial
+// Nov17 New Added Code - Salpocial
 const isOpen = ref(false);
 
 const selectPet = (item) => {
@@ -342,6 +340,13 @@ onMounted(async () => {
 
   console.log("props", selectedPostDetailsValue.value);
 });
+
+// to close press esc
+onMounted(() => {
+  const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+  window.addEventListener('keydown', closeModalOnEsc)
+  onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+})
 </Script>
 
 <template>
@@ -359,15 +364,15 @@ onMounted(async () => {
             leave-from="opacity-100 translate-y-0 sm:scale-100"
             leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
             <DialogPanel
-              class="relative transform overflow-hidden rounded-lg bg-white shadow-lg transition-all sm:max-w-[60rem] sm:mx-4 sm:w-full p-6">
+              class="relative transform overflow-hidden rounded-lg bg-white shadow-lg transition-all sm:max-w-[50rem] sm:mx-4 sm:w-full p-6">
               <div class="flex justify-between items-center">
-                <DialogTitle as="h3" class="text-lg font-semibold leading-6 text-gray-900">
+                <DialogTitle as="h3" class="text-2xl font-semibold leading-6 text-gray-900">
                   <!-- if edit "Edit report.." if create "create report..."- joey -->
                   {{ mode === 'edit' ? 'Edit Report' : 'Create Report' }}
                 </DialogTitle>
                 <button @click="$emit('close')" ref="cancelButtonRef" class="text-gray-500 hover:text-gray-700">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" class="w-5 h-5">
+                    stroke-width="2" class="w-7 h-7">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -377,7 +382,7 @@ onMounted(async () => {
                   <img class="h-16 w-16 border border-gray-500 rounded-full object-cover" :src="profileUrl"
                     alt="profile image" />
                   <div class="flex flex-col gap-y-1">
-                    <span class="text-base font-medium"> {{ fullname }}</span>
+                    <span class="text-lg font-medium"> {{ fullname }}</span>
                     <select v-model="selectedreportCategory"
                       class="border text-gray-700 bg-slate-50 font-medium rounded-lg text-sm px-5 py-2.5  inline-flex text-left  ">
                       <option value="" selected disabled hidden>Report Type</option>
@@ -389,14 +394,25 @@ onMounted(async () => {
                 </div>
                 <div class="text-sm">
                   <!-- HERE JO  -->
-                  <!-- Starting Changes -->
+                  <!-- Nov17 comment changes in because of Salpocials code
+                  <div v-if="selectedreportCategory == 2" class="py-2 flex flex-col gap-y-2">
+                    <label for="petcategory" class="font-medium">Pet</label>
+                    <select v-model="selectedPetId" id="petcategory"
+                      class="text-gray-700 bg-slate-50 block w-full p-2.5 border rounded-lg">
+                      <option v-if="options.length == 0" value="null" selected>{{ defaultOptionText }}</option>
+                      <option v-for="(item, index) in options" :key="index" :value="item.id">
+                        {{ item.name }}
+                      </option>
+                    </select>
+                  </div> -->
+                  <!-- Nov17 Starting Changes -->
                   <div v-if="selectedreportCategory == 2" class="py-2 flex flex-col gap-y-2">
                     <PetList @petSelected="selectPet" />
-                    </div>
+                  </div>
                   <!-- End Changes -->
                   <!-- /* HERE JO */ -->
                   <div class="py-2 flex flex-col gap-y-2 mt-2">
-                    <label for="petcategory" class="font-medium">Pet Category</label>
+                    <label for="petcategory" class="text-base font-medium">Pet Category</label>
                     <select v-if="selectedCategory !== 'other'" v-model="selectedCategory" id="petcategory"
                       class="text-gray-700 bg-slate-50 block w-full p-2.5 border rounded-lg ">
                       <option value="" selected disabled hidden>Select Pet Category</option>
@@ -417,13 +433,14 @@ onMounted(async () => {
                     </div>
                   </div>
                   <div class="py-2 flex flex-col gap-y-2">
-                    <div>
-                      <label for="location" class="font-medium">Location</label>
-                      <div class="text-red-400 text-[12px] italic" v-if="locationflag == false">dsagdjgsd</div>
+                    <div class="flex item-center gap-x-2">
+                      <label for="location" class="text-base font-medium">Location</label>
+                      <span class="text-red-400 text-[12px] italic" v-if="locationflag == false">
+                        *Please add a location!</span>
+                    </div>
+                    <div class="flex gap-x-2">
                       <input id="location" placeholder="Enter your Location" v-model="selectedLocationAddress"
                         class="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2" />
-                    </div>
-                    <div>
                       <button @click.prevent="showMapModal = true, clearflags()">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="25" height="25">
                           <path fill="#f03d3d"
@@ -445,7 +462,7 @@ onMounted(async () => {
                     <!-- Display images -->
 
                   </div>
-                  <div v-if="imageUrls.length > 0" class="grid grid-cols-1 place-items-center gap-1 border-t">
+                  <!-- <div v-if="imageUrls.length > 0" class="grid grid-cols-1 place-items-center gap-1 border-t">
                     <div v-for="(imageUrl, index) in imageUrls" :key="index.source" class="relative mx-1">
                       <img :src="imageUrl.url || imageUrl" alt="Uploaded Image"
                         class="max-w-full max-h-[300px] object-contain border" />
@@ -456,6 +473,28 @@ onMounted(async () => {
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
+                    </div>
+                  </div> -->
+                  <!-- Nov17-->
+                  <div v-if="imageUrls.length > 0"
+                    class="outline-dashed outline-2 mx-1 outline-offset-3 outline-gray-200 rounded-lg p-2 my-2">
+                    <div class="px-4 my-2 mx-2 sm:col-span-2 sm:px-0">
+                      <ul role="list" class="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-2 sm:gap-x-4 lg:grid-cols-3">
+                        <li v-for="(imageUrl, index) in imageUrls" :key="index" class="relative">
+                          <div
+                            class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-md bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                            <img :src="imageUrl.url || imageUrl" alt="Uploaded Image"
+                              class="pointer-events-none w-full sm:h-52 lg:h-40 object-cover" />
+                            <button @click.prevent="removeImage(index)"
+                              class="absolute top-0 right-0 p-1 text-red-500 hover:text-red-700">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </li>
+                      </ul>
                     </div>
                   </div>
                   <div v-if="photoflag == false" class="flex justify-between my-3 mx-[1.5rem]">

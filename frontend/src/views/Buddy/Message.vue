@@ -8,7 +8,7 @@ import { io } from 'socket.io-client';
 import default_avatar from '@/assets/images/buddy_default.jpg'
 import viewbuddypostdetials from '@/components/Shelter/shelter_RescueOp_ReportViewdetailsModal.vue';
 
-//New One - Salpocial
+// Nov20 - Salpocial
 import { useRoute } from 'vue-router';
 const route = useRoute();
 // End one
@@ -183,6 +183,7 @@ async function sendMessage(thisformData) {
     });
 
     if (response.data.success) {
+      createConversation.value = false;
       let messageData = {
         chat_id: selectedChat_id.value,
         user_id: parseInt(user_id.value),
@@ -443,7 +444,6 @@ let rescuedposts = ref([])
 async function retrieveRescuedReports() {
   try {
     const response = await axios.post("http://localhost:5000/getereports", {
-      _user_id: _user_id,
       _status: 'Rescued'
     });
 
@@ -530,53 +530,52 @@ watch(searchValue, (newValue) => {
 //     getUserFullName();
 // });
 
-// New Salpocial
+// Nov20 - Salpocial
 const retrieveUserChat = async () => {
-    const userIdFromQuery = route.query.buddyId; 
-    console.log("User  ID from Query:", userIdFromQuery);
+  const userIdFromQuery = route.query.buddyId;
+  console.log("User  ID from Query:", userIdFromQuery);
 
-    if (!userIdFromQuery) return; // Exit early if userId is not present
+  if (!userIdFromQuery) return; // Exit early if userId is not present
 
-    try {
-        const response = await axios.post("http://localhost:5000/getfullname", {
-            id: userIdFromQuery,
-        });
+  try {
+    const response = await axios.post("http://localhost:5000/getfullname", {
+      id: userIdFromQuery,
+    });
 
-        console.log("API Response:", response.data);
+    console.log("API Response:", response.data);
 
-        if (Array.isArray(response.data) && response.data.length > 0) {
-            const [userData] = response.data;
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      const [userData] = response.data;
 
-            // Update receiver details
-            receiverId.value = userIdFromQuery;
-            receiverName.value = userData.full_name;
+      // Update receiver details
+      receiverId.value = userIdFromQuery;
+      receiverName.value = userData.full_name;
 
-            console.log("Receiver ID set to:", receiverId.value);
-            console.log("Receiver Name set to:", receiverName.value);
+      console.log("Receiver ID set to:", receiverId.value);
+      console.log("Receiver Name set to:", receiverName.value);
 
-            // Find an existing conversation with the receiver
-            const existingChat = conversations.value.find(chat => 
-                chat.participant_1_id === Number(receiverId.value) || 
-                chat.participant_2_id === Number(receiverId.value)
-            );
+      // Find an existing conversation with the receiver
+      const existingChat = conversations.value.find(chat =>
+        chat.participant_1_id === Number(receiverId.value) ||
+        chat.participant_2_id === Number(receiverId.value)
+      );
 
-            if (existingChat) {
-                console.log("Existing chat found:", existingChat);
-                selectConversation(existingChat);
-                createConversation.value = false;
-            } else {
-                console.log("No existing chat found. Preparing new conversation.");
-                createConversation.value = true; // Show the new conversation UI
-                selectedChat_id.value = null;  // Ensure no chat ID is set for new chat
-            }
-        } else {
-            console.error("Failed to fetch receiver name. Response:", response.data);
-        }
-    } catch (error) {
-        console.error("Error fetching user data:", error);
+      if (existingChat) {
+        console.log("Existing chat found:", existingChat);
+        selectConversation(existingChat);
+        createConversation.value = false;
+      } else {
+        console.log("No existing chat found. Preparing new conversation.");
+        createConversation.value = true; // Show the new conversation UI
+        selectedChat_id.value = null;  // Ensure no chat ID is set for new chat
+      }
+    } else {
+      console.error("Failed to fetch receiver name. Response:", response.data);
     }
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  }
 };
-
 
 onMounted(async () => {
   await getUserFullName();
@@ -584,14 +583,94 @@ onMounted(async () => {
   await retrieveRescuedReports();
   await retrieveInPorgressReports();
   await retrievePendingReports();
-
-  // New Salpocial
-  await retrieveUserChat();
+  await retrieveUserChat(); // Nov20 - Salpocial
 });
 </script>
 <template>
-  <!-- Gi change nko height kay samok T-T -->
-  <div class="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
+  <!-- Nov 20 If conversations list is empty, show the "Create New Message" default display - Joey -->
+  <div v-if="conversations.length === 0"
+    class="flex justify-center items-center sm:h-[calc(100vh-67px)] lg:md:h-[calc(100vh-0px)] mx-4">
+    <div v-if="!createConversation" class="p-4 text-center grid grid-flow-row place-items-center container gap-y-4">
+      <img width="300" height="300"
+        src="https://img.icons8.com/external-nawicon-flat-nawicon/300/external-conversation-communication-nawicon-flat-nawicon-2.png"
+        alt="external-conversation-communication-nawicon-flat-nawicon-2" />
+      <button @click="createConversation = true">
+        <span
+          class="text-gray-500 font-semibold text-base hover:underline hover:underline-offset-4 hover:text-amber-500">
+          Click to Start a Conversation!</span>
+      </button>
+    </div>
+    <div v-if="createConversation"
+      class="sm:w-[30rem] xl:w-[70%]  xl:h-[70%] sm:h-[40rem] flex flex-col border rounded-2xl overflow-hidden shadow-md">
+      <div v-if="!receiverId" class="flex flex-row w-full gap-x-3 items-center p-8 border-b">
+        <span class="text-base font-semibold">To: </span>
+        <div class="relative w-full">
+          <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 absolute inset-y-2 left-3" aria-hidden="true" />
+          <input id="search" name="search" @input="handleInput(searchValue)" v-model="searchValue"
+            class="block w-full rounded-lg bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6"
+            placeholder="Search" type="search" />
+          <!-- Search Results Dropdown -->
+          <ul v-if="searchResults.length > 0" class="absolute bg-white border mt-1 w-full max-h-60 overflow-y-auto">
+            <li v-for="item in searchResults" :key="item.id" class="px-4 py-2 hover:bg-gray-100">
+              <button @click="handleItemClick(item.id, item.name)" class="w-full text-left">
+                {{ item.name }}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div v-else class="relative p-8 border-b">
+        <span class="text-base font-semibold flex gap-x-1">To: {{ receiverName }}</span>
+      </div>
+      <!-- default image -->
+      <div class="h-full flex items-center justify-center">
+        <img width="300" height="300"
+          src="https://img.icons8.com/external-nawicon-flat-nawicon/300/external-conversation-communication-nawicon-flat-nawicon-2.png"
+          alt="external-conversation-communication-nawicon-flat-nawicon-2" />
+      </div>
+      <!-- New Conversation Message Input Form -->
+      <form @submit.prevent="createNewMessage" class="mt-auto">
+        <div v-if="files.length > 0" class="px-4 my-2 mx-2 sm:col-span-2 sm:px-0">
+          <ul role="list"
+            class="grid grid-cols-2 gap-x-2 gap-y-4 sm:gap-x-4 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-8">
+            <li v-for="(file, index) in files" :key="file.source" class="relative">
+              <div
+                class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-md bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                <img :src="file.url" alt=""
+                  class="pointer-events-none sm:w-full sm:h-24 lg:w-32 lg:h-32 object-cover" />
+                <button @click.prevent="removeImage(index)"
+                  class="absolute top-0 right-0 p-1 text-gray-500 hover:text-red-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" class="w-7 h-7">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="mt-auto flex border-t items-center">
+          <div class="flex justify-start w-full">
+            <!-- @click="messagesent=false"  -->
+            <textarea v-model="newMessage" placeholder="Write a message..." @keydown="handleKeyDown"
+              class="w-full px-6 py-6 outline-none resize-none" />
+
+          </div>
+          <div class="flex px-6 gap-x-3 justify-end">
+            <div>
+              <input type="file" ref="fileInput" multiple class="hidden" @change="handleMultipleFileChange" />
+              <PhotoIcon class="h-7 w-7 text-gray-700 hover:text-gray-900" aria-hidden="true"
+                @click="triggerFileInput" />
+            </div>
+            <PaperAirplaneIcon @click.prevent="createNewMessage" class="h-7 w-7 text-gray-700 hover:text-gray-900"
+              aria-hidden="true" />
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div v-else class="flex h-[calc(100vh-64px)] overflow-hidden bg-white">
     <!-- Conversations Sidebar -->
     <!-- responsive text by color sm:bg-red-400 md:bg-blue-400 lg:bg-orange-400 xl:bg-green-400 -->
     <div class="sm:w-[20%] xl:w-[30%] border-r-2 text-gray-600 flex-1">
@@ -685,7 +764,7 @@ onMounted(async () => {
       </div>
 
       <!-- Messages Display -->
-      <div ref="messagesContainer" class="messages-container flex-1 overflow-y-auto px-4 bg-gray-50">
+      <div ref="messagesContainer" class="messages-container flex-1 overflow-y-auto p-4 bg-gray-50">
         <div v-for="(message, messageIndex) in sortedMessages" :key="messageIndex" class="message">
           <!-- Outgoing Messages (Sent by Current User) -->
           <div v-if="message.user_id == user_id" class="flex text-sm text-gray-600 p-3 justify-end">

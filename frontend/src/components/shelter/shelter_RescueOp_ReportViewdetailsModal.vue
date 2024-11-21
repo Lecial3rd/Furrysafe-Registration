@@ -59,7 +59,6 @@ const prevImage = () => {
 let _user_id = ref(null)
 let userdetails = ref([])
 async function getUserDetailsOnHover() {
-    console.log("on hover")
     try {
         const response = await axios.post("http://localhost:5000/getusedetails", {
             _id: _user_id.value
@@ -67,18 +66,15 @@ async function getUserDetailsOnHover() {
 
         if (response.data.success && response.data.data.length > 0) {
             userdetails.value = response.data.data;
-
-            console.log("value", userdetails.value[0].profile_url)
         }
     }
     catch (err) {
         console.log("error in retrieve reports", err)
     }
-
 }
 onMounted(async () => {
     selectedReportDetails.value = props.selectedPostDetails;
-    console.log("props", selectedReportDetails.value);
+    console.log("Papi props", props.selectedPostDetails.reportDetails);
     _user_id.value = selectedReportDetails.value.user_id
     await getUserDetailsOnHover()
 })
@@ -136,7 +132,7 @@ const open = ref(true)
                                             <img :src="userdetails[0].profile_url" alt="profile"
                                                 class="w-10 h-10 rounded-full object-cover" />
                                             <span class="font-bold sm:text-base xl:text-xl">
-                                                {{ selectedReportDetails.posted_by }}</span>
+                                                {{ userdetails[0].name }}  </span>
                                         </div>
                                     </div>
                                     <div
@@ -258,8 +254,9 @@ const open = ref(true)
                                                         <div v-if="selectedReportDetails.report_status === 'Pending'">
                                                             <button class="w-full">
                                                                 <!-- Nov15 added :postId="selectedReportDetails.post_id" salpocial's integration-->
-                                                                <statusbuttons
-                                                                    :postId="selectedReportDetails.post_id" />
+                                                                 <!-- Nov20 added :operation="selectedReportDetails.post_type" - Joey -->
+                                                                <statusbuttons  :reportDetails="selectedReportDetails" 
+                                                                    :postId="selectedReportDetails.post_id" :operation="selectedReportDetails.post_type"/>
                                                             </button>
                                                         </div>
                                                     </dl>

@@ -3,6 +3,8 @@ import { onMounted, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from "axios";
 import { SparklesIcon, RectangleStackIcon } from '@heroicons/vue/24/outline'
+import { PencilIcon, PhoneIcon, LinkIcon, EnvelopeIcon, MapPinIcon } from '@heroicons/vue/20/solid'
+
 
 import vieweventdetials from '@/components/Shelter/shelter_Myshelter_GridEventViewdetailsModal.vue';
 // view detials on grid images
@@ -81,7 +83,7 @@ async function loadProfileCard() {
             });
 
             profileUrl.value = profiles.value[0]?.profileurl;
-            console.log("profile url", profileUrl.value)
+            console.log("profile response", response.data)
         } else {
             console.error("No profile data received:", response);
         }
@@ -96,7 +98,6 @@ const bio = ref([])
 const sociallink = ref([])
 const details = ref([])
 
-
 async function loadProfileDetails() {
     //const id = localStorage.getItem('c_id');
 
@@ -107,7 +108,7 @@ async function loadProfileDetails() {
 
         // Assuming response.data is an array and you need the first item
         const data = response.data[0];
-        console.log(data);
+
 
         // Update bio
         bio.value = [
@@ -124,6 +125,8 @@ async function loadProfileDetails() {
         ];
 
         // Update details
+        console.log("before details");
+
         details.value = [
             {
                 icon: MapPinIcon,
@@ -138,6 +141,8 @@ async function loadProfileDetails() {
                 label: data.email || 'No email available.',
             },
         ];
+
+        console.log("load profile details", details.value);
 
     } catch (err) {
         console.error("Error loading profile details:", err);
@@ -222,9 +227,10 @@ function eventhasMultiplePhotos(photo_display_url) {
 
 
 onMounted(async () => {
-    loadProfileCard();
-    console.log("shelter",id)
-    loadProfileDetails();
+    console.log("shelter", id)
+
+    await loadProfileCard();
+    await loadProfileDetails();
     await retrieveReports()
     await retrieveEvents()
 })
@@ -263,7 +269,7 @@ const updateCurrentTab = (tabName) => {
 
                         <div class="sm:hidden md:flex flex-col w-[30rem] gap-y-4">
                             <div class="flex text-left items-center">
-                                <h1 class="text-2xl font-bold">{{ profile.shelter }}</h1>
+                                <h1 class="text-2xl font-bold"> {{ profile.shelter }}</h1>
                             </div>
 
                             <!-- user details -->
@@ -279,7 +285,7 @@ const updateCurrentTab = (tabName) => {
                                         class="py-1 grid grid-cols-[20px_1fr] gap-2">
                                         <LinkIcon class="w-5 h-5 text-gray-500" />
                                         <a v-if="item.link" :href="item.link" target=_blank
-                                            class="cursor-pointer break-words">{{
+                                            class="cursor-pointer break-words"> {{
                                                 item.link }}</a>
                                     </li>
                                 </ul>

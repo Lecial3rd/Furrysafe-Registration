@@ -41,7 +41,7 @@ async function loadPetProfiles() {
                     }));
                 }
 
-                console.log("profile.date_rehomed", profile.date_rehomed)
+                console.log("profile", profile)
                 petDetails.value = {
                     petid: profile.id,
                     name: name,
@@ -53,12 +53,14 @@ async function loadPetProfiles() {
                     size: profile.size,
                     energyLevel: profile.energylevel || "Unspecified", // Corrected to camelCase
                     age: profile.age,
+                    gender: profile.gender,
                     about: profile.about,
                     status: profile.status,
                     owner: profile.owner,
                     qrphoto: profile.qr,
                     extraphotos: extraphotos, // Use transformed extraphotos array
-                    imageUrl: profile.profileurl
+                    imageUrl: profile.profileurl,
+                    statuse: profile.status
                 };
 
                 healthAndMedical.length = 0;
@@ -180,7 +182,8 @@ onMounted(() => {
                 <dl class="grid grid-cols-1 sm:grid-cols-2">
                     <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
                         <dt class="text-sm font-medium leading-6 text-gray-900">Given-Name</dt>
-                        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:mt-2">{{ petDetails.name }}
+                        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:mt-2">{{ petDetails.name }} / {{
+                            petDetails.nickname }}
                         </dd>
                     </div>
                     <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
@@ -193,12 +196,26 @@ onMounted(() => {
                         </dd>
                     </div>
                     <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
+                        <dt class="text-sm font-medium leading-6 text-gray-900">Pet Status</dt>
+                        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:mt-2">{{ petDetails.status }}
+                        </dd>
+                    </div>
+                    <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
                         <dt class="text-sm font-medium leading-6 text-gray-900">Pet Type</dt>
                         <dd class="mt-1 text-sm leading-6 text-gray-700 sm:mt-2">{{ petDetails.petCategory }}</dd>
                     </div>
                     <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
                         <dt class="text-sm font-medium leading-6 text-gray-900">Age / Gender</dt>
-                        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:mt-2">{{ petDetails.age }}
+                        <dd class="mt-1 text-sm leading-6 text-gray-700 sm:mt-2">
+                            <span>
+                                <!--  {{ petDetails.age }} / {{ petDetails.gender }}-->
+                                <span v-if="petDetails.age == 0" class="italic"> Age to be confirmed </span>
+                                <span v-if="petDetails.age == 1" class="italic"> {{ petDetails.age }} year old </span>
+                                <span v-if="petDetails.age > 1" class="italic"> {{ petDetails.age }} years old </span>
+                                /
+                                <span v-if="petDetails.gender == 'm'">Male</span>
+                                <span v-if="petDetails.gender == 'f'">Female</span>
+                            </span>
                         </dd>
                     </div>
                     <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
@@ -239,7 +256,8 @@ onMounted(() => {
                             <li v-for="image in extraphotos" :key="image.source" class="relative">
                                 <div
                                     class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
-                                    <img :src="image.source" alt="" class="pointer-events-none w-80 h-80 object-cover " />
+                                    <img :src="image.source" alt=""
+                                        class="pointer-events-none w-80 h-80 object-cover " />
                                 </div>
                             </li>
                         </ul>

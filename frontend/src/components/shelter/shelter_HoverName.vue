@@ -5,15 +5,15 @@ import axios from "axios"
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 
-const viewreportpost = ref({
-    id: 1,
-    name: "Eric",
-    lastname: "Ramones",
-    badge: "buddy",
-    about: "Im airix jr sheshhh",
-    location: "#506 Lim Building J.P. Laurel Avenue, Corner Acacia, Davao City, Philippines",
-    profile: require("@/assets/images/eric.png"),
-});
+// const viewreportpost = ref({
+//     id: 1,
+//     name: "Eric",
+//     lastname: "Ramones",
+//     badge: "buddy",
+//     about: "Im airix jr sheshhh",
+//     location: "#506 Lim Building J.P. Laurel Avenue, Corner Acacia, Davao City, Philippines",
+//     profile: require("@/assets/images/eric.png"),
+// });
 
 const props = defineProps({
     _user_id: {
@@ -108,9 +108,8 @@ onMounted(async () => {
                 <EyeIcon class="h-6 w-6 text-gray-300 group-hover:text-gray-700" />
                 <span class="text-gray-500 group-hover:text-gray-700">View Profile</span>
             </RouterLink>
-
-            <!-- Changes Salpocial -->
-            <RouterLink :to="{ name: 'sheltermessages', query: { shelterId: id, shelterUserID: _user_id} }"
+            <!-- Nov20 :to="{ name: 'sheltermessages', query: { shelterId: id, shelterUserID: _user_id} }" - Salpocial -->
+            <RouterLink :to="{ name: 'sheltermessages', query: { shelterId: id, shelterUserID: _user_id } }"
                 class="flex gap-x-3 border rounded-lg bgteal hover:animate-pulse sm:px-4 md:px-8 xl:px-20 py-2 items-center">
                 <ChatBubbleLeftEllipsisIcon class="h-6 w-6 text-white" />
                 <span class="text-white">Message</span>

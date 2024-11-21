@@ -32,44 +32,6 @@ const healthAndMedical = reactive([])
 const allPhotos = ref([]);
 
 onMounted(() => {
-    // selectedPost.value = props.selectedPostDetails
-    // Nov12
-//     if (selectedProfile.value && selectedProfile.value.name_nickname) {
-//         const [firstName, nickName] = selectedProfile.value.name_nickname.split('/');
-//         name.value = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-//         nickname.value = nickName.charAt(0).toUpperCase() + nickName.slice(1);
-
-//         healthAndMedical.length = 0;
-//         healthAndMedical.push(
-//             {
-//                 label: 'Vaccinations Status',
-//                 details: selectedProfile.value.vaccinename || "Not vaccinated"
-//             },
-//             {
-//                 label: 'Spay / Neuter',
-//                 status: selectedProfile.value.sterilization || "Unknown"
-//             },
-//             {
-//                 label: 'Medical Conditions',
-//                 status: selectedProfile.value.condition || "None known"
-//             },
-//             {
-//                 label: 'Special Needs',
-//                 status: selectedProfile.value.need || "None"
-//             }
-//         );
-
-//         const { profileurl, post_photos } = selectedProfile.value;
-
-//         // Ensure profile URL is added if it exists
-//         allPhotos.value = profileurl ? [profileurl] : [];
-
-//         // Add additional photos if they exist and aren't just "No additional photos"
-//         if (Array.isArray(post_photos) && post_photos[0] !== 'No post photos') {
-//             allPhotos.value = allPhotos.value.concat(post_photos);
-//         }
-//     }
-// });
     const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
     window.addEventListener('keydown', closeModalOnEsc)
     onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
@@ -82,24 +44,34 @@ onMounted(() => {
         nickname.value = nickName.charAt(0).toUpperCase() + nickName.slice(1);
 
         healthAndMedical.length = 0;
+        healthAndMedical.length = 0;
         healthAndMedical.push(
             {
                 label: 'Vaccinations Status',
-                details: selectedProfile.value.vaccinename || "Not vaccinated"
+                details: selectedProfile.value.vaccinename && selectedProfile.value.vaccinename !== 'null'
+                    ? selectedProfile.value.vaccinename
+                    : "Not vaccinated"
             },
             {
                 label: 'Spay / Neuter',
-                status: selectedProfile.value.sterilization || "Unknown"
+                details: selectedProfile.value.sterilization && selectedProfile.value.sterilization !== 'null'
+                    ? selectedProfile.value.sterilization
+                    : "Unknown"
             },
             {
                 label: 'Medical Conditions',
-                status: selectedProfile.value.condition || "None known"
+                details: selectedProfile.value.condition && selectedProfile.value.condition !== 'null'
+                    ? selectedProfile.value.condition
+                    : "None known"
             },
             {
                 label: 'Special Needs',
-                status: selectedProfile.value.need || "None"
+                details: selectedProfile.value.need && selectedProfile.value.need !== 'null'
+                    ? selectedProfile.value.need
+                    : "None"
             }
         );
+
 
         const { profileurl, post_photos } = selectedProfile.value;
 
@@ -179,17 +151,16 @@ const open = ref(true)
 
                                 <!-- display image styling -->
                                 <!-- if one image -->
-                                <div v-if="allPhotos.length === 1"
-                                    class="flex my-4 h-[30rem] rounded-2xl bg-black">
+                                <div v-if="allPhotos.length === 1" class="flex my-4 h-[30rem] rounded-2xl bg-black">
                                     <img :src="allPhotos[0]" alt="first image"
                                         class="w-full object-contain rounded-l-2xl" />
                                 </div>
                                 <div v-else-if="allPhotos.length === 2"
-                                    class="grid grid-flow-col gap-2 my-4 h-[35rem]">
+                                    class="flex gap-2 my-4 h-[35rem] rounded-2xl overflow-hidden">
                                     <img :src="allPhotos[0]" alt="first image"
-                                        class="col-span-3 w-full h-full object-cover rounded-l-2xl bg-black" />
+                                        class="col-span-3 w-full h-full object-contain bg-black" />
                                     <img :src="allPhotos[1]" alt="second image"
-                                        class="col-span-3 object-cover w-full h-full rounded-tr-2xl bg-black" />
+                                        class="col-span-3 object-contain w-full h-full bg-black" />
                                 </div>
                                 <div v-else-if="allPhotos.length >= 3"
                                     @click="toggleModalViewImagePreview(selectedProfile.id)"
@@ -218,7 +189,7 @@ const open = ref(true)
                                     <span class="sm:text-base lg:text-lg">{{ name }}'s Information</span>
 
                                     <div class="flex sm:gap-x-2 md:gap-x-4">
-                                        <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'edit' } }"
+                                        <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'edit', petid: selectedProfile.id} }"
                                             class="bg-gray-800 py-1 sm:px-4 md:px-8 rounded-lg text-white hover:bg-gray-700">
                                             Edit Profile</RouterLink>
                                         <!-- <button
@@ -242,7 +213,11 @@ const open = ref(true)
                                             <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Given-Name</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2">
-                                                    {{ name }}, "{{ nickname }}"</dd>
+                                                    {{ name }}
+                                                    <span v-if="nickname">
+                                                        , "{{ nickname }}"
+                                                    </span>
+                                                </dd>
                                             </div>
                                             <div class="bg-gray-50 px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Pet Type</dt>
@@ -257,20 +232,20 @@ const open = ref(true)
                                             <div class="bg-gray-50 px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Age / Gender</dt>
                                                 <dd class="leading-6 text-gray-700 sm:col-span-2 ">
-                                                    {{ selectedProfile.age }}
                                                     <span v-if="selectedProfile.age > 1">
-                                                        years old
+                                                        {{ selectedProfile.age }} years old
                                                     </span>
                                                     <span v-if="selectedProfile.age == 1">
-                                                        year old
+                                                        {{ selectedProfile.age }} year old
                                                     </span>
-                                                    <span class="i" v-else>
+                                                    <span class="italic" v-else>
                                                         To be Confirmed
                                                     </span>
+                                                    /
                                                     <span v-if="selectedProfile.gender == 'f'">Female</span>
                                                     <span v-else>Male</span>
                                                 </dd>
-                                                 
+
                                             </div>
                                             <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                                 <dt class="font-medium text-gray-900">Size</dt>

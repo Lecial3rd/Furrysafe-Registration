@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import statusbuttons from '@/components/Shelter/shelter_RescueOp_ReportCard_ReportStatusButtons.vue';
-import previewhover from '@/components/Shelter/shelter_HoverName.vue';
+import missingstatusbutton from '@/components/Shelter/shelter_Missingreports_Button.vue'
+// import previewhover from '@/components/Shelter/shelter_HoverName.vue';
 import axios from "axios";
 
 const showRescueCancelButtons = ref(false);
@@ -35,13 +36,12 @@ async function retrieveReports() { //display
             _report_status: 'Pending' // Nov12 'In progress'  change to 'Pending'
         });
 
-        console.log(response.data)
         if (response.data && response.data.length > 0) {
             // Filter out reports that are already rescued
             posts.value = response.data.filter(report => report.report_status !== 'Rescued' && report.report_status !== 'In progress'); // Nov12 added ( && report.report_status !== 'In progress' )
-        } ``
-        console.log(posts.value)
-        // Nov5 end of salpocial's new code
+        }
+
+        console.log("posts here", posts.value[0].post_type)
     }
     catch (err) {
         console.log("error in retrieve reports", err)
@@ -85,8 +85,6 @@ onMounted(async () => {
                             class="relative inline-block">
                             <span class="hover:underline cursor-pointer">{{ report.posted_by }}</span>
                         </div>
-                        <!-- reportId use to get the id of the hover username para ma compare sa previewhover component side -->
-                        <!-- <previewhover v-if="hoveredIndex === index" :_user_id="report.user_id" class="absolute z-10" /> -->
                         <div @mouseenter="hoveredIndex = index" @mouseleave="hoveredIndex = null">
                             <previewhover v-if="hoveredIndex === index" :_user_id="report.user_id"
                                 class="absolute z-10" />
@@ -106,7 +104,11 @@ onMounted(async () => {
 
             </div>
             <div> <!-- Nov5 added :postId="report.post_id" @statusUpdated="handleStatusUpdate"-->
-                <statusbuttons :postId="report.post_id" :reportedUserId="report.user_id"  @statusUpdated="handleStatusUpdate" />
+                <!-- v-if="report.post_type != 'Missing Report'" -->
+                <missingstatusbutton v-if="report.post_type == 'Missing Report'" :postId="report.post_id"
+                    :reportedUserId="report.user_id" :reportDetails="report" />
+                <statusbuttons v-else :postId="report.post_id" :reportedUserId="report.user_id" :reportDetails="report"
+                    @statusUpdated="handleStatusUpdate" />
             </div>
         </div>
     </div>

@@ -3,7 +3,7 @@
         <div class="lg:grid min-h-screen lg:grid-cols-12">
             <aside class="bg-blue-50 w-full right-[6%] relative lg:order-last lg:col-span-5 lg:h-full hidden lg:block ">
                 <!-- Check if this image is causing issues -->
-                <img alt="" :src="require('@/assets/images/home_animalshelter_slider_pic4.png')"
+                <img alt="" :src="require('@/assets/images/home_animalshelter.png')"
                     class="absolute inset-0 my-20 mx-16 h-[90%] w-[90%] object-contain " />
             </aside>
 
@@ -148,6 +148,7 @@ export default {
                 this.userPassword = UserPassword.value; // Get password value
 
                 await this.getUser(); // Call getUser method
+                console.log("cred", this.userEmail, this.userPassword)
             } catch (err) {
                 console.log(err); // Log any errors
             }

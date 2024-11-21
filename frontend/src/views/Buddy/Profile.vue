@@ -24,13 +24,12 @@ const selectedProfileViewDetailsId = ref(null);
 const toggleModalProfileViewDetails = (id) => {
   if (selectedProfileViewDetailsId.value === id) {
     selectedProfileViewDetailsId.value = null;
-    viewpostflag.value = false;
+    selectedProfileViewDetails.value = null;
     console.log("Profile modal closed");
   } else {
     selectedProfileViewDetailsId.value = id;
-    const pet = petprofiles.value.find(pet => pet.id === selectedProfileViewDetailsId.value);
-    if (pet) selectedProfileViewDetails.value = pet;
-    viewpostflag.value = true;
+    selectedProfileViewDetails.value = petprofiles.value.find(pet => pet.id === id) || null;
+    console.log("Profile modal opened for ID:", id);
   }
 };
 // end
@@ -64,6 +63,12 @@ const toggleModalViewDetails = (id) => {
     if (foundPost) selectedPostDetails.value = foundPost;
   }
 };
+
+async function getid(id) {
+  selectedPostViewDetailsId.value = id;
+  const foundPost = buddyPosts.value.find(post => post.post_id === selectedPostViewDetailsId.value);
+  if (foundPost) selectedPostDetails.value = foundPost;
+}
 
 async function getUserDetails() {
   try {
@@ -216,7 +221,7 @@ function hasMultiplePhotos(photo_display_url) {
         <div v-if="selectedTab === 'Profile'" class="sm:mx-0 md:mx-8">
           <div v-if="petprofiles && petprofiles.length > 0">
             <div class="flex justify-between items-center mb-4">
-              <h1 class="font-semibold sm:text-base md:text-lg">My Pet Profile's</h1>
+              <h1 class="font-semibold sm:text-base md:text-lg">My Pet Profiles</h1>
 
               <!-- reusing the profile_CreateNewProfile.vue -->
               <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'create' } }"
@@ -242,7 +247,8 @@ function hasMultiplePhotos(photo_display_url) {
                       && Profile.profileurl != 1"
                       class="absolute top-2 right-2 h-5 w-5 text-white group-hover:opacity-75" />
                   </button>
-                  <viewprofiledetials v-if="viewpostflag == true" :selectedProfileDetails="selectedProfileViewDetails"
+                  <viewprofiledetials v-if="selectedProfileViewDetailsId === Profile.id"
+                    :selectedProfileDetails="selectedProfileViewDetails"
                     @close="toggleModalProfileViewDetails(Profile.id)" />
                 </li>
               </ul>

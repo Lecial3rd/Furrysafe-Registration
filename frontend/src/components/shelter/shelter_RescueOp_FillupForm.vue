@@ -350,7 +350,23 @@ async function loadPetStatus() { // load pet status... tf do u want
 }
 const currentUser_id = ref(localStorage.getItem('u_id'));
 const receiverId = ref(null)
+
+// Define error state for each field
+const isNameError = ref(false);
+const isGenderError = ref(false);
+// const isPetError = ref(false);
+const isSterilizationError = ref(false);
+const isStatusError = ref(false);
+
 async function retrieveData() {
+
+    // Nov20 Reset errors before validation
+    isNameError.value = false;
+    isGenderError.value = false;
+    // isPetError.value = false;
+    isSterilizationError.value = false;
+    isStatusError.value = false;
+
     const formData = new FormData();
     const vaccineArray = getSelectedVaccineIds();
 
@@ -394,7 +410,7 @@ async function retrieveData() {
     // Append data entries to FormData
     entries.forEach(([key, value]) => formData.append(key, value));
 
-    // Validate required fields
+    // Nov20 not use Validate required fields
     const name_ = formData.get('name');
     const gender_ = formData.get('gender');
     const pet_ = formData.get('pet_category_id');
@@ -403,9 +419,22 @@ async function retrieveData() {
     const steril_ = formData.get('other_sterilization');
     const steril2_ = formData.get('sterilization_id');
 
-    for (const [key, value] of formData.entries()) {
-        console.log(`Formdata: ${key}: ${value}`);
+    if (!name.value) {
+        isNameError.value = true;
     }
+
+    if (!gender.value) {
+        isGenderError.value = true;
+    }
+
+    if (!selectedSterilization.value) {
+        isSterilizationError.value = true;
+    }
+
+    if (!selectedstatus.value) {
+        isStatusError.value = true;
+    }
+
 
     if (name_ && gender_ && status_ && (pet_ || pet2_) && (steril_ || steril2_)) {
         try {
@@ -740,12 +769,20 @@ const open = ref(true);
                                                 </div>
                                                 <div class="mt-[1rem] grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                                                     <div class="md:col-span-3 sm:col-span-full">
-                                                        <label for="given-name"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Name</label>
+                                                        <div class="flex gap-x-1 items-center">
+                                                            <label for="given-name"
+                                                                class="block text-sm font-medium leading-6 text-gray-900">Name</label>
+                                                            <span v-if="isNameError"
+                                                                class="text-red-600 text-[12px] text-center">*Pet name
+                                                                is
+                                                                required.</span>
+                                                        </div>
                                                         <div class="mt-2">
                                                             <input v-model="name" type="text" name="given-name"
-                                                                id="given-name" autocomplete="given-name"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
+                                                                id="given-name" autocomplete="given-name" :class="[
+                                                                    'block w-full rounded-md py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6',
+                                                                    { 'ring-red-300': isNameError }
+                                                                ]" />
                                                         </div>
                                                     </div>
                                                     <div class="md:col-span-3 sm:col-span-full">
@@ -764,18 +801,22 @@ const open = ref(true);
                                                         <div class="mt-2">
                                                             <input v-model="daterehomed" type="date" name="rehome"
                                                                 id="rehome"
-                                                                class="border p-1 rounded-lg px-[1rem] w-full">
+                                                                class="border p-1 bg-gray-100 rounded-lg px-[1rem] w-full"
+                                                                :disabled="true">
                                                         </div>
                                                     </div>
                                                     <div id="anitype" class="lg:col-span-2 sm:col-span-full">
-                                                        <label for="animaltype"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Pet
-                                                            Type</label>
+                                                        <div class="flex gap-x-1 items-center">
+                                                            <label for="animaltype"
+                                                                class="block text-sm font-medium leading-6 text-gray-900">
+                                                                Pet Type</label>
+                                                        </div>
                                                         <div class="mt-2">
                                                             <select v-if="selectedAnimalType !== 'Other'"
                                                                 id="animaltype" name="animaltype"
                                                                 v-model="selectedAnimalType"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 bg-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6"
+                                                                :disabled="true">
                                                                 <option value="" selected disabled hidden>Select Animal
                                                                     Type</option>
                                                                 <option v-for="(item, index) in animalCategory"
@@ -842,12 +883,19 @@ const open = ref(true);
                                                         </div>
                                                     </div>
                                                     <div id="gender" class="lg:col-span-1 sm:col-span-full">
-                                                        <label for="animalGender"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Gender</label>
+                                                        <div class="flex gap-x-1 items-center">
+                                                            <label for="animalGender"
+                                                                class="block text-sm font-medium leading-6 text-gray-900">Gender</label>
+                                                            <span v-if="isGenderError"
+                                                                class="text-red-600 text-[12px] text-center">*Pet Gender
+                                                                is
+                                                                required.</span>
+                                                        </div>
                                                         <div class="mt-2">
                                                             <select v-model="selectedGender" id="animalGender"
-                                                                name="animalGender"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                                                                name="animalGender" :class="[
+                                                                    'block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6',
+                                                                    { 'ring-red-300': isGenderError }]">
                                                                 <option value="" selected disabled hidden>Select Gender
                                                                 </option>
                                                                 <option value="male">Male</option>
@@ -904,11 +952,17 @@ const open = ref(true);
                                                         </div>
                                                     </div>
                                                     <div id="lvl" class="md:col-span-2 sm:col-span-full">
-                                                        <label for="status"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Status</label>
+                                                        <div class="flex gap-x-1 items-center">
+                                                            <label for="status"
+                                                                class="block text-sm font-medium leading-6 text-gray-900">Status</label>
+                                                            <span v-if="isStatusError"
+                                                                class="text-red-600 text-[12px] text-center">
+                                                                *Pet Status is required.</span>
+                                                        </div>
                                                         <div class="mt-2">
                                                             <select id="status" name="status" v-model="selectedstatus"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                                                                :class="['block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6',
+                                                                    { 'ring-red-300': isStatusError }]">
                                                                 <option value="" selected disabled hidden>Select Pet
                                                                     Status</option>
                                                                 <option v-for="(status, index) in status" :key="index"
@@ -988,9 +1042,16 @@ const open = ref(true);
                                                         </div>
                                                     </div>
                                                     <div v-if="categoriesLoaded" class="sm:col-span-full">
-                                                        <h4 class="font-medium text-gray-900">
-                                                            Has this animal been sterilized?
-                                                        </h4>
+                                                        <div class="flex gap-x-1 items-center">
+                                                            <h4 class="font-medium text-gray-900">
+                                                                Has this animal been sterilized?
+                                                            </h4>
+                                                            <span v-if="isSterilizationError"
+                                                                class="text-red-600 text-[12px] text-center">*Pet
+                                                                sterilization
+                                                                is
+                                                                required.</span>
+                                                        </div>
                                                         <div v-for="[categoryname, options] in Object.entries(categoriesRaw)"
                                                             :key="categoryname" class="mt-4 space-y-2">
                                                             <span v-if="categoryname !== 'None'"

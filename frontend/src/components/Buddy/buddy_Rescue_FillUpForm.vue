@@ -1,455 +1,3 @@
-<template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @click.self="$emit('close')">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
-                leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-40 transition-opacity" />
-            </TransitionChild>
-            <div class="fixed inset-0 z-10 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300"
-                        enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
-                        leave-from="opacity-100 translate-y-0 sm:scale-100"
-                        leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel
-                            class="relative transform overflow-hidden rounded-lg mx-4 bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-fit sm:p-6">
-
-                            <div class="mt-3 text-center sm:mx-4 sm:mt-0 sm:text-left">
-                                <div class="flex justify-end">
-                                    <button @click="$emit('close')" ref="cancelButtonRef">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" class="w-4 h-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <DialogTitle as="h3"
-                                    class="mb-[1.5rem] text-2xl font-semibold leading-6 text-gray-700 flex justify-center">
-                                    Pet Information Form
-                                </DialogTitle>
-
-                                <!-- start content -->
-                                <div>
-                                    <form class="xl:w-[70rem]">
-                                        <div class="space-y-12 sm:mx-[2rem] my-[2.5rem]">
-                                            <div class="border-b border-gray-900/10 pb-7">
-                                                <div
-                                                    class="mt-4 border-t pt-[2rem] grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                                                    <div class="md:col-span-3 sm:col-span-full">
-                                                        <label for="profile-photo"
-                                                            class="block text-base font-medium leading-6 text-gray-900">
-                                                            Profile photo</label>
-                                                        <div :class="{ 'py-5': !selectedImage, 'py-2': selectedImage }"
-                                                            class="mt-2 flex justify-center rounded-lg outline-2 outline-dashed outline-gray-300">
-                                                            <div class="text-center" v-if="!selectedImage">
-                                                                <PhotoIcon class="mx-auto h-12 w-12 text-gray-300"
-                                                                    aria-hidden="true" />
-                                                                <div
-                                                                    class="mt-4 flex text-sm leading-6 text-gray-600 justify-center">
-                                                                    <label for="profile-photo"
-                                                                        class="relative cursor-pointer rounded-md font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-teal-600 focus-within:ring-offset-2 hover:text-teal-500">
-                                                                        <span>Upload a file</span>
-                                                                        <input id="profile-photo" ref="profileInput"
-                                                                            name="profile-photo" type="file"
-                                                                            class="sr-only"
-                                                                            @change="handleFileChange" />
-                                                                    </label>
-                                                                </div>
-                                                                <p class="text-xs leading-5 text-gray-600">PNG, JPG, GIF
-                                                                    up to 10MB</p>
-                                                            </div>
-                                                            <div v-else
-                                                                class="flex justify-center items-center h-full w-full relative">
-                                                                <img :src="selectedImage"
-                                                                    class="max-w-[15rem] max-h-[15rem] rounded-md" />
-                                                                <button @click="clearImage"
-                                                                    class="absolute top-2 sm:right-[1rem] lg:right-[8.1rem] text-gray-600 hover:text-red-600">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                        class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                                                        stroke="currentColor">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round" stroke-width="2"
-                                                                            d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="mt-[1rem] grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                                                    <div class="md:col-span-3 sm:col-span-full">
-                                                        <label for="given-name"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Temporary Name</label>
-                                                        <div class="mt-2">
-                                                            <input v-model="name" type="text" name="given-name"
-                                                                id="given-name" autocomplete="given-name"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div>
-                                                    <!-- <div class="md:col-span-3 sm:col-span-full">
-                                                        <label for="alias"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Nickname</label>
-                                                        <div class="mt-2">
-                                                            <input v-model="nickname" type="text" name="alias"
-                                                                id="alias"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div> -->
-                                                    <div id="rehomed" class="lg:col-span-1 sm:col-span-full">
-                                                        <label for="rehome"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">
-                                                            Date Re-homed</label>
-                                                        <div class="mt-2">
-                                                            <input v-model="daterehomed" type="date" name="rehome"
-                                                                id="rehome"
-                                                                class="border p-1 rounded-lg px-[1rem] w-full">
-                                                        </div>
-                                                    </div>
-                                                    <div id="anitype" class="lg:col-span-2 sm:col-span-full">
-                                                        <label for="animaltype"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Pet
-                                                            Type</label>
-                                                        <div class="mt-2">
-                                                            <select v-if="selectedAnimalType !== 'Other'"
-                                                                id="animaltype" name="animaltype"
-                                                                v-model="selectedAnimalType"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
-                                                                <option value="" selected disabled hidden>Select Animal
-                                                                    Type</option>
-                                                                <option v-for="(item, index) in animalCategory"
-                                                                    :key="index" :value="item.id">{{
-                                                                        item.pet_category }}</option>
-                                                                <option value="Other">Other</option>
-                                                                <!-- Make sure this value matches the check -->
-                                                            </select>
-                                                            <div v-else class="flex gap-2 items-center">
-                                                                <input type="text" v-model="animaltype"
-                                                                    name="animaltype" id="animaltype"
-                                                                    placeholder="Type of Furry Animal"
-                                                                    class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                                <button @click="clearAnimalTypeInput" class="w-4 h-4">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                        viewBox="0 0 24 24" fill="none"
-                                                                        stroke="currentColor" stroke-width="2">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round"
-                                                                            d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- <div id="breed" class="lg:col-span-2 sm:col-span-full">
-                                                        <label for="animalbreed"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">
-                                                            Breed / Mix</label>
-                                                        <div class="mt-2"> -->
-                                                            <!-- Display the dropdown when selectedAnimalTypeString is not 'Other' -->
-                                                            <!-- <select
-                                                                v-if="selectedAnimalTypeString && selectedBreedString !== 'Other'"
-                                                                id="animalbreed" name="animalbreed"
-                                                                v-model="selectedAnimalBreed"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
-                                                                <option value="" selected disabled hidden>Select {{
-                                                                    selectedAnimalTypeString }}
-                                                                    Breed/Mix</option>
-                                                                <option v-for="(breed, index) in breedCategory"
-                                                                    :key="index" :value="breed.id">{{
-                                                                        breed.name }}</option>
-                                                                <option value="Other">Other</option>
-                                                            </select> -->
-
-                                                            <!-- Display the text input when selectedAnimalTypeString is 'Other' -->
-                                                            <!-- <div v-else class="flex gap-2 items-center">
-                                                                <input type="text" v-model="animalbreed"
-                                                                    name="animalbreed" id="animalbreed"
-                                                                    :placeholder="selectedBreedString === 'Other' ? 'Type of Furry Animal Breed/Mix' : `Type of ${selectedAnimalTypeString} Breed/Mix`"
-                                                                    class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                                <button v-if="selectedBreedString === 'Other'"
-                                                                    @click.prevent="clearAnimalTypeBreed"
-                                                                    class="w-4 h-4 lg:mr-[1rem]">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                        viewBox="0 0 24 24" fill="none"
-                                                                        stroke="currentColor" stroke-width="2">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round"
-                                                                            d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div> -->
-                                                    <div id="gender" class="lg:col-span-1 sm:col-span-full">
-                                                        <label for="animalGender"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Gender</label>
-                                                        <div class="mt-2">
-                                                            <select v-model="selectedGender" id="animalGender"
-                                                                name="animalGender"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
-                                                                <option value="" selected disabled hidden>Select Gender
-                                                                </option>
-                                                                <option value="male">Male</option>
-                                                                <option value="female">Female</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <!-- <div id="fur" class="md:col-span-4 sm:col-span-full">
-                                                        <label for="coatfur"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">
-                                                            Coat / Fur</label>
-                                                        <div class="mt-2">
-                                                            <input v-model="coat" type="text" name="coatfur"
-                                                                id="coatfur"
-                                                                placeholder="ex. Short, dark-brown coat with a slight wave"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div>
-                                                    <div id="age" class="md:col-span-2 sm:col-span-full">
-                                                        <label for="animalAge"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Age</label>
-                                                        <div class="mt-2">
-                                                            <input v-model="age" type="number" name="animalAge"
-                                                                id="animalAge" placeholder="Ex. 2 yrs old"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div> -->
-                                                    <!-- <div id="size" class="md:col-span-4 sm:col-span-full">
-                                                        <label for="animalSize"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Size</label>
-                                                        <div class="mt-2">
-                                                            <input v-model="sizeweight" type="text" name="animalSize"
-                                                                id="animalSize"
-                                                                placeholder="ex. 38 pounds, 59 inches tall"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div>
-                                                    <div id="lvl" class="md:col-span-2 sm:col-span-full">
-                                                        <label for="energyLvl"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Energy
-                                                            Level</label>
-                                                        <div class="mt-2">
-                                                            <select id="energyLvl" name="energyLvl"
-                                                                @change="getSelectedOption($event)"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
-                                                                <option value="" selected disabled hidden>Select Energy
-                                                                    Level Status</option>
-                                                                <option>Low</option>
-                                                                <option>Medium</option>
-                                                                <option>Medium-High</option>
-                                                                <option>High</option>
-                                                                <option>Very High</option>
-                                                            </select>
-                                                        </div>
-                                                    </div> -->
-                                                    <!-- <div id="lvl" class="md:col-span-2 sm:col-span-full">
-                                                        <label for="status"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Status</label>
-                                                        <div class="mt-2">
-                                                            <select id="status" name="status" v-model="selectedstatus"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
-                                                                <option value="" selected disabled hidden>Select Pet
-                                                                    Status</option>
-                                                                <option v-for="(status, index) in status" :key="index"
-                                                                    :value="status.id">{{
-                                                                        status.name }} </option>
-                                                            </select>
-                                                        </div>
-                                                    </div> -->
-                                                    <!-- <div class="col-span-full border-t border-gray-900/10">
-                                                        <div class="border-b border-gray-900/10 py-5">
-                                                            <h2 class="text-base font-semibold leading-7 text-gray-900">
-                                                                Health and Medical</h2>
-                                                            <p class="mt-1 text-sm leading-6 text-gray-600">Provide
-                                                                details about the animal's
-                                                                current health, including vaccinations, medical
-                                                                conditions, and treatment history.
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-span-full">
-                                                        <div class="lg:flex items-center gap-3">
-                                                            <h4
-                                                                class="block text-sm font-medium leading-6 text-gray-900">
-                                                                Vaccinations Status</h4>
-                                                            <p class="font-normal text-[13px] text-gray-500">( Please
-                                                                select one or more of the
-                                                                following vaccination options this animal has received.
-                                                                )</p>
-                                                        </div>
-                                                        <div
-                                                            class="mt-4 grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-1 gap-y-2 text-sm leading-6">
-                                                            <div v-for="(option, index) in displayVaccines" :key="index"
-                                                                class="flex items-center mx-6">
-                                                                <div>
-                                                                    <input type="checkbox"
-                                                                        :id="'checkbox' + (index + 1)"
-                                                                        v-model="selectedVaccines" :value="option.name"
-                                                                        class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600">
-                                                                </div>
-                                                                <div>
-                                                                    <label :for="'checkbox' + (index + 1)"
-                                                                        class="font-medium text-gray-600 pl-[.50rem]">{{
-                                                                            option.name }}</label>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-span-full">
-                                                                <label for=""
-                                                                    class="block text-sm font-medium leading-6 text-gray-900">Other
-                                                                    Vaccines</label>
-                                                                <div class="mt-2 flex gap-x-3">
-                                                                    <textarea v-model="otherVaccines"
-                                                                        class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6"></textarea>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-span-full">
-                                                        <label for="MedConditions"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">
-                                                            Medical Conditions
-                                                        </label>
-                                                        <div class="mt-2 flex gap-x-3">
-                                                            <textarea type="text" v-model="medicalcondition"
-                                                                name="MedConditions" id="MedConditions"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="sm:col-span-full">
-                                                        <label for="specialNeeds"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">
-                                                            Special Needs
-                                                        </label>
-                                                        <div class="mt-2 flex gap-x-3">
-                                                            <textarea type="text" v-model="specialneed"
-                                                                name="specialNeeds" id="specialNeeds"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div>
-                                                    <div v-if="categoriesLoaded" class="sm:col-span-full">
-                                                        <h4 class="font-medium text-gray-900">
-                                                            Has this animal been sterilized?
-                                                        </h4>
-                                                        <div v-for="[categoryname, options] in Object.entries(categoriesRaw)"
-                                                            :key="categoryname" class="mt-4 space-y-2">
-                                                            <span v-if="categoryname !== 'None'"
-                                                                class="font-medium text-sm text-gray-900">
-                                                                {{ categoryname }}
-                                                            </span>
-                                                            <div v-if="options.length > 0"
-                                                                v-for="(option, index) in options" :key="index"
-                                                                class="relative flex gap-x-3">
-                                                                <div class="flex h-6 items-center">
-                                                                    <input :id="option.id" name="spayNeuterStatus"
-                                                                        type="radio" :value="option.name"
-                                                                        v-model="selectedSterilization"
-                                                                        class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
-                                                                        @input="selectedValue = $event.target.value" />
-                                                                </div>
-                                                                <div class="lg:flex text-sm leading-6">
-                                                                    <label :for="option.id"
-                                                                        class="font-medium text-gray-700 pr-[1rem]">
-                                                                        {{ option.name }}
-                                                                    </label>
-                                                                    <p class="text-gray-600">{{ option.description }}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div> -->
-                                                    <!-- <div class="col-span-full border-t border-gray-900/10">
-                                                        <div class="border-b border-gray-900/10 py-5">
-                                                            <h2 class="text-base font-semibold leading-7 text-gray-900">
-                                                                Other Information
-                                                            </h2>
-                                                            <p class="mt-1 text-sm leading-6 text-gray-600">
-                                                                Share other important information related to this furry
-                                                                animal. This
-                                                                information
-                                                                you've provided for this animal can
-                                                                help potential adopters to learn more about its
-                                                                background, personality, and
-                                                                needs.
-                                                            </p>
-                                                        </div>
-                                                    </div> -->
-                                                    <!-- <div class="col-span-full">
-                                                        <label for="aboutInfo"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">
-                                                            Tell me more about this Furry Animal</label>
-                                                        <div class="mt-2">
-                                                            <textarea v-model="about" id="aboutInfo" name="aboutInfo"
-                                                                rows="3"
-                                                                class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
-                                                        </div>
-                                                    </div> -->
-                                                    <div class="col-span-full">
-                                                        <label for="otherPhotos"
-                                                            class="block text-sm font-medium leading-6 text-gray-900">Photos</label>
-                                                        <div class="px-[1rem] py-[1rem]">
-                                                            <div class="px-4 sm:col-span-2 sm:px-0">
-                                                                <ul role="list"
-                                                                    class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
-                                                                    <li v-for="(file, index) in files"
-                                                                        :key="file.source" class="relative">
-                                                                        <div
-                                                                            class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
-                                                                            <img :src="file.url" alt=""
-                                                                                class="pointer-events-none object-cover" />
-                                                                            <button @click="removeImage(index)"
-                                                                                class="absolute top-0 right-0 p-1 text-gray-600 hover:text-red-600">
-                                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    viewBox="0 0 24 24" fill="none"
-                                                                                    stroke="currentColor"
-                                                                                    stroke-width="2" class="w-4 h-4">
-                                                                                    <path stroke-linecap="round"
-                                                                                        stroke-linejoin="round"
-                                                                                        d="M6 18L18 6M6 6l12 12" />
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                            <div class="mt-3">
-                                                                <label for="otherPhotos"
-                                                                    class="cursor-pointer flex items-center gap-x-2">
-                                                                    <input type="file" multiple
-                                                                        @change="handleMultipleFileChange"
-                                                                        id="otherPhotos" ref="otherPhotos"
-                                                                        class="hidden" />
-                                                                    <img width="24" height="24"
-                                                                        src="https://img.icons8.com/fluency/48/stack-of-photos.png"
-                                                                        alt="stack-of-photos" />
-                                                                    <span
-                                                                        class="font-medium text-gray-700 text-[14px]">Add
-                                                                        more
-                                                                        photos</span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center justify-end gap-x-6">
-                                                <button type="button" @click="retrieveData"
-                                                    class="rounded-md bgteal px-[2rem] py-2 text-sm font-semibold text-white shadow-sm hover:bg-bgteal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
-                                                    Save Information
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                                <!-- end content -->
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
-</template>
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch, computed, toRaw, defineProps } from 'vue'
 import axios from "axios"
@@ -457,9 +5,17 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import { PhotoIcon } from '@heroicons/vue/24/solid'
 import { useRouter } from 'vue-router';
 
-
 const emit = defineEmits(['close', 'post-created']) // for closing the modal with close button - joey added
-const props = defineProps(['postId']);
+const props = defineProps({
+    postId: {
+        type: Number, // specify type if needed
+        required: true // set required to true if postId is always needed
+    },
+    reportDetails: {
+        type: Object,
+        required: false
+    }
+});
 console.log('Received postId:', props.postId); // Debug line
 
 // to close press esc
@@ -467,6 +23,8 @@ onMounted(() => {
     const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
     window.addEventListener('keydown', closeModalOnEsc)
     onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+
+    console.log("logging", props.reportDetails)
 })
 
 const toastRef = ref(null);
@@ -802,8 +360,8 @@ async function retrieveData() {
 
     // Log FormData contents
     for (let [key, value] of formData.entries()) {
-    console.log(key, value);
-}
+        console.log(key, value);
+    }
 
     // Validate required fields
     const name_ = formData.get('name');
@@ -815,95 +373,63 @@ async function retrieveData() {
     const steril2_ = formData.get('sterilization_id');
 
     if (!name.value || !selectedAnimalType.value || !selectedGender.value) {
-    console.error("Required fields are missing");
-    return; // Prevent submission if required fields are missing
-    
-}
+        console.error("Required fields are missing");
+        return; // Prevent submission if required fields are missing
+
+    }
     try {
         // Save pet profile
         const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         console.log("Response from save_pet_profile:", response.data);
-        
+
         if (response.data.success) {
             const postId = props.postId; // Ensure this is correctly returned from the API
             const shelterId = localStorage.getItem('c_id');
-            
+
             console.log("Post ID:", postId);
             console.log("Shelter ID:", shelterId);
-            
+
             if (postId && shelterId) {
                 // Confirm rescue
                 const rescueResponse = await axios.post("http://localhost:5000/confirmRescue", {
                     post_id: postId,
                     shelter_id: shelterId
+                });
+
+                console.log("Response from confirmRescue:", rescueResponse.data);
+
+                if (rescueResponse.data.success) {
+                    emit('close');
+
+                    navigateTo({
+                        path: "/buddy_home",
+                        query: { showToast: true, message: 'Pet Profile Saved and Rescued Successfully', from: 'create' }
                     });
-                    
-                    console.log("Response from confirmRescue:", rescueResponse.data);
-
-                    if (rescueResponse.data.success) {
-                        emit('close');
-                        
-                        navigateTo({
-                            path: "/buddy_home",
-                            query: { showToast: true, message: 'Pet Profile Saved and Rescued Successfully', from: 'create' }
-                        });
 
 
-                    } else {
-                        console.error('Failed to confirm rescue:', rescueResponse.data.message);
-                    }
                 } else {
-                    console.error('Post ID or Shelter ID is undefined');
+                    console.error('Failed to confirm rescue:', rescueResponse.data.message);
                 }
             } else {
-                console.error('Failed to save profile:', response.data.message);
+                console.error('Post ID or Shelter ID is undefined');
             }
-        } catch (err) {
-            console.error("Error occurred during the process:", err);
-            if (err.response) {
-                console.error("Response data:", err.response.data); // Log server response
-                console.error("Response status:", err.response.status); // Log status code
-                }
-            }
+        } else {
+            console.error('Failed to save profile:', response.data.message);
+        }
+    } catch (err) {
+        console.error("Error occurred during the process:", err);
+        if (err.response) {
+            console.error("Response data:", err.response.data); // Log server response
+            console.error("Response status:", err.response.status); // Log status code
+        }
+    }
 }
 
-async function sendMessagetoUser(){
-    
+async function sendMessagetoUser() {
+
 }
-
-// async function savePetProfile(formData) {
-//     console.log("Profile data being sent to server:", formData); // Log the FormData contents
-
-//     try {
-//         const response = await axios.post("http://localhost:5000/save_pet_profile", formData, {
-//             headers: { 'Content-Type': 'multipart/form-data' } // Ensure correct header
-//         });
-
-//         console.log("Response from server:", response.data); // Log the response from the server
-
-//         if (response.data.success) {
-//             navigateTo({
-//                 path: "/animalprofile",
-//                 query: { showToast: true, message: 'Pet Profile Saved Successfully', from: 'create' }
-//             });
-//         } else {
-//             console.error('Failed to save profile:', response.data.message);
-//             if (toastRef.value) {
-//                 toastRef.value.showToast('Error: ' + response.data.message); // Show error message
-//             }
-//         }
-//     } catch (err) {
-//         console.error("Error occurred while saving pet profile:", err);
-//         if (toastRef.value) {
-//             toastRef.value.showToast('An error occurred: ' + err.message); // Show error message
-//         }
-//     }
-// }
-
-
-//SMALL FUNCTIONS
 
 const removeImage = (index) => {
     files.value.splice(index, 1)
@@ -1002,3 +528,202 @@ onMounted(() => { //pag load sa page mag load ni =)
 // Reactive state
 const open = ref(true);
 </script>
+<template>
+    <TransitionRoot as="template" :show="open">
+        <Dialog as="div" class="relative z-50" @click.self="$emit('close')">
+            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
+                leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-40 transition-opacity" />
+            </TransitionChild>
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                    <TransitionChild as="template" enter="ease-out duration-300"
+                        enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                        enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
+                        leave-from="opacity-100 translate-y-0 sm:scale-100"
+                        leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                        <DialogPanel
+                            class="relative transform overflow-hidden rounded-lg mx-4 bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full md:max-w-[50rem] sm:p-6">
+                            <div class="flex justify-between items-center">
+                                <DialogTitle as="h3" class="text-2xl font-semibold leading-6 text-gray-900">
+                                    Pet Rescue Information Form
+                                </DialogTitle>
+                                <button @click="$emit('close')" ref="cancelButtonRef"
+                                    class="text-gray-500 hover:text-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" class="w-7 h-7">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="mt-3 text-center sm:mx-4 sm:mt-0 sm:text-left">
+
+                                <form>
+                                    <div class="my-4 grid grid-cols-6 gap-x-6 gap-y-4">
+                                        <div class="col-span-full">
+                                            <label for="profile-photo"
+                                                class="block text-base font-medium leading-6 text-gray-900">
+                                                Profile photo</label>
+                                            <div :class="{ 'py-5': !selectedImage, 'py-2': selectedImage }"
+                                                class="mt-2 flex justify-center rounded-lg outline-2 outline-dashed outline-gray-300">
+                                                <div class="text-center" v-if="!selectedImage">
+                                                    <PhotoIcon class="mx-auto h-12 w-12 text-gray-300"
+                                                        aria-hidden="true" />
+                                                    <div
+                                                        class="mt-4 flex text-sm leading-6 text-gray-600 justify-center">
+                                                        <label for="profile-photo"
+                                                            class="relative cursor-pointer rounded-md font-semibold text-teal-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-teal-600 focus-within:ring-offset-2 hover:text-teal-500">
+                                                            <span>Upload a file</span>
+                                                            <input id="profile-photo" ref="profileInput"
+                                                                name="profile-photo" type="file" class="sr-only"
+                                                                @change="handleFileChange" />
+                                                        </label>
+                                                    </div>
+                                                    <p class="text-xs leading-5 text-gray-600">
+                                                        PNG, JPG, GIF up to 10MB</p>
+                                                </div>
+                                                <div v-else
+                                                    class="flex justify-center items-center h-full w-full relative">
+                                                    <img :src="selectedImage"
+                                                        class="max-w-[15rem] max-h-[15rem] rounded-md" />
+                                                    <button @click="clearImage"
+                                                        class="absolute top-2 sm:right-[1rem] lg:right-[8.1rem] text-gray-600 hover:text-red-600">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4 col-span-full">
+                                            <label for="given-name"
+                                                class="block text-sm font-medium leading-6 text-gray-900">
+                                                Pet Name</label>
+                                            <div class="mt-2">
+                                                <input v-model="name" type="text" name="given-name" id="given-name"
+                                                    autocomplete="given-name"
+                                                    class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
+                                            </div>
+                                        </div>
+
+                                        <div id="rehomed" class="sm:col-span-full md:col-span-2">
+                                            <label for="rehome"
+                                                class="block text-sm font-medium leading-6 text-gray-900">
+                                                Date Re-homed</label>
+                                            <div class="mt-2">
+                                                <input v-model="daterehomed" type="date" name="rehome" id="rehome"
+                                                    class="border p-1 rounded-lg px-[1rem] w-full">
+                                            </div>
+                                        </div>
+
+                                        <div id="anitype" class="sm:col-span-full md:col-span-2">
+                                            <label for="animaltype"
+                                                class="block text-sm font-medium leading-6 text-gray-900">
+                                                Pet Type</label>
+                                            <div class="mt-2 w-full">
+                                                <select v-if="selectedAnimalType !== 'Other'" id="animaltype"
+                                                    name="animaltype" v-model="selectedAnimalType"
+                                                    class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                                                    <option value="" selected disabled hidden>
+                                                        Select Animal Type</option>
+                                                    <option v-for="(item, index) in animalCategory" :key="index"
+                                                        :value="item.id">{{
+                                                            item.pet_category }}</option>
+                                                    <option value="Other">Other</option>
+                                                    <!-- Make sure this value matches the check -->
+                                                </select>
+                                                <div v-else class="flex gap-2 items-center">
+                                                    <input type="text" v-model="animaltype" name="animaltype"
+                                                        id="animaltype" placeholder="Type of Furry Animal"
+                                                        class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:text-sm sm:leading-6" />
+                                                    <button @click="clearAnimalTypeInput" class="w-4 h-4">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                            fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="gender" class="sm:col-span-full md:col-span-2">
+                                            <label for="animalGender"
+                                                class="block text-sm font-medium leading-6 text-gray-900">Gender</label>
+                                            <div class="mt-2">
+                                                <select v-model="selectedGender" id="animalGender" name="animalGender"
+                                                    class="block w-full rounded-md border-0 py-1.5 px-[1rem] text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-teal-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                                                    <option value="" selected disabled hidden>Select Gender
+                                                    </option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-span-full">
+                                            <label for="otherPhotos"
+                                                class="block text-sm font-medium leading-6 text-gray-900">Photos</label>
+                                            <div>
+                                                <div v-if="files.length > 0"
+                                                    class="outline-dashed outline-2 outline-offset-3 outline-gray-200 rounded-lg p-2 my-2">
+                                                    <div class="px-4 my-2 sm:col-span-2">
+                                                        <ul role="list"
+                                                            class="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-1 sm:gap-x-4 md:grid-cols-3">
+                                                            <li v-for="(file, index) in files" :key="file.source"
+                                                                class="relative">
+                                                                <div
+                                                                    class="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-md bg-gray-100 focus-within:ring-2 focus-within:ring-teal-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                                                                    <img :src="file.url" alt=""
+                                                                        class="pointer-events-none w-full sm:h-52 lg:h-40 object-cover" />
+                                                                    <button @click.prevent="removeImage(index)"
+                                                                        class="absolute top-0 right-0 p-1 text-red-500 hover:text-red-700">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            viewBox="0 0 24 24" fill="none"
+                                                                            stroke="currentColor" stroke-width="2"
+                                                                            class="w-6 h-6">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                                d="M6 18L18 6M6 6l12 12" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-3 px-4 w-fit">
+                                                    <label for="otherPhotos"
+                                                        class="cursor-pointer flex items-center gap-x-2">
+                                                        <input type="file" multiple @change="handleMultipleFileChange"
+                                                            id="otherPhotos" ref="otherPhotos" class="hidden" />
+                                                        <img width="30" height="30"
+                                                            src="https://img.icons8.com/fluency/30/stack-of-photos.png"
+                                                            alt="stack-of-photos" />
+                                                        <span class="font-medium text-gray-500 text-[14px]">
+                                                            Add more photos</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-end gap-x-6">
+                                        <button type="button" @click="retrieveData"
+                                            class="rounded-md bgteal px-[2rem] py-2 text-sm font-semibold text-white shadow-sm hover:bg-lightteal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
+                                            Save Information
+                                        </button>
+                                    </div>
+                                </form>
+                                <!-- end content -->
+                            </div>
+                        </DialogPanel>
+                    </TransitionChild>
+                </div>
+            </div>
+        </Dialog>
+    </TransitionRoot>
+</template>

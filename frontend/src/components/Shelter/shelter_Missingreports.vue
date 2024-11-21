@@ -30,22 +30,26 @@ const handleStatusUpdate = () => {
 let selectedPost = ref(null)
 let posts = ref([])
 let selectedPostDetails = ref([])
-let _shelter_id = localStorage.getItem('c_id')
-async function retrieveReports() {
+let _user_id = localStorage.getItem('u_id')
+async function retrieveReports() { //display
     try {
         console.log("retrieveReports")
-        const response = await axios.post("", {
-            _shelter_id: _shelter_id,
-            _status: 'Pending'
+        const response = await axios.post("http://localhost:5000/getereports", {
+            _post_id: selectedPost.value,
+            _post_type: 2,
+            _report_status: 'Pending' // Nov12 'In progress'  change to 'Pending'
         });
 
+        console.log(response.data)
         if (response.data && response.data.length > 0) {
-            posts.value = response.data
-        }
-        console.log("post value", posts.value)
+            // Filter out reports that are already rescued
+            posts.value = response.data.filter(report => report.report_status !== 'Rescued' && report.report_status !== 'In progress'); // Nov12 added ( && report.report_status !== 'In progress' )
+        } ``
+        console.log(posts.value)
+        // Nov5 end of salpocial's new code
     }
     catch (err) {
-        console.log("error in retrieve operations", err)
+        console.log("error in retrieve reports", err)
     }
 }
 
@@ -99,11 +103,12 @@ onMounted(async () => {
 
             </div>
             <div>
-                <statusbuttons :postId="report.post_id" @statusUpdated="handleStatusUpdate"/>
+                <statusbuttons :postId="report.post_id" :reportedUserId="report.user_id" :reportDetails="report"
+                    @statusUpdated="handleStatusUpdate" />
             </div>
         </div>
     </div>
-    
+
 </template>
 
 <!-- 

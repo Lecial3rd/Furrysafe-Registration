@@ -3,7 +3,7 @@
         <div class="lg:grid lg:grid-cols-12 mx-4">
             <section
                 class="bg-blue-50 left-[6%]  relative h-32 items-end  lg:col-span-5 lg:h-full xl:col-span-6 hidden lg:block">
-                <img alt="" :src="require('@/assets/images/home_animalshelter_slider_pic4.png')"
+                <img alt="" :src="require('@/assets/images/home_animalshelter.png')"
                     class="absolute inset-0 my-20 mx-10 h-[90%] w-[90%] object-contain " />
 
                 <div class="hidden lg:relative lg:block lg:p-12">
@@ -19,7 +19,8 @@
                 <div class="w-full md:w-2/3 mx-auto">
                     <div class="flex gap-x-2 items-center">
                         <RouterLink to="/">
-                            <HomeIcon class="h-6 w-6 text-gray-800 hover:text-gray-700" />
+                            <!-- <HomeIcon class="h-6 w-6 text-gray-800 hover:text-gray-700" /> -->
+                            <img alt="FrrySfLogo" title="Home" :src="logo" class="h-10 w-10" />
                         </RouterLink>
                         <h1 class="text-2xl font-semibold text-gray-800 ">Sign up as Buddy</h1>
                     </div>
@@ -102,7 +103,7 @@
 import axios from "axios";
 import Dropdown from "../components/registration_dropdown.vue";
 import passwordunhide from "../components/passwordHide.vue";
-import { HomeIcon  } from '@heroicons/vue/20/solid'
+import { HomeIcon } from '@heroicons/vue/20/solid'
 
 export default {
     name: 'LoginShelter',
@@ -123,6 +124,7 @@ export default {
             birthYear: '',
             gender: '',
             submitted: false,
+            logo: require('@/assets/images/frrysfLOGO.png'),
             dog: require('@/assets/images/animalshelterdog.png'),
             formData: new FormData(),
             userdetails: {

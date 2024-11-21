@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import statusbuttons from '@/components/Shelter/shelter_RescueOp_ReportCard_ReportStatusButtons.vue';
 import previewhover from '@/components/Shelter/shelter_HoverName.vue';
 import axios from "axios";
 
@@ -26,7 +25,7 @@ const toggleModalViewDetails = (id) => {
 let selectedPost = ref(null)
 let posts = ref([])
 let selectedPostDetails = ref([])
-let id = localStorage.getItem('c_id')
+let id = localStorage.getItem('u_id')
 async function retrieveReports() { //display
     try {
         console.log("retrieveReports")

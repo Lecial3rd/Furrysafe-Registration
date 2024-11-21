@@ -32,33 +32,39 @@
                 <div>
                   <PetList @petSelected="handlePetSelected" />
                 </div>
+
+                <span v-if="isMissingPetProfile" class="flex justify-center mt-2 text-center text-red-500 text-xs">
+                  Please Select Pet Profile!</span>
+
                 <div class="text-sm mt-1.5">
                   <div class="flex flex-col">
                     <label for="petName" class="font-medium leading-6 text-gray-700">
                       Nickname</label>
                     <input v-model="nickname" type="text" name="petName" id="petName" placeholder="Nickname"
-                      class="mt-1.5 border rounded-md p-1.5 px-6" readonly>
+                      class="mt-1.5 border bg-gray-50 rounded-md p-1.5 px-6 text-gray-800 placeholder-gray-700 outline-none" readonly>
                   </div>
                   <div class="flex flex-col mt-1.5">
                     <label for="rehomed" class="font-medium leading-6 text-gray-700">
                       Date Re-homed</label>
                     <input v-model="daterehomed" type="text" name="rehomed" placeholder="Date Rehomed"
-                      class="mt-1.5 border rounded-md p-1.5 px-6" readonly>
+                      class="mt-1.5 border bg-gray-50 rounded-md p-1.5 px-6 text-gray-800 placeholder-gray-700 outline-none" readonly>
                   </div>
                   <div class="flex flex-col mt-1.5">
                     <label for="petBreed" class="font-medium leading-6 text-gray-700">
                       Breed / Mix</label>
-                    <input v-model="breed" type="text" name="petName" id="petName" placeholder="Breed"
-                      class="mt-1.5 border rounded-md p-1.5 px-6" readonly>
+                    <input v-model="breed" type="text" name="petBreed" id="petBreed" placeholder="Breed"
+                      class="mt-1.5 border bg-gray-50 rounded-md p-1.5 px-6 text-gray-800 placeholder-gray-700 outline-none" readonly>
                   </div>
                 </div>
 
                 <div class="mt-2">
-                  <textarea v-model="newpost" placeholder="Write a caption or description of this post..."
-                    class="border rounded-lg py-[1rem] px-6 w-full h-[8rem]" />
+                  <textarea v-model="newpost"
+                    :placeholder="isMissingCaption ? 'Post Caption is required...' : 'Write a caption or description of this post...'"
+                  :class="['border rounded-lg py-[1rem] px-6 w-full h-[8rem]', { 'border-red-500 placeholder-red-500': isMissingCaption }]" />
                 </div>
 
-                <div v-if="imageUrls.length > 0" class="outline-dashed outline-2 outline-offset-3 outline-gray-200 rounded-lg p-2 my-2">
+                <div v-if="imageUrls.length > 0"
+                  class="outline-dashed outline-2 outline-offset-3 outline-gray-200 rounded-lg p-2 my-2">
                   <div class="px-4 my-2 mx-2 sm:col-span-2 sm:px-0">
                     <ul role="list" class="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-2 sm:gap-x-4 lg:grid-cols-3">
                       <li v-for="(imageUrl, index) in imageUrls" :key="index" class="relative">
@@ -88,6 +94,7 @@
                     </label>
                   </div>
                 </div>
+
                 <div class="flex justify-center">
                   <!-- Nov5 @click="handleSubmit replace to -->
                   <button type="button" :disabled="isLoading" @click="submitPost"
@@ -97,6 +104,10 @@
                   </button>
                 </div>
               </div>
+              <!-- <span v-if="isAllMissingFields" class="flex justify-center mt-4 text-center text-red-500 text-xs">
+                Please complete all required fields and provide another image other than pet profile</span> -->
+              <span v-if="isMissingProofImageImage" class="flex justify-center mt-4 text-center text-red-500 text-xs">
+                Please provide another image other than the pet profile!</span>
 
             </DialogPanel>
           </TransitionChild>
@@ -260,11 +271,12 @@ function handlePetSelected(info) {
         imageUrls.value.push(selected.profile);  // Add profile image URL
       } else {
         console.warn("No profile image found for the selected pet.");
-        alert('No profile image found for the selected pet.');
+        // alert('No profile image found for the selected pet.');
       }
 
       console.log("Pet ID set to:", post.pet_id); // Debugging line
     } else {
+      isMissingPetProfile.value = true
       console.error("Invalid selected pet:", selected);  // Handle invalid selection
     }
   } else {
@@ -324,19 +336,45 @@ function handlePetSelected(info) {
 //     isLoading.value = false
 //   }
 // }
+
+// const isAllMissingFields = ref(false)
+const isMissingPetProfile = ref(false)
+const isMissingCaption = ref(false)
+const isMissingProofImageImage = ref(false)
+
+
 async function submitPost() {
   console.log("User ID:", post.user_id);
   console.log("Pet ID:", post.pet_id);
   console.log("Content:", newpost.value);
+
+  // isAllMissingFields.value = false
+  isMissingPetProfile.value = false
+  isMissingCaption.value = false
+  isMissingProofImageImage.value = false
 
   // Check if loading
   if (isLoading.value) return;
 
   // Check for required fields
   if (!post.user_id || !post.pet_id || !newpost.value) {
-    alert("Please complete all required fields.");
+    // isAllMissingFields.value = true
+    if(!post.pet_id){
+      isMissingPetProfile.value = true
+    }
+
+    if(!newpost.value){
+      isMissingCaption.value = true
+    }
+    isMissingProofImageImage.value = true; // Nov21 for styling
     return;
   }
+
+  // if (!imageUrls.value || imageUrls.value.length === 0) {
+  //   isMissingProofImageImage.value = true; // Nov21 for styling
+  //   console.log("No Images to process or file array is empty.");
+  //   return;
+  // }
 
   try {
     // Set loading state to true
@@ -351,6 +389,7 @@ async function submitPost() {
     // Add photo URLs (if any) to the FormData
     if (imageUrls.value && imageUrls.value.length > 0) {
       formData.append('photo_urls', JSON.stringify(imageUrls.value));
+      isMissingProofImageImage.value = true; // Nov21 for styling
     }
 
     // Handle file input and append to FormData
@@ -387,9 +426,9 @@ async function submitPost() {
     // Improved error handling to include more server-side details
     if (error.response && error.response.data) {
       console.error('Server responded with:', error.response.data);
-      alert('Error submitting post: ' + (error.response.data.message || error.message));
+      console.error('Error submitting post: ' + (error.response.data.message || error.message));
     } else {
-      alert('Error submitting post: ' + error.message);
+      console.error('Error submitting post: ' + error.message);
     }
 
   } finally {

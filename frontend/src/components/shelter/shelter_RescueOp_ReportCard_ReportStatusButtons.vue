@@ -1,12 +1,27 @@
 <template>
+    <!-- Changes code - Salpocial (Nov21)-->
     <div class="font-semibold border-t text-sm rounded-b-lg">
-        <!-- Nov5 change v-if="!showRescueCancelButtons && !showSuccessMessage && !showConfirmRescue && !showConfirmCancel" to -->
-        <button v-if="!showRescueCancelButtons && !showSuccessMessage && !showConfirmDialog" type="button"
-            class="flex justify-center py-4 font-semibold w-full text-red-600 bg-slate-50 hover:bg-red-500 hover:text-white rounded-b-lg"
-            @click="handleTakeAction">
-            <!-- Nov15 @click="showRescueCancelButtons = true; confirmAction()"> change to -->
-            Take Action
-        </button>
+        <div v-if="!showRescueCancelButtons && !showSuccessMessage && !showConfirmDialog" class="flex justify-center">
+            <button v-if="operation === 'Missing Report' && props.reportedUserId == uid"
+                type="button"
+                class="flex justify-center py-4 font-semibold w-full text-red-600 bg-slate-50 hover:bg-green-500 hover:text-white rounded-b-lg"
+                @click="handleTakeAction">
+                Found
+            </button>
+            <RouterLink v-else-if="operation === 'Missing Report' && props.reportedUserId != uid"
+                :to="getMessageRoute"
+                class="flex justify-center py-4 font-semibold w-full text-red-600 bg-slate-50 hover:bg-green-500 hover:text-white rounded-b-lg">
+                <span class="font-bold text-sm">Message</span>
+            </RouterLink>
+            <button v-else
+                type="button"
+                class="flex justify-center py-4 font-semibold w-full text-red-600 bg-slate-50 hover:bg-green-500 hover:text-white rounded-b-lg"
+                @click="handleTakeAction">
+                Take Action
+            </button>
+        </div>
+        <!-- End of Huge Changes - Salpocial (Nov21) -->
+        
         <!-- Is this code even used? - Salpocial -->
         <div v-else-if="showRescueCancelButtons || props.operation == 'ongoing'"
             class="flex justify-between font-semibold text-gray-600 rounded-b-lg">
@@ -46,24 +61,28 @@
             <span>{{ successMessage }}</span> <!-- Nov5 -->
         </div>
         <!-- Nov15 Modal for Buddy Rescue Fill-Up Form -->
-        <formModal v-if="showFormModal" :postId="postId" @close="showFormModal = false"
-            @statusUpdated="handleAction('Rescued')">
+        <formModal v-if="showFormModal" :reportDetails="props.reportDetails" :postId="postId"
+            @close="showFormModal = false" @statusUpdated="handleAction('Rescued')">
         </formModal>
     </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue'; // Added "Computed" - Salpocial (Nov21)
 
 // Nov5 start of salpocial's new code
 import axios from 'axios';
 import formModal from "@/components/Buddy/buddy_Rescue_FillUpForm.vue"; // Nov15
 
+// Salpocial Add (Nov21)
+import { useRoute } from 'vue-router';
+const route = useRoute();
+
 // converted into <script setup> salpocial's code below
 const props = defineProps({
     postId: {
         type: Number,
-        required: true
+        required: false,
     },
     operation: {
         type: String,
@@ -73,26 +92,56 @@ const props = defineProps({
         type: Number,
         required: false
     },
+    reportDetails: {
+        type: Object,
+        required: false
+    }
+});
+
+console.log('Props:', props);
+
+// New code - Salpocial (Nov21)
+const getMessageRoute = computed(() => {
+    console.log('userType:', userType);
+    console.log('Reported user ID', props.reportDetails.user_id);
+    console.log('postId:', props.postId);
+
+    if (userType === 'shelter') {
+        console.log('Going to Shelter', props.postId, props.reportDetails.user_id);
+        return { name: 'sheltermessages', query: { shelterId: props.postId, shelterUserID: props.reportDetails.user_id } };
+    } else {
+        console.log('Going to Buddy', props.postId, props.reportDetails.user_id);
+        return { name: 'buddy_messages', query: { buddyId: props.reportDetails.user_id } };
+    }
 });
 
 const emit = defineEmits(['statusUpdated']);
 
+let status = ref(null)
 const showRescueCancelButtons = ref(false);
 const showSuccessMessage = ref(false);
 const showConfirmDialog = ref(false);
 const successMessage = ref('');
 const selectedAction = ref('');
 const showFormModal = ref(false); // State for showing the form modal
+const userType = localStorage.getItem('u_type');
+const uid = localStorage.getItem('u_id')
+
+console.log('userType from localStorage:', userType);
+console.log('uid from localStorage:', uid);
 
 // Nov15
 const handleTakeAction = async () => {
-    const userType = localStorage.getItem('u_type'); // Retrieve the user type
+    // Retrieve the user type
 
     if (userType === 'shelter') {
         // Confirm rescue action for shelter
+        status.value = 'In progress'
         await confirmAction();
     } else if (userType === 'buddy') {
         // Show the form modal instead of redirecting
+        status.value = 'Rescued'
+        await confirmAction();
         showFormModal.value = true; // Open the modal
     }
 };
@@ -114,12 +163,14 @@ const confirmAction = async () => { //upon click
     try {
         const response = await axios.post('http://localhost:5000/accept-report', {
             post_id: props.postId,
-            shelter_id: localStorage.getItem('c_id')
+            user_id: localStorage.getItem('u_id'),
+            status: status.value,
         });
 
         if (response.data.success) {
             retrieveMessage()
             showConfirmDialog.value = false;
+
             emit('statusUpdated'); // Nov15
             emit('close'); // Nov15
         }
@@ -151,7 +202,7 @@ const cancelRescue = async () => { //rescued => yes
     try {
         const response = await axios.post('http://localhost:5000/cancelOperation', {
             _post_id: props.postId,
-            _shelter_id: localStorage.getItem('c_id')
+            user_id: localStorage.getItem('u_id')
         });
 
         if (response.data.success) {
@@ -185,39 +236,39 @@ const getUserFullName = async () => {
 };
 async function retrieveMessage() {
     await getUserFullName()
+
+    console.log("chat id", selectedChat_id.value)
     if (!selectedChat_id.value) {
         await retrieveChatId(); // Await the creation of a new chat
-        // After creating a new chat, selectedChat_id should be set
     }
     const formData = new FormData();
-    // const tempurl = [null];
 
-    // files.value.forEach((fileobj) => { //append images
-    //     formData.append(`url`, fileobj.file);
-    // })
-
-    console.log("retrievemessagehere")
-    console.log("props post id",)
-
-    let messageData = [
-        ["chat_id", selectedChat_id.value],
-        ["user_id", null],
-        ["message", `This stray animal report is now handled by ` + userFullName.value],
-        ["date", new Date().toISOString()],
-        ["post_id", props.postId]
-        //     ["sender_name", userFullName],
-        //     ["p1_name", userFullName],
-        //     ["p2_name", receiverName.value] // Ensure receiverName is set
-    ];
+    let messageData = null;
+    if (userType === 'shelter') {
+        messageData = [
+            ["chat_id", selectedChat_id.value],
+            ["user_id", null],
+            ["message", `This stray animal report is now handled by ` + userFullName.value],
+            ["date", new Date().toISOString()],
+            ["post_id", props.postId]
+        ];
+    } else if (userType === 'buddy') {
+        messageData = [
+            ["chat_id", selectedChat_id.value],
+            ["user_id", null],
+            ["message", userFullName.value + ` rescued the animal in this post.`],
+            ["date", new Date().toISOString()],
+            ["post_id", props.postId]
+        ];
+    }
 
     messageData.forEach(([key, value]) => formData.append(key, value));
-
-    // sendMessage(formData)
     sendMessagetoUser(formData)
 }
 const selectedChat_id = ref(null)
 const retrieveChatId = async () => {
     try {
+        console.log("new chat here", receiverId.value, currentUser_id)
         const response = await axios.post("http://localhost:5000/newchat", {
             senderid: currentUser_id,
             receiverid: receiverId.value
@@ -239,7 +290,6 @@ async function sendMessagetoUser(thisformData) {
         console.log("send message to user", pair[0], pair[1]);
     }
 
-    // return
     try {
         const response = await axios.post("http://localhost:5000/sendmessage", thisformData, {
             headers: {
@@ -256,76 +306,21 @@ async function sendMessagetoUser(thisformData) {
     }
 }
 
-
-
 const cancelAction = () => {
     showConfirmDialog.value = false;
     showRescueCancelButtons.value = true;
 };
 
+let reportDetails;
 let button_flag = ref('')
 onMounted(() => {
     button_flag.value = props.operation
-    receiverId.value = props.reportedUserId
+    reportDetails = props.reportDetails
+
+    // Salpocial Add/Changes (Nov21)
+    receiverId.value = reportDetails.user_id || shelterUserID
+    const shelterUserID = route.query.shelterUserID;    
+
 })
 
 </script>
-<!-- 
-// Nov5 orig salpocial's code
-// export default {
-//     props: {
-//         postId: {
-//             type: Number,
-//             required: true
-//         }
-//     },
-//     emits: ['statusUpdated'],
-//     setup(props, { emit }) {
-//         const showRescueCancelButtons = ref(false);
-//         const showSuccessMessage = ref(false);
-//         const showConfirmDialog = ref(false);
-//         const successMessage = ref('');
-//         const selectedAction = ref('');
-
-//         const handleAction = (action) => {
-//             selectedAction.value = action;
-//             showRescueCancelButtons.value = false;
-//             showConfirmDialog.value = true;
-//         };
-
-//         const confirmAction = async () => {
-//             try {
-//                 const response = await axios.post('http://localhost:5000/accept-rescue', {
-//                     post_id: props.postId,
-//                     shelter_id: localStorage.getItem('c_id'),
-//                     status: selectedAction.value
-//                 });
-
-//                 if (response.data.success) {
-//                     showConfirmDialog.value = false;
-//                     showSuccessMessage.value = true;
-//                     successMessage.value = `${selectedAction.value} Successfully`;
-//                     emit('statusUpdated');
-//                 }
-//             } catch (error) {
-//                 console.error('Error:', error);
-//                 // Handle error (show error message)
-//             }
-//         };
-
-//         const cancelAction = () => {
-//             showConfirmDialog.value = false;
-//             showRescueCancelButtons.value = true;
-//         };
-
-//         return {
-//             showRescueCancelButtons,
-//             showSuccessMessage,
-//             showConfirmDialog,
-//             successMessage,
-//             handleAction,
-//             confirmAction,
-//             cancelAction
-//         };
-//     }
-// } -->

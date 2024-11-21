@@ -1,17 +1,16 @@
-
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import axios from "axios"
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { ChevronLeftIcon, ChevronRightIcon, EllipsisHorizontalIcon } from "@heroicons/vue/20/solid";
 import CreateReportModal from '@/components/Buddy/buddy_CreateReportPost_Modal.vue' // for edit modal
-
+import missingbutton from '@/components/Shelter/shelter_Missingreports_Button.vue'
 
 // to close press esc
 onMounted(() => {
-  const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
-  window.addEventListener('keydown', closeModalOnEsc)
-  onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
+    const closeModalOnEsc = (e) => e.key === 'Escape' && emit('close')
+    window.addEventListener('keydown', closeModalOnEsc)
+    onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
 })
 
 const openEditModal = ref(false) // for create report modal
@@ -95,7 +94,7 @@ async function getUserDetailsOnHover() {
     }
 
 }
-onMounted (async () => {
+onMounted(async () => {
     selectedPost.value = props.selectedPostDetails
     _user_id.value = selectedPost.value.user_id
     await getUserDetailsOnHover()
@@ -214,8 +213,8 @@ const open = ref(true)
                                                         <button @click="openEditModal = true; currentModalMode = 'edit'"
                                                             class="block w-full py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-t-lg"
                                                             role="menuitem">Edit Post</button>
-                                                        <CreateReportModal v-if="openEditModal && selectedPost" mode="edit"
-                                                            :selectedPostDetails="selectedPost"
+                                                        <CreateReportModal v-if="openEditModal && selectedPost"
+                                                            mode="edit" :selectedPostDetails="selectedPost"
                                                             @close="openEditModal = false" />
 
                                                         <button @click="deletePost"
@@ -285,6 +284,8 @@ const open = ref(true)
                                                         </div>
 
                                                     </dl>
+                                                    <missingbutton :postId="selectedPost.post_id" :reportedUserId="selectedPost.user_id" :reportDetails="selectedPost"/>
+
                                                 </div>
                                             </div>
                                             <!-- <div class="flex justify-center sm:mt-4 xl:mt-8">
@@ -299,10 +300,11 @@ const open = ref(true)
 
                                         </div>
                                     </div>
+
                                 </div>
+
                             </div>
                             <!-- content end -->
-
                         </DialogPanel>
                     </TransitionChild>
                 </div>

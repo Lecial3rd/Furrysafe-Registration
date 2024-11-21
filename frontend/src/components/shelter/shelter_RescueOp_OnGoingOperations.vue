@@ -32,12 +32,13 @@ const handleStatusUpdate = () => {
 let selectedPost = ref(null)
 let posts = ref([])
 let selectedPostDetails = ref([])
-let _shelter_id = localStorage.getItem('c_id')
+let _user_id = localStorage.getItem('u_id')
 async function retrieveReports() {
+    console.log("retrieveReports")
+
     try {
-        console.log("retrieveReports")
         const response = await axios.post("http://localhost:5000/getongoingoperations", {
-            _shelter_id: _shelter_id,
+            _shelter_id: _user_id,
             _status: 'In progress' // Nov12 'Pending' change to 'In progress' 
         });
 

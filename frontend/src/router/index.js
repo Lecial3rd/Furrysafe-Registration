@@ -57,6 +57,7 @@ import buddyprofile from "../views/Buddy/Profile.vue";
 import buddyeditprofile from "@/components/Buddy/buddy_Profile_EditProfile.vue";
 import buddyshelterprofile from "@/components/Buddy/buddy_ViewShelterProfile.vue";
 import buddycreateanimalprofile from "../views/Buddy/profile_CreateNewProfile.vue";
+import buddyexplore from "../views/Buddy/explore.vue"; // Nov20
 
 import viewshelterprofile from "../views/pov_shelterProfile.vue";
 import viewbuddyprofile from "../views/pov_buddyprofile.vue";
@@ -278,6 +279,12 @@ const routes = [
         path: "/buddy_messages",
         name: "buddy_messages",
         component: buddymessages,
+      },
+      {
+        // message
+        path: "/buddy_explore",
+        name: "buddy_explore",
+        component: buddyexplore,
       },
       {
         // profile

@@ -24,7 +24,6 @@ const toggleModalViewDetails = (id) => {
 
     if (foundPost) {
         selectedPostDetails.value = foundPost
-        console.log("WAOT", selectedPostDetails.value)
     }
 };
 
@@ -79,12 +78,19 @@ onMounted(async () => {
             </RouterLink>
             <!-- <span class="text-[11px] border py-1 px-3 font-medium rounded-full bg-gray-50">{{ post.post_type }}</span> -->
             <span :class="{
-                'text-[10px] border py-1 px-3 font-medium rounded-full': true,
+                'text-[10px] border py-1 px-3 font-medium rounded-full text-center': true,
                 'bg-amber-50 border-amber-300 text-amber-500': post.post_type === 'Missing Report',
                 'bg-red-50 border-red-300 text-red-500': post.post_type === 'Stray Report',
                 'bg-teal-50 border-teal-300 text-teal-500': post.post_type === 'Adoption',
                 'bg-gray-50': post.post_type !== 'Missing Report' && post.post_type !== 'Stray Report' && post.post_type !== 'Adoption',
             }">{{ post.post_type }}</span>
+            <span :class="{
+                'text-[10px] border py-1 px-3 font-medium rounded-full text-center': true,
+                'bg-amber-50 border-amber-300 text-amber-500': post.report_status === 'In progress',
+                'bg-red-50 border-red-300 text-red-500': post.report_status === 'Pending',
+                'bg-teal-50 border-teal-300 text-teal-500': post.report_status === 'Rescued',
+                'bg-gray-50': post.post_type !== 'In progress' && post.report_status !== 'Pending' && post.report_status !== 'Rescued',
+            }">{{ post.report_status }}</span>
         </div>
 
         <div class="w-full h-fit rounded-xl bg-black flex flex-col items-center relative group">
@@ -98,6 +104,7 @@ onMounted(async () => {
                     class="mx-auto flex-shrink-0 w-[50rem] h-[30rem] object-cover rounded-xl cursor-pointer"
                     :src="post.photos[0]" alt="image post" />
             </div>
+
 
             <!-- Image Preview -->
             <viewpostimagepreview v-if="selectedPostViewImagePreviewId === post.post_id"
@@ -123,14 +130,14 @@ onMounted(async () => {
 
         <div class="p-2 px-3">
             <div class="flex items-center gap-x-4">
-                <!-- Changes - Salpocial -->
-                <RouterLink :to="{ name: 'buddy_messages', query: { buddyId: post.user_id } }" 
-                title="Chat with Us" class="flex items-center gap-x-2 relative group" >
-                <ChatBubbleLeftRightIcon class="sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-900" />
-                <span class="font-bold text-sm hidden group-hover:flex">
-                    Message
-                </span>
-            </RouterLink>
+                <!-- Nov20 :to="{ name: 'buddy_messages', query: { buddyId: post.user_id } }" - Salpocial's Changes -->
+                <RouterLink :to="{ name: 'buddy_messages', query: { buddyId: post.user_id } }" title="Chat with Us"
+                    class="flex items-center gap-x-2 relative group">
+                    <ChatBubbleLeftRightIcon class="sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-900" />
+                    <span class="font-bold text-sm hidden group-hover:flex">
+                        Message
+                    </span>
+                </RouterLink>
 
                 <div v-if="post.post_type == 'Adoption'">
                     <RouterLink to="" title="Pet Profile" class="flex items-center gap-x-2 relative group">

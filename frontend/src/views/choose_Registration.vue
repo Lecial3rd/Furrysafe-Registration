@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import DogImage from '@/assets/images/home_animalshelter_slider_pic4.png'
+import DogImage from '@/assets/images/home_animalshelter.png'
 </script>
 
 <style scoped>

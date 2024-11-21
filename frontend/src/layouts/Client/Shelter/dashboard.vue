@@ -165,7 +165,7 @@
                 </div>
             </div>
             <main class="lg:pl-72">
-                <div class="px-4 sm:px-0 lg:px-8">
+                <div>
                     <RouterView /> <!-- main content page -->
                     <popupNewpost v-if="showModalCreatePost" @close="toggleModal({ name: 'New Post' })" />
                     <popupNewEvent v-if="showModalCreateEvent" @close="toggleModal({ name: 'New Event' })" />

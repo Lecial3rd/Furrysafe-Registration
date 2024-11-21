@@ -391,6 +391,7 @@ async function retrieveData() { //for updating, saves the data to a formdata
     dataEntries.value.forEach(([key, value]) => formData.append(key, value));
 
     // Debugging: Log FormData contents
+    console.log("debugging")
     formData.forEach((value, key) => {
         console.log(`${key}:`, value);
     });

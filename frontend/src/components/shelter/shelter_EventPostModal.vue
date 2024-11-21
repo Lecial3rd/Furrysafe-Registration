@@ -37,7 +37,7 @@
                       class="w-full py-2.5 px-[1rem] text-lg font-medium placeholder:text-gray-400 focus:outline-none"
                       placeholder="Event Title" />
                   </div>
-                  <div class="flex sm:flex-col md:flex-row sm:text-sm md:text-[13px] px-[1.1rem] gap-x-2 border-t py-2">
+                  <div class="flex sm:flex-col md:flex-row sm:text-sm md:text-[13px] px-[1.1rem] gap-x-2 border-y py-2">
                     <div class="flex items-center sm:gap-x-1.5 md:gap-x-1">
                       <label for="start-datetime" class="text-gray-400">Event Start:</label>
                       <p class="sm:text-sm md:text-[12px]">{{ startDateTime }}</p>
@@ -53,18 +53,20 @@
                         class="w-[1rem] h-[1rem] text-transparent bg-transparent border-none cursor-pointer focus:outline-none" />
                     </div>
                   </div>
+                  <!-- Nov21 -->
+                  <div class="py-2 flex flex-col gap-y-2">
+                    <div>
+                      <div class="text-red-400 text-[12px] italic" v-if="locationflag == false">@</div>
+                      <input id="location" placeholder="Enter your Location" v-model="selectedLocationAddress"
+                        class="w-full text-sm text-gray-700 py-[10px] px-5 outline-none transition" />
+                    </div>
+                  </div>
+
                   <div class="mt-1 border-t border-gray-200">
                     <label for="caption" class="sr-only">Event Caption</label>
                     <textarea v-model="caption" name="caption"
                       placeholder="Write a caption or description of this Event..."
                       class="py-[10px] px-6 w-full h-[8rem] focus:outline-none" />
-                  </div>
-                  <div class="py-2 flex flex-col gap-y-2">
-                    <div>
-                      <div class="text-red-400 text-[12px] italic" v-if="locationflag == false">dsagdjgsd</div>
-                      <input id="location" placeholder="Enter your Location" v-model="selectedLocationAddress"
-                        class="w-full bg-transparent rounded-md border border-stroke dark:border-dark-3 py-[10px] px-5 text-dark-6 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-gray-2 disabled:border-gray-2" />
-                    </div>
                   </div>
                   <div class="flex justify-between mb-3 mx-[1.5rem]">
                     <div>
@@ -117,13 +119,13 @@
                     {{ mode === 'edit' ? 'Save Changes' : 'Post' }}</button>
                 </div>
               </div>
+
+              <mapoverlay @dataSent="handleData" v-if="showMapModal" @close="showMapModal = false" />
+              <Toast ref="toastRef" @closed="refreshRoute($router)" />
             </DialogPanel>
           </TransitionChild>
         </div>
       </div>
-      <mapoverlay @dataSent="handleData" v-if="showMapModal" @close="showMapModal = false" />
-      <Toast ref="toastRef" @closed="refreshRoute($router)" />
-      <!--  :shelterlatitude="lat" :shelterlongitude="lng"  -->
     </Dialog>
   </TransitionRoot>
 </template>
@@ -132,9 +134,8 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 
-// Added Map
+// Nov21 Added Map
 import mapoverlay from '@/components/buddy_PinModal.vue'
-
 
 // joey added
 import { defineProps } from 'vue'; // for reusing the form defining mode receive either edit or create yeahhh - joey
@@ -158,7 +159,7 @@ const handleSubmit = () => {
 };
 // end of reuse the modal
 
-// Function to handle data sent from the map overlay
+// Nov21 Function to handle data sent from the map overlay
 function handleData(data) {
   console.log(data);
   // Assuming data contains address, lat, and lng
@@ -186,11 +187,11 @@ const eventTitle = ref('')
 const latitude = ref(null)
 const longitude = ref(null)
 const caption = ref(null)
-const showMapModal = ref(false) //Added for map
-const selectedLocationAddress = ref('')
+const showMapModal = ref(false) // Nov21 Added for map
+const selectedLocationAddress = ref('') // Nov21
 
 
-//flags
+// Nov21 flags
 const photoflag = ref(true);
 const locationflag = ref(true);
 
