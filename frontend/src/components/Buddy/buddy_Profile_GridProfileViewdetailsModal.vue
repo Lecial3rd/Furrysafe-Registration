@@ -189,6 +189,7 @@ const open = ref(true)
                                     <span class="sm:text-base lg:text-lg">{{ name }}'s Information</span>
 
                                     <div class="flex sm:gap-x-2 md:gap-x-4">
+                                        <!-- Salpocial Changes -->
                                         <RouterLink :to="{ path: '/create_newanimalprofile', query: { mode: 'edit', petid: selectedProfile.id} }"
                                             class="bg-gray-800 py-1 sm:px-4 md:px-8 rounded-lg text-white hover:bg-gray-700">
                                             Edit Profile</RouterLink>
