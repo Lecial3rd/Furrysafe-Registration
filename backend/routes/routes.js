@@ -57,7 +57,8 @@ import {
 from "../controllers/buddy_functions.js"
 
 import {
-  getReportCategory
+  getReportCategory,
+  sendMail
 } 
 from "../controllers/sub_functions.js"
 
@@ -150,6 +151,8 @@ router.post("/cancelOperation", upload2.any(), setCancelOperation);
 //all 
 router.post("/getusedetails", getUserDetails) 
 
+//Added by salpocial
+router.post("/sendmail", sendMail)
 
 
 

@@ -3,6 +3,7 @@ import supabase from "../config/database.js"
 import { createBuddy } from "./buddyModel.js"
 import { createShelter, verifyShelter } from "./shelterModel.js";
 import { createToken, createRefreshToken } from "../middleware/jwt.js"
+import { sendMail } from "../controllers/sub_functions.js"; // Added by salpocial
 
 //LOGIN | check if user credentials exist in DATABASE
 export const validateUser = async (req, res) => {
@@ -236,10 +237,14 @@ export const createUser = async (req, res) =>{
             const userID = data[0]?.user_id; //retrieves userid from data
             if(regtype.match("buddy")){
                 await createBuddy(userID, user); //user holds all user detials
+                await sendMail(email, 'Welcome!', 'Thank you for registering with us!'); //Added by Salpocial
             }
             else{
                 await createShelter(userID, sheltername, documents, email); 
+                await sendMail(email, 'Welcome!', 'Thank you for registering with us! Please Wait for Admin Approval'); //Added by Salpocial
             }
+
+                        
            res.status(200).json({success: true, message: 'User Successfully added', user: data});
         }
     }
